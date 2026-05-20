@@ -32,62 +32,58 @@ A web-based Record Management System built with CodeIgniter 3, Bootstrap 4, and 
 
 **1. Clone the repository**
 ```bash
-*******************
-Release Information
-*******************
+**3. Create the database**
 
-This repo contains in-development code for future releases. To download the
-latest stable release please visit the `CodeIgniter Downloads
-<https://codeigniter.com/download>`_ page.
+Open phpMyAdmin and run:
+```sql
+CREATE DATABASE rms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-**************************
-Changelog and New Features
-**************************
+**4. Import the users table**
+```sql
+CREATE TABLE `users` (
+    `id`        int(11)      NOT NULL AUTO_INCREMENT,
+    `firstname` varchar(50)  NOT NULL,
+    `lastname`  varchar(50)  NOT NULL,
+    `birthday`  date         NOT NULL,
+    `age`       int(11)      NOT NULL,
+    `address`   varchar(100) NOT NULL,
+    `contactno` varchar(11)  NOT NULL,
+    `email`     varchar(100) NOT NULL,
+    `password`  varchar(255) NOT NULL,
+    `create_at` timestamp    NOT NULL DEFAULT current_timestamp(),
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
 
-You can find a list of all changes for each release in the `user
-guide change log <https://github.com/bcit-ci/CodeIgniter/blob/develop/user_guide_src/source/changelog.rst>`_.
+**5. Insert a test admin user**
+```sql
+INSERT INTO `users` (`firstname`, `lastname`, `birthday`, `age`, `address`, `contactno`, `email`, `password`)
+VALUES (
+    'Admin',
+    'User',
+    '1990-01-01',
+    35,
+    'Manila Philippines',
+    '09000000000',
+    'admin@rms.local',
+    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
+);
+```
 
-*******************
-Server Requirements
-*******************
+> Default password: `password`
 
-PHP version 5.6 or newer is recommended.
+**6. Configure database connection**
 
-It should work on 5.3.7 as well, but we strongly advise you NOT to run
-such old versions of PHP, because of potential security and performance
-issues, as well as missing features.
+Open `application/config/database.php` and set:
+```php
+'hostname' => 'localhost',
+'username' => 'root',
+'password' => '',
+'database' => 'rms',
+```
 
-************
-Installation
-************
+**7. Start Apache and MySQL in XAMPP**
 
-Please see the `installation section <https://codeigniter.com/userguide3/installation/index.html>`_
-of the CodeIgniter User Guide.
-
-*******
-License
-*******
-
-Please see the `license
-agreement <https://github.com/bcit-ci/CodeIgniter/blob/develop/user_guide_src/source/license.rst>`_.
-
-*********
-Resources
-*********
-
--  `User Guide <https://codeigniter.com/docs>`_
--  `Contributing Guide <https://github.com/bcit-ci/CodeIgniter/blob/develop/contributing.md>`_
--  `Language File Translations <https://github.com/bcit-ci/codeigniter3-translations>`_
--  `Community Forums <http://forum.codeigniter.com/>`_
--  `Community Wiki <https://github.com/bcit-ci/CodeIgniter/wiki>`_
--  `Community Slack Channel <https://codeigniterchat.slack.com>`_
-
-Report security issues to our `Security Panel <mailto:security@codeigniter.com>`_
-or via our `page on HackerOne <https://hackerone.com/codeigniter>`_, thank you.
-
-***************
-Acknowledgement
-***************
-
-The CodeIgniter team would like to thank EllisLab, all the
-contributors to the CodeIgniter project and you, the CodeIgniter user.
+**8. Open in browser**

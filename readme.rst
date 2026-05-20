@@ -1,7 +1,4 @@
-Here is the raw README.md file content. Copy everything between the lines exactly as is:
-
-C:\xampp\htdocs\rms\README.md — replace entire file with this:
-markdown# 📁 RMS — Record Management System
+# 📁 RMS — Record Management System
 
 A web-based Record Management System built with CodeIgniter 3, Bootstrap 4, and MySQL. Designed for managing records efficiently with a clean authentication system and scalable architecture.
 

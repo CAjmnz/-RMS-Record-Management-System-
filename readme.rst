@@ -1,15 +1,37 @@
 ###################
 Record Management System 
 ###################
+# RMS — Record Management System
 
-CodeIgniter is an Application Development Framework - a toolkit - for people
-who build web sites using PHP. Its goal is to enable you to develop projects
-much faster than you could if you were writing code from scratch, by providing
-a rich set of libraries for commonly needed tasks, as well as a simple
-interface and logical structure to access these libraries. CodeIgniter lets
-you creatively focus on your project by minimizing the amount of code needed
-for a given task.
+A web-based Record Management System built with CodeIgniter 3, Bootstrap 4, and MySQL.
 
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | CodeIgniter 3 |
+| Frontend | Bootstrap 4 + jQuery |
+| Database | MySQL (via XAMPP) |
+| Server | Apache (XAMPP) |
+| PHP | 8.2+ |
+
+---
+
+## Requirements
+
+- XAMPP (Apache + MySQL)
+- PHP 8.2 or higher
+- CodeIgniter 3
+- Web browser
+
+---
+
+## Local Setup
+
+**1. Clone the repository**
+```bash
 *******************
 Release Information
 *******************

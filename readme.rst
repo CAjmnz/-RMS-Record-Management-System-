@@ -1,55 +1,89 @@
+<div align="center">
+
 # 🗂️ RMS — Record Management System
 
-A **Role-Based Record Management System** built using **CodeIgniter 3**, **Bootstrap 4.6**, **jQuery**, and **MySQL**.
+### Role-Based System built with CodeIgniter 3
 
-This system follows a clean **MVC architecture** and supports secure authentication, role-based access control (RBAC), and full user management.
-
----
-
-## 🚀 Features
-
-### 🔐 Authentication
-- Login / Logout system
-- Session-based authentication
-- Secure password hashing (bcrypt)
-- Guest vs Protected routes
+![PHP](https://img.shields.io/badge/PHP-7.4%2B-blue)
+![CI](https://img.shields.io/badge/CodeIgniter-3-red)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-4-purple)
+![MySQL](https://img.shields.io/badge/MySQL-Database-orange)
 
 ---
 
-### 👤 User Management (Admin Only)
-- Create Users (Admin only)
-- View Users Table (Admin + Users read-only)
-- Edit Users (Admin only)
-- Soft Delete Users (Admin only)
-- Role-Based Access Control (RBAC)
+A secure **MVC-based Record Management System** with authentication, role-based access control, and full user management.
+
+</div>
 
 ---
 
-### 📊 Dashboard
-- Welcome panel
-- User session display
-- Modular UI cards (Records, Users, Reports)
+## 🚀 Project Overview
+
+RMS is designed for **internal management systems** where:
+- Admin controls all users
+- Users have limited access
+- Authentication is secure and session-based
 
 ---
 
-### 🔒 Security
-- Password hashing (password_hash / password_verify)
-- SQL Injection protection (Query Builder)
-- XSS protection (htmlspecialchars)
-- Role-based route protection
-- Soft delete implementation
+## ⚙️ Tech Stack
 
----
-
-## 🏗️ Tech Stack
-
-- PHP 7.4+ / 8.x
-- CodeIgniter 3
+- PHP (CodeIgniter 3)
 - MySQL
-- Bootstrap 4.6
-- jQuery 3.6
-- Apache (XAMPP recommended)
+- Bootstrap 4
+- jQuery
+- Apache (XAMPP)
 
 ---
 
-## 📁 Project Structure
+## 🔐 Authentication System
+
+- Login / Logout
+- Session-based authentication
+- Password hashing (bcrypt)
+- Protected routes (Guest vs RMS controllers)
+
+---
+
+## 👤 User Management (RBAC)
+
+### Admin
+✔ Create users  
+✔ Edit users  
+✔ Delete users  
+✔ View all users  
+
+### Regular User
+✔ View dashboard  
+✔ View users (read-only)  
+
+---
+
+## 📊 Dashboard Features
+
+- Welcome panel
+- Logged-in user info
+- Modular system cards:
+  - Records
+  - Users
+  - Reports
+
+---
+
+## 🗄️ Database Structure
+
+```sql
+users
+├── id
+├── firstname
+├── lastname
+├── birthday
+├── address
+├── contactno
+├── email
+├── password
+├── role (admin/user)
+├── is_active
+├── deleted_at
+├── created_at
+└── updated_at

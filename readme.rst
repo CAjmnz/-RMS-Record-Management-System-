@@ -1,5 +1,5 @@
 ###################
-What is CodeIgniter
+Record Management System 
 ###################
 
 CodeIgniter is an Application Development Framework - a toolkit - for people

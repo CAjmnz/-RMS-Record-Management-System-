@@ -1,6 +1,6 @@
-<div align="center">
 
-# 🗂️ RMS — Record Management System
+
+🗂️ RMS — Record Management System
 
 ### Role-Based System built with CodeIgniter 3
 

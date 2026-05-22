@@ -17,6 +17,7 @@ class Dashboard extends RMS_Controller
         $this->data['firstname']    = $this->session->userdata('firstname');
         $this->data['lastname']     = $this->session->userdata('lastname');
         $this->data['email']        = $this->session->userdata('email');
+        $this->data['contactno']        = $this->session->userdata('contactno');
         $this->data['role']         = $this->session->userdata('role');
 
         // Stats and recent users shown to EVERYONE — just no actions for non-admin

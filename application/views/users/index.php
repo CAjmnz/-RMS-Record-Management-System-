@@ -31,27 +31,7 @@
 <body>
 
 <!-- NAVBAR -->
-<nav class="navbar navbar-dark px-4">
-    <span class="navbar-brand font-weight-bold">RMS — User Management</span>
-    <div class="ml-auto d-flex align-items-center">
-
-        <a href="<?php echo base_url('dashboard'); ?>"
-           class="btn btn-outline-light btn-sm mr-2">
-            Dashboard
-        </a>
-
-        <a href="<?php echo base_url('users'); ?>"
-           class="btn btn-outline-light btn-sm mr-2 nav-link-active">
-            Users
-        </a>
-
-        <a href="<?php echo base_url('logout'); ?>"
-           class="btn btn-outline-light btn-sm">
-            Logout
-        </a>
-
-    </div>
-</nav>
+<?php $this->load->view('templates/navbar'); ?>
 
 <div class="container mt-5">
 
@@ -88,7 +68,8 @@
                 <thead class="thead-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Full Name</th>
+                    <th>LastName</th>
+                    <th>FirstName</th>
                     <th>Email</th>
                     <th>Contact No</th>
                     <th>Role</th>
@@ -104,9 +85,11 @@
                     <?php foreach ($users as $user) : ?>
                         <tr>
                             <td><?php echo (int)$user->id; ?></td>
-
                             <td>
-                                <?php echo htmlspecialchars($user->firstname . ' ' . $user->lastname); ?>
+                                <?php echo htmlspecialchars($user->lastname); ?>
+                            </td>
+                            <td>
+                                <?php echo htmlspecialchars($user->firstname ); ?>
                             </td>
 
                             <td><?php echo htmlspecialchars($user->email); ?></td>

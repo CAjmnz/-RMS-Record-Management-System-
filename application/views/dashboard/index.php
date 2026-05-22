@@ -94,27 +94,7 @@
 <body>
 
 <!-- NAVBAR -->
-<nav class="navbar navbar-dark px-4">
-    <span class="navbar-brand font-weight-bold">RMS — Dashboard</span>
-    <div class="ml-auto d-flex align-items-center">
-
-        <a href="<?php echo base_url('dashboard'); ?>"
-           class="btn btn-outline-light btn-sm mr-2 nav-link-active">
-            Dashboard
-        </a>
-
-        <a href="<?php echo base_url('users'); ?>"
-           class="btn btn-outline-light btn-sm mr-2">
-            Users
-        </a>
-
-        <a href="<?php echo base_url('logout'); ?>"
-           class="btn btn-outline-light btn-sm">
-            Logout
-        </a>
-
-    </div>
-</nav>
+<?php $this->load->view('templates/navbar'); ?>
 
 <div class="container mt-5">
 
@@ -205,91 +185,7 @@
     </div>
 
     <!-- ── RECENTLY ADDED USERS TABLE (everyone — read only) -->
-    <div class="card card-custom mb-5">
-
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 font-weight-bold">Recently Added Users</h6>
-
-            <?php if ($role === 'admin') : ?>
-                <!-- Admin gets the View All link -->
-                <a href="<?php echo base_url('users'); ?>"
-                   class="btn btn-outline-success btn-sm">
-                    View All Users
-                </a>
-            <?php else : ?>
-                <!-- Regular user sees a read-only label -->
-                <span class="badge badge-secondary px-3 py-2">
-                    Read-only
-                </span>
-            <?php endif; ?>
-        </div>
-
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-read-only mb-0">
-                    <thead class="thead-dark">
-                    <tr>
-                        <th class="pl-3">Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Date Added</th>
-                        <?php if ($role === 'admin') : ?>
-                            <th width="160">Actions</th>
-                        <?php endif; ?>
-                    </tr>
-                    </thead>
-
-                    <tbody>
-                    <?php if (!empty($recent_users)) : ?>
-                        <?php foreach ($recent_users as $u) : ?>
-                            <tr>
-                                <td class="pl-3">
-                                    <?php echo htmlspecialchars($u->firstname . ' ' . $u->lastname); ?>
-                                </td>
-
-                                <td><?php echo htmlspecialchars($u->email); ?></td>
-
-                                <td>
-                                    <span class="badge badge-<?php echo $u->role === 'admin' ? 'danger' : 'primary'; ?>">
-                                        <?php echo ucfirst($u->role); ?>
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="badge badge-<?php echo $u->is_active ? 'success' : 'secondary'; ?>">
-                                        <?php echo $u->is_active ? 'Active' : 'Inactive'; ?>
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <?php echo date('M d, Y', strtotime($u->created_at)); ?>
-                                </td>
-
-                                <!-- Edit / Delete: admin only -->
-                                <?php if ($role === 'admin') : ?>
-                                    <td>
-                                        <button class="btn btn-primary btn-sm">Edit</button>
-                                        <button class="btn btn-danger btn-sm">Delete</button>
-                                    </td>
-                                <?php endif; ?>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else : ?>
-                        <tr>
-                            <td colspan="<?php echo $role === 'admin' ? 6 : 5; ?>"
-                                class="text-center text-muted py-3">
-                                No users found.
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                    </tbody>
-
-                </table>
-            </div>
-        </div>
-
-    </div>
+    
 
 </div>
 

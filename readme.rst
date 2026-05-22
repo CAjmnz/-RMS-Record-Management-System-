@@ -20,3 +20,7 @@ Tech Stack:
 - PHP (CodeIgniter 3)
 - MySQL
 - Apache (XAMPP)
+PATCH NOTES 
+- added loggs
+- added clock 
+- added user profile

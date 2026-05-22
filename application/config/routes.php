@@ -16,7 +16,14 @@ $route['default_controller'] = 'home';
 $route['auth/login']        = 'auth/login/index';
 $route['auth/login/submit'] = 'auth/login/submit';
 $route['login']             = 'auth/login/index';
-
+/*
+|--------------------------------------------------------------------------
+| Users Routes
+|--------------------------------------------------------------------------
+*/
+$route['users'] = 'users/index';
+$route['users/create'] = 'users/create';
+$route['users/store'] = 'users/store';
 /*
 |--------------------------------------------------------------------------
 | Logout Route

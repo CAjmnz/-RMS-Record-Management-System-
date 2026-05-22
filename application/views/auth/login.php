@@ -8,7 +8,7 @@
           href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <style>
         body {
-            background-color: #f0f2f5;
+            background-color:rgba(219, 241, 226, 0.9);
         }
         .login-wrapper {
             min-height: 100vh;
@@ -20,10 +20,10 @@
             width: 100%;
             max-width: 420px;
             border-radius: 8px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            box-shadow: 0 4px 24px rgb(16, 253, 8);
         }
         .login-card .card-header {
-            background: #343a40;
+            background:rgb(26, 197, 10);
             color: #fff;
             text-align: center;
             font-size: 1.25rem;
@@ -38,7 +38,7 @@
 <div class="login-wrapper">
     <div class="card login-card">
         <div class="card-header">
-            <?php echo isset($site_name) ? htmlspecialchars($site_name) : 'RMS'; ?> &mdash; Login
+            <?php echo isset($site_name) ? htmlspecialchars($site_name) : 'RMS'; ?> &mdash; RECORD MANAGEMENT SYSTEM
         </div>
         <div class="card-body p-4">
 

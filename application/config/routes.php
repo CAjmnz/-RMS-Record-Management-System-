@@ -45,9 +45,15 @@ $route['dashboard'] = 'dashboard/index';
 | Profile Route
 |--------------------------------------------------------------------------
 */
-$route['profile'] = 'profile/index';
-$route['profile/edit'] = 'profile/edit';
-$route['profile/update'] = 'profile/update';
+$route['profile']       = 'profile/index';
+$route['profile/edit']  = 'profile/edit';
+$route['profile/update']= 'profile/update';
+/*
+|--------------------------------------------------------------------------
+| Employees Route
+|--------------------------------------------------------------------------
+*/
+$route['employees'] = 'employees/index';
 /*
 |--------------------------------------------------------------------------
 | Reserved Routes

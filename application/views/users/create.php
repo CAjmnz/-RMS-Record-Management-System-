@@ -25,6 +25,8 @@
         <input type="text" name="firstname" class="form-control mb-2" placeholder="Firstname">
 
         <input type="text" name="lastname" class="form-control mb-2" placeholder="Lastname">
+        
+        <input type="text" name="employee_id" class="form-control mb-2" placeholder="Employee_id">
 
         <input type="date" name="birthday" class="form-control mb-2">
 

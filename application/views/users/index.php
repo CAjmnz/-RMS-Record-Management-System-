@@ -74,6 +74,8 @@
                     <th>Contact No</th>
                     <th>Role</th>
                     <th>Status</th>
+                    <th>Job Title</th>
+                    <th>Department</th>
                     <?php if ($role === 'admin') : ?>
                         <th width="180">Actions</th>
                     <?php endif; ?>
@@ -107,13 +109,20 @@
                                     <?php echo $user->is_active ? 'Active' : 'Inactive'; ?>
                                 </span>
                             </td>
+                            <td><?php echo htmlspecialchars($user->job_title); ?></td>
 
+                            <td>
+                             <span class="badge badge-info">
+                            <?php echo htmlspecialchars($user->department); ?>
+                            </span>
+                             </td>
                             <?php if ($role === 'admin') : ?>
                                 <td>
                                     <button class="btn btn-primary btn-sm">Edit</button>
                                     <button class="btn btn-danger btn-sm">Delete</button>
                                 </td>
                             <?php endif; ?>
+
                         </tr>
                     <?php endforeach; ?>
                 <?php else : ?>
@@ -170,7 +179,12 @@
                                    class="form-control" required>
                         </div>
                     </div>
-
+                    <div class="col-md-6 mb-3">
+                           <label>Employee ID</label>
+                           <input type="text"name="employee_id"
+                                  class="form-control"required>
+                    </div>  
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label>Birthday</label>
@@ -224,8 +238,30 @@
                                 <option value="0">Inactive</option>
                             </select>
                         </div>
+                        
                     </div>
+                    <div class="row">
+                    <div class="col-md-6 mb-3">
+    <label>Job Title</label>
+    <input type="text"
+           name="job_title"
+           class="form-control"
+           placeholder="System Programmer, Analyst, etc."
+           required>
+</div>
 
+<div class="col-md-6 mb-3">
+    <label>Department</label>
+    <select name="department" class="form-control" required>
+        <option value="">Select Department</option>
+        <option value="IAD">IAD</option>
+        <option value="Accounting">Accounting</option>
+        <option value="HRD">HRD</option>
+        <option value="IT">IT</option>
+        <option value="Admin">Admin</option>
+    </select>
+</div>
+ 
                 </div>
 
                 <div class="modal-footer">
@@ -338,4 +374,5 @@ $(document).ready(function () {
 </script>
 
 </body>
+<?php $this->load->view('templates/footer'); ?>
 </html>

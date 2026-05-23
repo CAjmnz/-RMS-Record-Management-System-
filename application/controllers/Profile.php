@@ -24,7 +24,7 @@ class Profile extends RMS_Controller
     }
 
     /**
-     * EDIT OWN PROFILE PAGE
+     * EDIT PROFILE PAGE
      */
     public function edit()
     {
@@ -37,16 +37,17 @@ class Profile extends RMS_Controller
     }
 
     /**
-     * UPDATE PROFILE (POST)
+     * UPDATE PROFILE
      */
     public function update()
     {
         $user_id = $this->session->userdata('user_id');
 
-        $this->form_validation->set_rules('nickname', 'Nickname', 'trim|max_length[50]');
-        $this->form_validation->set_rules('address', 'Address', 'trim|required|max_length[255]');
-        $this->form_validation->set_rules('contactno', 'Contact No', 'trim|required|max_length[20]');
-        $this->form_validation->set_rules('password', 'Password', 'trim|min_length[6]');
+        $this->form_validation->set_rules('nickname',  'Nickname',  'trim|max_length[50]');
+        $this->form_validation->set_rules('address',   'Address',   'trim|required');
+        $this->form_validation->set_rules('contactno', 'Contact',   'trim|required|max_length[20]');
+        $this->form_validation->set_rules('password',  'Password',  'trim|min_length[6]');
+        $this->form_validation->set_rules('employee_id', 'Employee ID', 'trim|max_length[50]');
 
         if ($this->form_validation->run() == FALSE) {
             $this->session->set_flashdata('error', validation_errors());
@@ -58,10 +59,10 @@ class Profile extends RMS_Controller
             'nickname'  => $this->input->post('nickname', TRUE),
             'address'   => $this->input->post('address', TRUE),
             'contactno' => $this->input->post('contactno', TRUE),
-            'updated_at' => date('Y-m-d H:i:s')
+            'updated_at'=> date('Y-m-d H:i:s')
         ];
 
-        // update password only if filled
+        // password optional
         if (!empty($this->input->post('password'))) {
             $data['password'] = password_hash(
                 $this->input->post('password'),

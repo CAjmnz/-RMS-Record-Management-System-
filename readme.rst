@@ -1,26 +1,27 @@
-RMS - Record Management System
-==============================
+# 📌 Record Management System (RMS)
 
-Project Overview:
-Built using CodeIgniter 3 for managing records and user profiles.
+A **CodeIgniter 3-based Record Management System** with full CRUD functionality for user management, built with a clean UI and AJAX-powered interactions.
 
-Recent Updates:
-- Separated navbar into reusable component
-- Added Profile module (view, edit, display)
-- Improved dashboard UI structure
-- Cleaned routing and user management flow
+---
 
-Features:
-- User authentication
-- Role-based access control
-- Profile management
-- Dashboard analytics
+## 🚀 Project Overview
 
-Tech Stack:
-- PHP (CodeIgniter 3)
-- MySQL
-- Apache (XAMPP)
-PATCH NOTES 
-- added loggs
-- added clock 
-- added user profile
+This system allows administrators to:
+
+- Create users
+- View user list
+- Edit user information
+- Delete users
+- Manage user roles and status
+- Track basic user details
+
+Built using:
+- CodeIgniter 3 (PHP MVC Framework)
+- MySQL Database
+- jQuery AJAX
+- Bootstrap UI components
+- Custom RMS UI styling
+
+---
+
+## 📁 Project Structure

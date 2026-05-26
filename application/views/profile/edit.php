@@ -23,6 +23,17 @@
 
         <form method="POST" action="<?php echo base_url('profile/update'); ?>">
 
+        <div class="form-group">
+                <label>Firstname</label>
+                <input type="text" name="firstname" class="form-control"
+                       value="<?php echo $user->firstname; ?>">
+            </div>
+            <div class="form-group">
+                <label>Lastname</label>
+                <input type="text" name="lastname" class="form-control"
+                       value="<?php echo $user->lastname; ?>">
+            </div>
+
             <div class="form-group">
                 <label>Nickname</label>
                 <input type="text" name="nickname" class="form-control"
@@ -46,6 +57,7 @@
                 <input type="text" name="contactno" class="form-control"
                        value="<?php echo $user->contactno; ?>" required>
             </div>
+            
 
             <div class="form-group">
                 <label>New Password (optional)</label>

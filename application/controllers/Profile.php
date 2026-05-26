@@ -43,6 +43,8 @@ class Profile extends RMS_Controller
     {
         $user_id = $this->session->userdata('user_id');
 
+        $this->form_validation->set_rules('firstname',  'Firstname',  'trim|max_length[50]');
+        $this->form_validation->set_rules('Lastname',  'Lastname',  'trim|max_length[50]');
         $this->form_validation->set_rules('nickname',  'Nickname',  'trim|max_length[50]');
         $this->form_validation->set_rules('address',   'Address',   'trim|required');
         $this->form_validation->set_rules('contactno', 'Contact',   'trim|required|max_length[20]');

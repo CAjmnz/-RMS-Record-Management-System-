@@ -1,378 +1,274 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($title); ?></title>
+<?php $this->load->view('templates/head'); ?>
+<?php $this->load->view('templates/sidebar'); ?>
+<?php $this->load->view('templates/topbar'); ?>
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+<div id="main-content">
 
-    <style>
-        body { background-color: #f0f2f5; }
+    <div class="section-title">User Management</div>
 
-        .navbar { background-color: rgba(9, 151, 9, 0.89); }
+    <div class="card-rms">
 
-        .card-custom {
-            border-radius: 10px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-        }
+        <!-- TOOLBAR -->
+        <div class="table-toolbar">
+            <input type="text"
+                   id="userSearch"
+                   class="table-search"
+                   placeholder="Search users...">
 
-        .modal-error { font-size: 14px; }
-
-        .flash-msg { transition: all 0.3s ease; }
-
-        .nav-link-active {
-            background-color: rgba(255,255,255,0.2) !important;
-            border-radius: 4px;
-        }
-    </style>
-</head>
-<body>
-
-<!-- NAVBAR -->
-<?php $this->load->view('templates/navbar'); ?>
-
-<div class="container mt-5">
-
-    <!-- Flash -->
-    <?php if ($this->session->flashdata('success')) : ?>
-        <div class="alert alert-success flash-msg">
-            <?php echo $this->session->flashdata('success'); ?>
-        </div>
-    <?php endif; ?>
-
-    <div class="card card-custom">
-
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Users Table</h4>
-
-            <!-- Create button: admin only -->
             <?php if ($role === 'admin') : ?>
-                <button class="btn btn-success btn-sm"
+                <button class="btn btn-sm"
                         data-toggle="modal"
-                        data-target="#createUserModal">
+                        data-target="#createUserModal"
+                        style="background:#16c784;color:#fff;">
                     + Create User
                 </button>
-            <?php else : ?>
-                <!-- Non-admin sees a read-only label instead -->
-                <span class="badge badge-secondary px-3 py-2">
-                    Read-only access
-                </span>
             <?php endif; ?>
         </div>
 
-        <div class="card-body table-responsive">
-
-            <table class="table table-bordered table-hover">
-                <thead class="thead-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>LastName</th>
-                    <th>FirstName</th>
-                    <th>Email</th>
-                    <th>Contact No</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Job Title</th>
-                    <th>Department</th>
-                    <?php if ($role === 'admin') : ?>
-                        <th width="180">Actions</th>
-                    <?php endif; ?>
-                </tr>
+        <!-- TABLE -->
+        <div class="table-responsive">
+            <table class="table-rms" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Contact</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
                 </thead>
 
-                <tbody>
-                <?php if (!empty($users)) : ?>
-                    <?php foreach ($users as $user) : ?>
-                        <tr>
-                            <td><?php echo (int)$user->id; ?></td>
-                            <td>
-                                <?php echo htmlspecialchars($user->lastname); ?>
-                            </td>
-                            <td>
-                                <?php echo htmlspecialchars($user->firstname ); ?>
-                            </td>
-
-                            <td><?php echo htmlspecialchars($user->email); ?></td>
-
-                            <td><?php echo htmlspecialchars($user->contactno); ?></td>
-
-                            <td>
-                                <span class="badge badge-<?php echo $user->role === 'admin' ? 'danger' : 'primary'; ?>">
-                                    <?php echo ucfirst($user->role); ?>
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="badge badge-<?php echo $user->is_active ? 'success' : 'secondary'; ?>">
-                                    <?php echo $user->is_active ? 'Active' : 'Inactive'; ?>
-                                </span>
-                            </td>
-                            <td><?php echo htmlspecialchars($user->job_title); ?></td>
-
-                            <td>
-                             <span class="badge badge-info">
-                            <?php echo htmlspecialchars($user->department); ?>
-                            </span>
-                             </td>
-                            <?php if ($role === 'admin') : ?>
-                                <td>
-                                    <button class="btn btn-primary btn-sm">Edit</button>
-                                    <button class="btn btn-danger btn-sm">Delete</button>
-                                </td>
-                            <?php endif; ?>
-
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else : ?>
+                <tbody id="usersTableBody">
+                <?php foreach ($users as $i => $user): ?>
                     <tr>
-                        <td colspan="<?php echo $role === 'admin' ? 7 : 6; ?>"
-                            class="text-center text-muted py-3">
-                            No users found.
+                        <td><?= $i + 1 ?></td>
+
+                        <td>
+                            <?= $user->firstname . ' ' . $user->lastname ?><br>
+                            <small><?= $user->email ?></small>
+                        </td>
+
+                        <td><?= $user->role ?></td>
+
+                        <td><?= $user->is_active ? 'Active' : 'Inactive' ?></td>
+
+                        <td><?= $user->contactno ?></td>
+
+                        <td><?= $user->created_at ?></td>
+
+                        <td>
+                            <button class="btn btn-primary btn-sm"
+                                    onclick="editUser(<?= $user->id ?>)">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="deleteUser(<?= $user->id ?>)">
+                                Delete
+                            </button>
                         </td>
                     </tr>
-                <?php endif; ?>
+                <?php endforeach; ?>
                 </tbody>
 
             </table>
-
         </div>
-    </div>
 
+    </div>
 </div>
 
-
-<!-- CREATE USER MODAL — rendered only for admin -->
-<?php if ($role === 'admin') : ?>
-
-<div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+<!-- ================= CREATE MODAL ================= -->
+<div class="modal fade" id="createUserModal">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
-            <form id="createUserForm">
+            <div class="modal-header">
+                <h5>Create User</h5>
+                <button class="close" data-dismiss="modal">&times;</button>
+            </div>
 
-                <div class="modal-header">
-                    <h5 class="modal-title">Create User</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
+            <div class="modal-body">
+
+                <div class="form-row">
+                    <input class="form-control mb-2 col-6" id="firstname" placeholder="First Name">
+                    <input class="form-control mb-2 col-6" id="lastname" placeholder="Last Name">
                 </div>
 
-                <div class="modal-body">
+                <input class="form-control mb-2" id="employee_id" placeholder="Employee ID">
 
-                    <!-- Errors appear here ONLY -->
-                    <div id="modalErrorBox"
-                         class="alert alert-danger modal-error d-none">
-                        <ul id="modalErrorList" class="mb-0 pl-3"></ul>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label>First Name</label>
-                            <input type="text" name="firstname"
-                                   class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label>Last Name</label>
-                            <input type="text" name="lastname"
-                                   class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                           <label>Employee ID</label>
-                           <input type="text"name="employee_id"
-                                  class="form-control"required>
-                    </div>  
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label>Birthday</label>
-                            <input type="date" name="birthday"
-                                   class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label>Contact Number</label>
-                            <input type="text" name="contactno"
-                                   class="form-control" maxlength="11" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label>Address</label>
-                        <textarea name="address" class="form-control"
-                                  rows="2" required></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label>Email</label>
-                        <input type="email" name="email"
-                               class="form-control" required>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label>Password</label>
-                            <input type="password" name="password"
-                                   class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label>Confirm Password</label>
-                            <input type="password" name="confirm_password"
-                                   class="form-control" required>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label>Role</label>
-                            <select name="role" class="form-control">
-                                <option value="user">User</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label>Status</label>
-                            <select name="is_active" class="form-control">
-                                <option value="1">Active</option>
-                                <option value="0">Inactive</option>
-                            </select>
-                        </div>
-                        
-                    </div>
-                    <div class="row">
-                    <div class="col-md-6 mb-3">
-    <label>Job Title</label>
-    <input type="text"
-           name="job_title"
-           class="form-control"
-           placeholder="System Programmer, Analyst, etc."
-           required>
-</div>
-
-<div class="col-md-6 mb-3">
-    <label>Department</label>
-    <select name="department" class="form-control" required>
-        <option value="">Select Department</option>
-        <option value="IAD">IAD</option>
-        <option value="Accounting">Accounting</option>
-        <option value="HRD">HRD</option>
-        <option value="IT">IT</option>
-        <option value="Admin">Admin</option>
-    </select>
-</div>
- 
+                <div class="form-row">
+                    <input class="form-control mb-2 col-6" type="date" id="birthday">
+                    <input class="form-control mb-2 col-6" id="contactno" placeholder="Contact Number">
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                            data-dismiss="modal">Close</button>
-                    <button type="submit" id="createUserSubmit"
-                            class="btn btn-success">Create User</button>
+                <input class="form-control mb-2" id="address" placeholder="Address">
+                <input class="form-control mb-2" id="email" placeholder="Email">
+
+                <div class="form-row">
+                    <input class="form-control mb-2 col-6" type="password" id="password" placeholder="Password">
+                    <input class="form-control mb-2 col-6" type="password" id="confirm_password" placeholder="Confirm Password">
                 </div>
 
-            </form>
+                <div class="form-row">
+                    <select class="form-control mb-2 col-6" id="role">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+
+                    <select class="form-control mb-2 col-6" id="is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+
+                <input class="form-control mb-2" id="job_title" placeholder="Job Title">
+                <input class="form-control mb-2" id="department" placeholder="Department">
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button class="btn btn-success" onclick="createUser()">Create User</button>
+            </div>
 
         </div>
     </div>
 </div>
 
-<?php endif; ?>
+<!-- ================= EDIT MODAL ================= -->
+<div class="modal fade" id="editUserModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
 
+            <div class="modal-header">
+                <h5>Edit User</h5>
+                <button class="close" data-dismiss="modal">&times;</button>
+            </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+            <div class="modal-body">
+
+                <input type="hidden" id="edit_id">
+
+                <div class="form-row">
+                    <input class="form-control mb-2 col-6" id="edit_firstname" placeholder="First Name">
+                    <input class="form-control mb-2 col-6" id="edit_lastname" placeholder="Last Name">
+                </div>
+
+                <input class="form-control mb-2" id="edit_employee_id" placeholder="Employee ID">
+
+                <div class="form-row">
+                    <input class="form-control mb-2 col-6" type="date" id="edit_birthday">
+                    <input class="form-control mb-2 col-6" id="edit_contactno" placeholder="Contact Number">
+                </div>
+
+                <input class="form-control mb-2" id="edit_address" placeholder="Address">
+                <input class="form-control mb-2" id="edit_email" placeholder="Email">
+
+                <div class="form-row">
+                    <select class="form-control mb-2 col-6" id="edit_role">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+
+                    <select class="form-control mb-2 col-6" id="edit_is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+
+                <input class="form-control mb-2" id="edit_job_title" placeholder="Job Title">
+                <input class="form-control mb-2" id="edit_department" placeholder="Department">
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button class="btn btn-primary" onclick="updateUser()">Update User</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<?php $this->load->view('templates/footer'); ?>
 
 <script>
-$(document).ready(function () {
 
-    // Flash messages auto-hide
-    setTimeout(function () {
-        $('.flash-msg').fadeOut(500);
-    }, 3000);
+function editUser(id)
+{
+    $.get("<?= base_url('users/get/') ?>" + id, function(res){
 
-    <?php if ($role === 'admin') : ?>
+        if (!res.success) return alert("User not found");
 
-    var STORE_URL  = '<?php echo base_url("users/store"); ?>';
-    var $modal     = $('#createUserModal');
-    var $form      = $('#createUserForm');
-    var $errorBox  = $('#modalErrorBox');
-    var $errorList = $('#modalErrorList');
-    var $submitBtn = $('#createUserSubmit');
-    var errorTimer = null;
+        let u = res.data;
 
-    function showErrors(errors) {
-        $errorList.empty();
+        $('#edit_id').val(u.id);
+        $('#edit_firstname').val(u.firstname);
+        $('#edit_lastname').val(u.lastname);
+        $('#edit_employee_id').val(u.employee_id);
+        $('#edit_birthday').val(u.birthday);
+        $('#edit_contactno').val(u.contactno);
+        $('#edit_address').val(u.address);
+        $('#edit_email').val(u.email);
+        $('#edit_role').val(u.role);
+        $('#edit_is_active').val(u.is_active);
+        $('#edit_job_title').val(u.job_title);
+        $('#edit_department').val(u.department);
 
-        if (typeof errors === 'object' && errors !== null) {
-            $.each(errors, function (field, msg) {
-                $errorList.append($('<li>').text(msg));
-            });
-        } else {
-            $errorList.append($('<li>').text(errors));
-        }
+        $('#editUserModal').modal('show');
 
-        $errorBox.removeClass('d-none');
+    }, 'json');
+}
 
-        clearTimeout(errorTimer);
-        errorTimer = setTimeout(function () {
-            $errorBox.fadeOut(500, function () {
-                $(this).addClass('d-none').show();
-                $errorList.empty();
-            });
-        }, 4000);
-    }
+function updateUser()
+{
+    $.post("<?= base_url('users/update') ?>", {
+        id: $('#edit_id').val(),
+        firstname: $('#edit_firstname').val(),
+        lastname: $('#edit_lastname').val(),
+        employee_id: $('#edit_employee_id').val(),
+        birthday: $('#edit_birthday').val(),
+        contactno: $('#edit_contactno').val(),
+        address: $('#edit_address').val(),
+        email: $('#edit_email').val(),
+        role: $('#edit_role').val(),
+        is_active: $('#edit_is_active').val(),
+        job_title: $('#edit_job_title').val(),
+        department: $('#edit_department').val()
+    }, function(){
+        location.reload();
+    }, 'json');
+}
 
-    function clearErrors() {
-        clearTimeout(errorTimer);
-        $errorBox.addClass('d-none').show();
-        $errorList.empty();
-    }
+function createUser()
+{
+    $.post("<?= base_url('users/store') ?>", {
+        firstname: $('#firstname').val(),
+        lastname: $('#lastname').val(),
+        employee_id: $('#employee_id').val(),
+        birthday: $('#birthday').val(),
+        contactno: $('#contactno').val(),
+        address: $('#address').val(),
+        email: $('#email').val(),
+        password: $('#password').val(),
+        role: $('#role').val(),
+        is_active: $('#is_active').val(),
+        job_title: $('#job_title').val(),
+        department: $('#department').val()
+    }, function(){
+        location.reload();
+    }, 'json');
+}
 
-    $modal.on('show.bs.modal', function () {
-        $form[0].reset();
-        clearErrors();
+function deleteUser(id)
+{
+    if (!confirm('Delete user?')) return;
+
+    $.post("<?= base_url('users/delete/') ?>" + id, function(){
+        location.reload();
     });
+}
 
-    $form.on('submit', function (e) {
-        e.preventDefault();
-
-        clearErrors();
-        $submitBtn.prop('disabled', true).text('Saving…');
-
-        $.ajax({
-            url      : STORE_URL,
-            type     : 'POST',
-            data     : $form.serialize(),
-            dataType : 'json',
-
-            success: function (res) {
-                if (res.status === 'success') {
-                    $modal.modal('hide');
-                    location.reload();
-                }
-            },
-
-            error: function (xhr) {
-                var res = null;
-                try { res = JSON.parse(xhr.responseText); } catch (e) {}
-
-                if (res && res.errors) {
-                    showErrors(res.errors);
-                } else {
-                    showErrors({ server: 'Server error. Please try again.' });
-                }
-
-                $submitBtn.prop('disabled', false).text('Create User');
-            }
-        });
-    });
-
-    <?php endif; ?>
-
-});
 </script>
-
-</body>
-<?php $this->load->view('templates/footer'); ?>
-</html>

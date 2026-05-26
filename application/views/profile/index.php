@@ -1,138 +1,167 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title><?php echo $title; ?></title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+<?php $this->load->view('templates/head', isset($this->data) ? $this->data : []); ?>
+<?php $this->load->view('templates/sidebar', isset($this->data) ? $this->data : []); ?>
+<?php $this->load->view('templates/topbar', isset($this->data) ? $this->data : []); ?>
 
-    <style>
-        body { background: #f0f2f5; }
-        .profile-card {
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        .avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(9,151,9,0.15);
-            color: rgba(9,151,9,0.89);
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size: 28px;
-            font-weight: bold;
-        }
-    </style>
-</head>
+<div id="main-content">
 
-<body>
-
-<?php $this->load->view('templates/navbar'); ?>
-
-<div class="container mt-5">
-
-    <?php if ($this->session->flashdata('success')): ?>
-        <div class="alert alert-success">
-            <?php echo $this->session->flashdata('success'); ?>
+    <?php if (!empty($flash_error)) : ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($flash_error); ?>
+            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
         </div>
     <?php endif; ?>
 
+    <?php if (!empty($flash_success)) : ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($flash_success); ?>
+            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+        </div>
+    <?php endif; ?>
+
+    <div class="section-title">My Profile</div>
+
     <div class="row">
 
-        <!-- LEFT CARD -->
-        <div class="col-md-4">
-            <div class="card profile-card p-3 text- left">
+        <!-- Profile Card -->
+        <div class="col-lg-4">
+            <div class="profile-card">
+                <div class="profile-banner"></div>
+                <div class="profile-body">
 
-                <div class="avatar mx-auto mb-3">
-                    <?php echo strtoupper(substr($user->firstname,0,1).substr($user->lastname,0,1)); ?>
+                    <?php
+                        $initials = '';
+                        if (!empty($user->firstname) && !empty($user->lastname)) {
+                            $initials = strtoupper(substr($user->firstname, 0, 1) . substr($user->lastname, 0, 1));
+                        }
+                    ?>
+
+                    <div class="profile-avatar-wrap">
+                        <div class="profile-avatar">
+                            <?php echo $initials ?: 'U'; ?>
+                        </div>
+                    </div>
+
+                    <p class="profile-name">
+                        <?php echo htmlspecialchars($user->firstname ?? ''); ?>
+                        <?php echo htmlspecialchars($user->lastname ?? ''); ?>
+                    </p>
+
+                    <p class="profile-email">
+                        <?php echo htmlspecialchars($user->email ?? '—'); ?>
+                    </p>
+
+                    <div class="mt-3">
+                        <?php if (!empty($user->role) && $user->role === 'admin') : ?>
+                            <span class="badge-role-admin">
+                                <i class="fas fa-shield-alt mr-1"></i>Admin
+                            </span>
+                        <?php else : ?>
+                            <span class="badge-role-user">
+                                <i class="fas fa-user mr-1"></i>User
+                            </span>
+                        <?php endif; ?>
+
+                        <?php if (!empty($user->is_active)) : ?>
+                            <span class="badge-active ml-2">
+                                <i class="fas fa-circle mr-1" style="font-size:8px;"></i>Active
+                            </span>
+                        <?php else : ?>
+                            <span class="badge-inactive ml-2">Inactive</span>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="<?php echo base_url('profile/edit'); ?>"
+                           class="btn btn-sm btn-block"
+                           style="background:#1a1a2e;color:#fff;border-radius:6px;font-size:12px;font-weight:600;">
+                            <i class="fas fa-pen mr-1"></i> Edit Profile
+                        </a>
+                    </div>
+
                 </div>
-                <span class="badge badge-<?php echo $user->role == 'admin' ? 'danger' : 'primary'; ?>">
-                    <?php echo ucfirst($user->role); ?>
-                </span>
-                <h5><?php echo $user->firstname . ' ' . $user->lastname; ?></h5>
-                <p><b></b> <?php echo $user->employee_id ?? 'N/A'; ?></p>
-                <p class="text-muted"><?php echo $user->email; ?></p>
-                <P><b></b><?php echo $user->age ?? 'N/A'; ?></p>
-                <hr>
-                <p><b>Department:</b> <?php echo $user->department ?? 'N/A'; ?></p>
-                <p><b>Job Title:</b> <?php echo $user->job_title ?? 'N/A'; ?></p>
-
-                <a href="<?php echo base_url('profile/edit'); ?>" class="btn btn-primary btn-block">
-                    Edit Profile
-                </a>
-
             </div>
         </div>
 
-        <!-- RIGHT PANEL -->
-        <div class="col-md-8">
+        <!-- Profile Details -->
+        <div class="col-lg-8">
+            <div class="card-rms mb-4">
+                <div class="card-header-rms">
+                    <div class="header-dot"></div>
+                    Account Information
+                </div>
 
-            <div class="card profile-card p-4">
+                <div style="padding: 20px 24px;">
+                    <div class="row">
 
-                <h4>Employee Information</h4>
-                <hr>
+                        <div class="col-md-6 mb-4">
+                            <div class="profile-field-label">First Name</div>
+                            <div class="profile-field-value">
+                                <?php echo htmlspecialchars($user->firstname ?? '—'); ?>
+                            </div>
+                        </div>
 
-                <table class="table table-bordered">
-                <tr>
-    <th>Employee ID</th>
-    <td><?php echo $user->employee_id ?? 'N/A'; ?></td>
-</tr>
+                        <div class="col-md-6 mb-4">
+                            <div class="profile-field-label">Last Name</div>
+                            <div class="profile-field-value">
+                                <?php echo htmlspecialchars($user->lastname ?? '—'); ?>
+                            </div>
+                        </div>
 
-                    <tr>
-                        <th>Firstname</th>
-                        <td><?php echo $user->firstname; ?></td>
-                    </tr>
+                        <div class="col-md-6 mb-4">
+                            <div class="profile-field-label">Email Address</div>
+                            <div class="profile-field-value">
+                                <?php echo htmlspecialchars($user->email ?? '—'); ?>
+                            </div>
+                        </div>
 
-                    <tr>
-                        <th>Lastname</th>
-                        <td><?php echo $user->lastname; ?></td>
-                    </tr>
+                        <div class="col-md-6 mb-4">
+                            <div class="profile-field-label">Contact Number</div>
+                            <div class="profile-field-value">
+                                <?php echo htmlspecialchars($user->contactno ?? '—'); ?>
+                            </div>
+                        </div>
 
-                    <tr>
-                        <th>Nickname</th>
-                        <td><?php echo $user->nickname; ?></td>
-                    </tr>
+                        <div class="col-md-6 mb-4">
+                            <div class="profile-field-label">Birthday</div>
+                            <div class="profile-field-value">
+                                <?php
+                                $bday = $user->birthday ?? null;
+                                echo ($bday && $bday !== '0000-00-00')
+                                    ? htmlspecialchars(date('F d, Y', strtotime($bday)))
+                                    : '—';
+                                ?>
+                            </div>
+                        </div>
 
-                    <tr>
-                        <th>Birthday</th>
-                        <td><?php echo $user->birthday; ?></td>
-                    </tr>
+                        <div class="col-md-6 mb-4">
+                            <div class="profile-field-label">Address</div>
+                            <div class="profile-field-value">
+                                <?php echo htmlspecialchars($user->address ?? '—'); ?>
+                            </div>
+                        </div>
 
-                    <tr>
-                        <th>Address</th>
-                        <td><?php echo $user->address; ?></td>
-                    </tr>
+                        <div class="col-md-6 mb-4">
+                            <div class="profile-field-label">Member Since</div>
+                            <div class="profile-field-value">
+                                <?php echo !empty($user->created_at) ? date('F d, Y', strtotime($user->created_at)) : '—'; ?>
+                            </div>
+                        </div>
 
-                    <tr>
-                        <th>Contact</th>
-                        <td><?php echo $user->contactno; ?></td>
-                    </tr>
+                        <div class="col-md-6 mb-4">
+                            <div class="profile-field-label">Last Updated</div>
+                            <div class="profile-field-value">
+                                <?php echo !empty($user->updated_at) ? date('F d, Y', strtotime($user->updated_at)) : '—'; ?>
+                            </div>
+                        </div>
 
-                    <tr>
-                        <th>Email</th>
-                        <td><?php echo $user->email; ?></td>
-                    </tr>
-
-                    <tr>
-                        <th>Department</th>
-                        <td><?php echo $user->department ?? 'N/A'; ?></td>
-                    </tr>
-
-                    <tr>
-                        <th>Job Title</th>
-                        <td><?php echo $user->job_title ?? 'N/A'; ?></td>
-                    </tr>
-
-                </table>
+                    </div>
+                </div>
 
             </div>
-
         </div>
 
     </div>
 
 </div>
 
-</body>
 <?php $this->load->view('templates/footer'); ?>
-</html>

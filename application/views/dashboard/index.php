@@ -1,196 +1,147 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($title); ?></title>
+<?php $this->load->view('templates/head'); ?>
+<?php $this->load->view('templates/sidebar'); ?>
+<?php $this->load->view('templates/topbar'); ?>
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+<div id="main-content">
 
-    <style>
-        body { background-color: #f0f2f5; }
+    <?php if (!empty($flash_error)) : ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($flash_error); ?>
+            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+        </div>
+    <?php endif; ?>
 
-        .navbar-rms {
-            background-color: rgba(9, 151, 9, 0.89) !important;
-        }
+    <?php if (!empty($flash_success)) : ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($flash_success); ?>
+            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+        </div>
+    <?php endif; ?>
 
-        .card-custom {
-            border-radius: 10px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-        }
-
-        .welcome-card {
-            border-left: 5px solid rgba(9, 151, 9, 0.89);
-        }
-
-        .welcome-card .avatar {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background-color: rgba(9, 151, 9, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: rgba(9, 151, 9, 0.89);
-        }
-
-        .stat-card {
-            border-radius: 10px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            padding: 20px 18px;
-            color: #fff;
-            position: relative;
-        }
-
-        .stat-number {
-            font-size: 2.4rem;
-            font-weight: 700;
-        }
-
-        .stat-label {
-            font-size: 0.82rem;
-            opacity: 0.9;
-            text-transform: uppercase;
-        }
-
-        .bg-total    { background-color: #2d6a4f; }
-        .bg-active   { background-color: #007bff; }
-        .bg-inactive { background-color: #6c757d; }
-        .bg-admins   { background-color: #dc3545; }
-
-        #dashboardClock {
-            font-weight: 700;
-            letter-spacing: 2px;
-        }
-    </style>
-</head>
-
-<body>
-
-<!-- NAVBAR -->
-<?php $this->load->view('templates/navbar'); ?>
-
-<div class="container mt-5">
-
-    <!-- PROFILE CARD -->
-    <div class="card card-custom welcome-card mb-4">
-        <div class="card-body d-flex align-items-center">
-
-            <div class="avatar mr-3">
-                <?php
-                    echo strtoupper(
-                        substr($firstname, 0, 1) .
-                        substr($lastname,  0, 1)
-                    );
-                ?>
-            </div>
-
-            <div>
-                <h4 class="mb-1">
-                    Welcome back, <?php echo htmlspecialchars($firstname . ' ' . $lastname); ?>
-                </h4>
-
-                <p class="text-muted mb-1">
-                    <?php echo htmlspecialchars($email); ?>
-                </p>
-
-                <span class="badge badge-<?php echo $role === 'admin' ? 'danger' : 'primary'; ?>">
-                    <?php echo ucfirst($role); ?>
-                </span>
-            </div>
-
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+        <div class="wb-text">
+            <h2>
+                Welcome back,
+                <?php echo htmlspecialchars($firstname . ' ' . $lastname); ?>!
+            </h2>
+            <p><?php echo htmlspecialchars($email); ?></p>
+            <span class="wb-badge"><?php echo ucfirst($role); ?></span>
+        </div>
+        <div class="wb-avatar">
+            <?php echo strtoupper(substr($firstname, 0, 1) . substr($lastname, 0, 1)); ?>
         </div>
     </div>
 
-    <!-- CLOCK -->
-    <div class="card card-custom p-4 mb-4 text-center">
-        <h6 class="text-muted">Current System Time</h6>
-        <h1 id="dashboardClock"></h1>
-    </div>
+    <!-- Stat Cards -->
+    <div class="section-title">System Overview MY bor</div>
 
-    <!-- SYSTEM OVERVIEW -->
-    <h5 class="font-weight-bold mb-3">System Overview</h5>
+    <?php
+        // SAFE FALLBACK (fix CI_Loader undefined $this->data issue)
+        $stats = isset($stats) ? $stats : (object)[
+            'total' => 0,
+            'active' => 0,
+            'inactive' => 0,
+            'admins' => 0
+        ];
+    ?>
 
     <div class="row">
 
-        <div class="col-md-3 mb-3">
-            <div class="stat-card bg-total">
-                <div class="stat-number"><?php echo $stats->total; ?></div>
-                <div class="stat-label">Total Users</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card sc-total">
+                <div class="stat-info">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-number"><?php echo $stats->total; ?></div>
+                    <div class="stat-sub">All registered accounts</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-footer">
+                    <a href="<?php echo base_url('users'); ?>">View All &rarr;</a>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-3 mb-3">
-            <div class="stat-card bg-active">
-                <div class="stat-number"><?php echo $stats->active; ?></div>
-                <div class="stat-label">Active</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card sc-active">
+                <div class="stat-info">
+                    <div class="stat-label">Active Users</div>
+                    <div class="stat-number"><?php echo $stats->active; ?></div>
+                    <div class="stat-sub">Currently enabled</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                <div class="stat-footer">
+                    <a href="<?php echo base_url('users'); ?>">View All &rarr;</a>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-3 mb-3">
-            <div class="stat-card bg-inactive">
-                <div class="stat-number"><?php echo $stats->inactive; ?></div>
-                <div class="stat-label">Inactive</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card sc-inactive">
+                <div class="stat-info">
+                    <div class="stat-label">Inactive Users</div>
+                    <div class="stat-number"><?php echo $stats->inactive; ?></div>
+                    <div class="stat-sub">Currently disabled</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-user-slash"></i></div>
+                <div class="stat-footer">
+                    <a href="<?php echo base_url('users'); ?>">View All &rarr;</a>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-3 mb-3">
-            <div class="stat-card bg-admins">
-                <div class="stat-number"><?php echo $stats->admins; ?></div>
-                <div class="stat-label">Admins</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card sc-admins">
+                <div class="stat-info">
+                    <div class="stat-label">Admins</div>
+                    <div class="stat-number"><?php echo $stats->admins; ?></div>
+                    <div class="stat-sub">Administrator accounts</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
+                <div class="stat-footer">
+                    <a href="<?php echo base_url('users'); ?>">View All &rarr;</a>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <!-- RECENT ACTIVITY -->
-    <div class="card card-custom mt-4 p-3 mb-5">
+    <!-- Recent Activity -->
+    <div class="section-title mt-2">Recent Activity</div>
 
-        <h5>Recent Activity</h5>
-        <hr>
+    <div class="card-rms mb-4">
+        <div class="card-header-rms">
+            <div class="header-dot"></div>
+            Activity Log
+        </div>
 
-        <?php if ( ! empty($logs)) : ?>
-            <ul class="list-group">
+        <div>
+            <?php if (!empty($logs)) : ?>
                 <?php foreach ($logs as $log) : ?>
-                    <li class="list-group-item">
-                        <small class="text-muted">
+                    <div class="activity-item">
+                        <div class="activity-dot"></div>
+                        <div class="activity-content">
+                            <div class="activity-action">
+                                <?php echo htmlspecialchars($log->action); ?>
+                            </div>
+                            <div class="activity-desc">
+                                <?php echo htmlspecialchars($log->description); ?>
+                            </div>
+                        </div>
+                        <div class="activity-time">
                             <?php echo htmlspecialchars($log->created_at); ?>
-                        </small><br>
-                        <b><?php echo htmlspecialchars($log->action); ?></b> —
-                        <?php echo htmlspecialchars($log->description); ?>
-                    </li>
+                        </div>
+                    </div>
                 <?php endforeach; ?>
-            </ul>
-        <?php else : ?>
-            <p class="text-muted mb-0">No activity yet.</p>
-        <?php endif; ?>
-
+            <?php else : ?>
+                <div class="empty-state">
+                    <i class="fas fa-inbox" style="font-size:28px;margin-bottom:8px;display:block;"></i>
+                    No activity recorded yet.
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
 
 </div>
 
-<!-- FOOTER -->
 <?php $this->load->view('templates/footer'); ?>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<script>
-$(document).ready(function () {
-
-    function updateClock() {
-        var now = new Date();
-        document.getElementById('dashboardClock').innerText =
-            now.toLocaleTimeString();
-    }
-
-    updateClock();
-    setInterval(updateClock, 1000);
-
-});
-</script>
-
-</body>
-</html>

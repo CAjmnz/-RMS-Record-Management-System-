@@ -1,14 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once APPPATH . 'core/MY_Controller.php';
-
 class Login extends Guest_Controller {
 
     public function __construct()
     {
         parent::__construct();
+        $this->load->helper(['form', 'url']);
         $this->load->library('form_validation');
+        $this->load->model('auth/Auth_model', 'auth_model');
     }
 
     public function index()
@@ -19,38 +19,44 @@ class Login extends Guest_Controller {
 
     public function submit()
     {
-        $this->form_validation->set_rules('email', 'Email', 'required|trim|valid_email');
+        $this->form_validation->set_rules('email',    'Email',    'required|trim|valid_email');
         $this->form_validation->set_rules('password', 'Password', 'required');
 
-        if ($this->form_validation->run() === FALSE)
-        {
+        if ($this->form_validation->run() === FALSE) {
             $this->data['title'] = 'Login — RMS';
             $this->load->view('auth/login', $this->data);
             return;
         }
 
         $email    = $this->input->post('email', TRUE);
-        $password = $this->input->post('password', TRUE);
+        $password = $this->input->post('password', FALSE); // ← FALSE: never XSS-clean passwords
 
-        $this->load->model('auth/Auth_model');
-        $user = $this->Auth_model->get_by_email($email);
+        $user = $this->auth_model->get_by_email($email);
 
-        if ( ! $user || ! password_verify($password, $user->password))
-        {
+        if ( ! $user || ! password_verify($password, $user->password)) {
             $this->session->set_flashdata('error', 'Invalid email or password.');
             redirect('auth/login');
             return;
         }
 
-        $this->session->set_userdata([
+        $session_data = [
             'user_id'   => $user->id,
-            'email'     => $user->email,
             'firstname' => $user->firstname,
             'lastname'  => $user->lastname,
+            'email'     => $user->email,
+            'role'      => $user->role,
             'logged_in' => TRUE,
-        ]);
+        ];
+        $this->session->set_userdata($session_data);
 
         $this->session->set_flashdata('success', 'Welcome back, ' . $user->firstname . '!');
         redirect('dashboard');
+    }
+
+    public function logout()
+    {
+        $this->session->sess_destroy();
+        $this->session->set_flashdata('success', 'You have been logged out.');
+        redirect('auth/login');
     }
 }

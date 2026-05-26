@@ -22,8 +22,10 @@ $route['login']             = 'auth/login/index';
 |--------------------------------------------------------------------------
 */
 $route['users'] = 'users/index';
-$route['users/create'] = 'users/create';
 $route['users/store'] = 'users/store';
+$route['users/get/(:num)'] = 'users/get/$1';
+$route['users/update/(:num)'] = 'users/update/$1';
+$route['users/delete/(:num)'] = 'users/delete/$1';
 /*
 |--------------------------------------------------------------------------
 | Logout Route
@@ -31,7 +33,7 @@ $route['users/store'] = 'users/store';
 | This allows logged-in users to reach it without being redirected away.
 |--------------------------------------------------------------------------
 */
-$route['logout']            = 'auth/logout/index';
+$route['logout']  = 'auth/logout/index';
 
 /*
 |--------------------------------------------------------------------------

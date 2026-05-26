@@ -7,97 +7,71 @@ class Users extends RMS_Controller
     {
         parent::__construct();
         $this->load->model('User_model');
-        $this->load->model('Activity_log_model');
-        $this->load->library('form_validation');
     }
 
     public function index()
     {
-        $this->data['title'] = 'Users — RMS';
-        $this->data['role']  = $this->session->userdata('role');
-        $this->data['users'] = $this->User_model->get_all();
+        $data['users'] = $this->User_model->get_all();
+        $data['role']  = $this->session->userdata('role');
 
-        $this->load->view('users/index', $this->data);
+        $this->load->view('users/index', $data);
+    }
+
+    public function get($id)
+    {
+        $user = $this->User_model->get_by_id($id);
+
+        if (!$user) {
+            echo json_encode(['success' => false, 'message' => 'User not found']);
+            return;
+        }
+
+        echo json_encode(['success' => true, 'data' => $user]);
+    }
+
+    public function update()
+    {
+        $id = $this->input->post('id');
+
+        $data = [
+            'firstname' => $this->input->post('firstname'),
+            'lastname'  => $this->input->post('lastname'),
+            'email'     => $this->input->post('email'),
+            'role'      => $this->input->post('role'),
+            'is_active' => $this->input->post('is_active')
+        ];
+
+        $update = $this->User_model->update($id, $data);
+
+        echo json_encode(['success' => $update]);
+    }
+
+    public function delete($id)
+    {
+        $delete = $this->User_model->soft_delete($id);
+
+        echo json_encode(['success' => $delete]);
     }
 
     public function store()
     {
-        // Admin only
-        if ($this->session->userdata('role') !== 'admin') {
-            show_404();
-        }
-
-        // AJAX only
-        if ( ! $this->input->is_ajax_request()) {
-            show_404();
-        }
-
-        $this->form_validation->set_rules('firstname',        'First Name',       'trim|required|max_length[100]');
-        $this->form_validation->set_rules('lastname',         'Last Name',        'trim|required|max_length[100]');
-        $this->form_validation->set_rules('birthday',         'Birthday',         'trim|required');
-        $this->form_validation->set_rules('address',          'Address',          'trim|required|max_length[255]');
-        $this->form_validation->set_rules('contactno',        'Contact No',       'trim|required|max_length[20]');
-        $this->form_validation->set_rules('email',            'Email',            'trim|required|valid_email|max_length[150]|is_unique[users.email]');
-        $this->form_validation->set_rules('password',         'Password',         'trim|required|min_length[6]|max_length[72]');
-        $this->form_validation->set_rules('confirm_password', 'Confirm Password', 'trim|required|matches[password]');
-        $this->form_validation->set_rules('role',             'Role',             'trim|required|in_list[admin,user]');
-        $this->form_validation->set_rules('is_active',        'Status',           'trim|required|in_list[0,1]');
-        $this->form_validation->set_rules('employee_id',      'Employee ID',      'trim|required|max_length[50]');
-        $this->form_validation->set_rules('job_title',        'Job Title',        'trim|required|max_length[100]');
-        $this->form_validation->set_rules('department',       'Department',       'trim|required|max_length[100]');
-
-        if ($this->form_validation->run() == FALSE) {
-            return $this->output
-                ->set_content_type('application/json')
-                ->set_status_header(422)
-                ->set_output(json_encode([
-                    'status' => 'error',
-                    'errors' => $this->form_validation->error_array(),
-                ]));
-        }
-
         $data = [
-            'firstname'   => $this->input->post('firstname',   TRUE),
-            'lastname'    => $this->input->post('lastname',    TRUE),
-            'birthday'    => $this->input->post('birthday',    TRUE),
-            'address'     => $this->input->post('address',     TRUE),
-            'contactno'   => $this->input->post('contactno',   TRUE),
-            'email'       => $this->input->post('email',       TRUE),
-            'password'    => password_hash($this->input->post('password'), PASSWORD_BCRYPT),
-            'role'        => $this->input->post('role',        TRUE),
-            'is_active'   => $this->input->post('is_active',   TRUE),
-            'employee_id' => $this->input->post('employee_id', TRUE),
-            'job_title'   => $this->input->post('job_title',   TRUE),
-            'department'  => $this->input->post('department',  TRUE),
-            'created_at'  => date('Y-m-d H:i:s'),
-            'updated_at'  => date('Y-m-d H:i:s'),
+            'firstname'   => $this->input->post('firstname'),
+            'lastname'    => $this->input->post('lastname'),
+            'employee_id' => $this->input->post('employee_id'),
+            'birthday'    => $this->input->post('birthday'),
+            'contactno'   => $this->input->post('contactno'),
+            'address'     => $this->input->post('address'),
+            'email'       => $this->input->post('email'),
+            'password'    => password_hash($this->input->post('password'), PASSWORD_DEFAULT),
+            'role'        => $this->input->post('role'),
+            'is_active'   => $this->input->post('is_active'),
+            'job_title'   => $this->input->post('job_title'),
+            'department'  => $this->input->post('department')
         ];
 
-        $new_id = $this->User_model->insert($data);
+        $insert = $this->User_model->insert($data);
 
-        if ( ! $new_id) {
-            return $this->output
-                ->set_content_type('application/json')
-                ->set_status_header(500)
-                ->set_output(json_encode([
-                    'status' => 'error',
-                    'errors' => ['db' => 'Database error. Please try again.'],
-                ]));
-        }
-
-        // ✅ FIX 1: method is log(), not insert()
-        // ✅ FIX 2: session key is 'id', not 'user_id'
-        $this->Activity_log_model->log([
-            'user_id'     => (int) $this->session->userdata('id'),
-            'action'      => 'CREATE_USER',
-            'description' => 'Created user: ' . $data['email'],
-        ]);
-
-        return $this->output
-            ->set_content_type('application/json')
-            ->set_output(json_encode([
-                'status'  => 'success',
-                'message' => 'User created successfully.',
-            ]));
+        echo json_encode(['success' => $insert]);
     }
 }

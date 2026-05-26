@@ -3,22 +3,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class User_model extends CI_Model
 {
-    public function get_paginated($limit, $offset)
+    // ─── Fetch all non-deleted users (DataTables handles pagination) ──
+    public function get_all()
     {
         return $this->db
             ->where('deleted_at IS NULL', null, false)
             ->order_by('id', 'DESC')
-            ->get('users', $limit, $offset)
+            ->get('users')
             ->result();
     }
 
-    public function count_all()
-    {
-        return $this->db
-            ->where('deleted_at IS NULL', null, false)
-            ->count_all_results('users');
-    }
-
+    // ─── CRUD ─────────────────────────────────────────────────────────
     public function get_by_id($id)
     {
         return $this->db->get_where('users', ['id' => $id])->row();
@@ -41,13 +36,23 @@ class User_model extends CI_Model
         ]);
     }
 
+    // ─── Stats (Dashboard) ────────────────────────────────────────────
     public function get_stats()
     {
         return (object)[
-            'total' => $this->db->where('deleted_at IS NULL', null, false)->count_all_results('users'),
-            'active' => $this->db->where('is_active', 1)->where('deleted_at IS NULL', null, false)->count_all_results('users'),
+            'total'    => $this->db->where('deleted_at IS NULL', null, false)->count_all_results('users'),
+            'active'   => $this->db->where('is_active', 1)->where('deleted_at IS NULL', null, false)->count_all_results('users'),
             'inactive' => $this->db->where('is_active', 0)->where('deleted_at IS NULL', null, false)->count_all_results('users'),
-            'admins' => $this->db->where('role', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users')
+            'admins'   => $this->db->where('role', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users'),
         ];
+    }
+
+    public function get_recent($limit = 5)
+    {
+        return $this->db
+            ->where('deleted_at IS NULL', null, false)
+            ->order_by('created_at', 'DESC')
+            ->get('users', $limit)
+            ->result();
     }
 }

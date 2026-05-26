@@ -7,23 +7,13 @@ class Users extends RMS_Controller
     {
         parent::__construct();
         $this->load->model('User_model');
-        $this->load->library('pagination');
     }
 
     public function index()
     {
-        $config['base_url'] = base_url('users/index');
-        $config['total_rows'] = $this->User_model->count_all();
-        $config['per_page'] = 5;
-        $config['uri_segment'] = 3;
-
-        $this->pagination->initialize($config);
-
-        $page = ($this->uri->segment(3)) ? $this->uri->segment(3) : 0;
-
-        $this->data['users'] = $this->User_model->get_paginated($config['per_page'], $page);
-        $this->data['pagination'] = $this->pagination->create_links();
-        $this->data['role'] = $this->session->userdata('role');
+        $this->data['users']      = $this->User_model->get_all();
+        $this->data['role']       = $this->session->userdata('role');
+        $this->data['total_rows'] = count($this->data['users']);
 
         $this->load->view('users/index', $this->data);
     }
@@ -55,11 +45,10 @@ class Users extends RMS_Controller
             'is_active'   => $this->input->post('is_active'),
             'job_title'   => $this->input->post('job_title'),
             'department'  => $this->input->post('department'),
-            'created_at'  => date('Y-m-d H:i:s')
+            'created_at'  => date('Y-m-d H:i:s'),
         ];
 
         $insert = $this->User_model->insert($data);
-
         echo json_encode(['success' => $insert]);
     }
 
@@ -68,15 +57,21 @@ class Users extends RMS_Controller
         $id = $this->input->post('id');
 
         $data = [
-            'firstname' => $this->input->post('firstname'),
-            'lastname'  => $this->input->post('lastname'),
-            'email'     => $this->input->post('email'),
-            'role'      => $this->input->post('role'),
-            'is_active' => $this->input->post('is_active')
+            'firstname'   => $this->input->post('firstname'),
+            'lastname'    => $this->input->post('lastname'),
+            'employee_id' => $this->input->post('employee_id'),
+            'birthday'    => $this->input->post('birthday'),
+            'contactno'   => $this->input->post('contactno'),
+            'address'     => $this->input->post('address'),
+            'email'       => $this->input->post('email'),
+            'role'        => $this->input->post('role'),
+            'is_active'   => $this->input->post('is_active'),
+            'job_title'   => $this->input->post('job_title'),
+            'department'  => $this->input->post('department'),
+            'updated_at'  => date('Y-m-d H:i:s'),
         ];
 
         $update = $this->User_model->update($id, $data);
-
         echo json_encode(['success' => $update]);
     }
 

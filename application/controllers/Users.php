@@ -11,10 +11,23 @@ class Users extends RMS_Controller
 
     public function index()
     {
-        $this->data['users']      = $this->User_model->get_all();
-        $this->data['role']       = $this->session->userdata('role');
-        $this->data['total_rows'] = count($this->data['users']);
-
+        $role           = $this->session->userdata('role');
+        $logged_user_id = $this->session->userdata('id');
+    
+        // Rule 3: pass filter so model hides admins from regular users
+        $filters = [];
+        if ($role === 'user') {
+            $filters['hide_admins'] = true;
+        }
+    
+        $this->data['users']          = $this->User_model->get_all($filters);
+        $this->data['role']           = $role;
+        $this->data['logged_user_id'] = $logged_user_id;
+        $this->data['total_rows']     = count($this->data['users']);
+    
+        $this->data['csrf_token_name']  = $this->security->get_csrf_token_name();
+        $this->data['csrf_token_value'] = $this->security->get_csrf_hash();
+    
         $this->load->view('users/index', $this->data);
     }
 
@@ -54,11 +67,27 @@ class Users extends RMS_Controller
 
     public function update()
     {
-        $id = $this->input->post('id');
-
+        if ($this->session->userdata('role') !== 'admin') {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            return;
+        }
+    
+        $id        = $this->input->post('id');
+        $firstname = $this->input->post('firstname');
+        $lastname  = $this->input->post('lastname');
+    
+        // Rule 1: block if name combo already taken by another user
+        if ($this->User_model->full_name_exists($firstname, $lastname, $id)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'This name combination already exists.'
+            ]);
+            return;
+        }
+    
         $data = [
-            'firstname'   => $this->input->post('firstname'),
-            'lastname'    => $this->input->post('lastname'),
+            'firstname'   => $firstname,
+            'lastname'    => $lastname,
             'employee_id' => $this->input->post('employee_id'),
             'birthday'    => $this->input->post('birthday'),
             'contactno'   => $this->input->post('contactno'),
@@ -70,7 +99,7 @@ class Users extends RMS_Controller
             'department'  => $this->input->post('department'),
             'updated_at'  => date('Y-m-d H:i:s'),
         ];
-
+    
         $update = $this->User_model->update($id, $data);
         echo json_encode(['success' => $update]);
     }

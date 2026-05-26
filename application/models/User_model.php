@@ -3,11 +3,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class User_model extends CI_Model
 {
-    // ─── Fetch all non-deleted users (DataTables handles pagination) ──
-    public function get_all()
+    // ─── Fetch all non-deleted users ──────────────────────────────────
+    public function get_all($filters = [])
     {
+        $this->db->where('deleted_at IS NULL', null, false);
+
+        // Rule 3: hide admins from regular users
+        if (!empty($filters['hide_admins'])) {
+            $this->db->where('role !=', 'admin');
+        }
+
         return $this->db
-            ->where('deleted_at IS NULL', null, false)
             ->order_by('id', 'DESC')
             ->get('users')
             ->result();
@@ -17,6 +23,33 @@ class User_model extends CI_Model
     public function get_by_id($id)
     {
         return $this->db->get_where('users', ['id' => $id])->row();
+    }
+
+    public function email_exists($email, $exclude_id = null)
+    {
+        $this->db->where('email', $email)
+                 ->where('deleted_at IS NULL', null, false);
+
+        if ($exclude_id) {
+            $this->db->where('id !=', $exclude_id);
+        }
+
+        return $this->db->count_all_results('users') > 0;
+    }
+
+    // Rule 1: case-insensitive full name combo check
+    public function full_name_exists($firstname, $lastname, $exclude_id = null)
+    {
+        $this->db
+            ->where('LOWER(firstname)', strtolower($firstname))
+            ->where('LOWER(lastname)', strtolower($lastname))
+            ->where('deleted_at IS NULL', null, false);
+
+        if ($exclude_id) {
+            $this->db->where('id !=', $exclude_id);
+        }
+
+        return $this->db->count_all_results('users') > 0;
     }
 
     public function insert($data)

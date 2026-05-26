@@ -7,14 +7,25 @@ class Users extends RMS_Controller
     {
         parent::__construct();
         $this->load->model('User_model');
+        $this->load->library('pagination');
     }
 
     public function index()
     {
-        $data['users'] = $this->User_model->get_all();
-        $data['role']  = $this->session->userdata('role');
+        $config['base_url'] = base_url('users/index');
+        $config['total_rows'] = $this->User_model->count_all();
+        $config['per_page'] = 5;
+        $config['uri_segment'] = 3;
 
-        $this->load->view('users/index', $data);
+        $this->pagination->initialize($config);
+
+        $page = ($this->uri->segment(3)) ? $this->uri->segment(3) : 0;
+
+        $this->data['users'] = $this->User_model->get_paginated($config['per_page'], $page);
+        $this->data['pagination'] = $this->pagination->create_links();
+        $this->data['role'] = $this->session->userdata('role');
+
+        $this->load->view('users/index', $this->data);
     }
 
     public function get($id)
@@ -27,6 +38,29 @@ class Users extends RMS_Controller
         }
 
         echo json_encode(['success' => true, 'data' => $user]);
+    }
+
+    public function store()
+    {
+        $data = [
+            'employee_id' => $this->input->post('employee_id'),
+            'firstname'   => $this->input->post('firstname'),
+            'lastname'    => $this->input->post('lastname'),
+            'birthday'    => $this->input->post('birthday'),
+            'address'     => $this->input->post('address'),
+            'contactno'   => $this->input->post('contactno'),
+            'email'       => $this->input->post('email'),
+            'password'    => password_hash($this->input->post('password'), PASSWORD_DEFAULT),
+            'role'        => $this->input->post('role'),
+            'is_active'   => $this->input->post('is_active'),
+            'job_title'   => $this->input->post('job_title'),
+            'department'  => $this->input->post('department'),
+            'created_at'  => date('Y-m-d H:i:s')
+        ];
+
+        $insert = $this->User_model->insert($data);
+
+        echo json_encode(['success' => $insert]);
     }
 
     public function update()
@@ -49,29 +83,6 @@ class Users extends RMS_Controller
     public function delete($id)
     {
         $delete = $this->User_model->soft_delete($id);
-
         echo json_encode(['success' => $delete]);
-    }
-
-    public function store()
-    {
-        $data = [
-            'firstname'   => $this->input->post('firstname'),
-            'lastname'    => $this->input->post('lastname'),
-            'employee_id' => $this->input->post('employee_id'),
-            'birthday'    => $this->input->post('birthday'),
-            'contactno'   => $this->input->post('contactno'),
-            'address'     => $this->input->post('address'),
-            'email'       => $this->input->post('email'),
-            'password'    => password_hash($this->input->post('password'), PASSWORD_DEFAULT),
-            'role'        => $this->input->post('role'),
-            'is_active'   => $this->input->post('is_active'),
-            'job_title'   => $this->input->post('job_title'),
-            'department'  => $this->input->post('department')
-        ];
-
-        $insert = $this->User_model->insert($data);
-
-        echo json_encode(['success' => $insert]);
     }
 }

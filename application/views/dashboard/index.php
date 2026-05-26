@@ -34,7 +34,7 @@
     </div>
 
     <!-- Stat Cards -->
-    <div class="section-title">System Overview MY bor</div>
+    <div class="section-title">System Overview </div>
 
     <?php
         // SAFE FALLBACK (fix CI_Loader undefined $this->data issue)

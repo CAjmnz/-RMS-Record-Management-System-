@@ -35,6 +35,7 @@
                         <th>Role</th>
                         <th>Status</th>
                         <th>Contact</th>
+                        <th>address</th>
                         <th>Created</th>
                         <th>Actions</th>
                     </tr>
@@ -56,6 +57,8 @@
 
                         <td><?= $user->contactno ?></td>
 
+                        <td><?= $user->address ?></td>
+
                         <td><?= $user->created_at ?></td>
 
                         <td>
@@ -72,8 +75,13 @@
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
-
+                <div style="margin-top:15px; display:flex; justify-content:flex-end;">
+    <?php echo $pagination; ?>
+</div>
             </table>
+            <div style="margin-top:15px; display:flex; justify-content:flex-end;">
+    <?php echo $pagination; ?>
+</div>
         </div>
 
     </div>
@@ -264,10 +272,24 @@ function createUser()
 
 function deleteUser(id)
 {
-    if (!confirm('Delete user?')) return;
+    if (!confirm('Are you sure you want to delete this user?')) return;
 
-    $.post("<?= base_url('users/delete/') ?>" + id, function(){
-        location.reload();
+    $.ajax({
+        url: "<?= base_url('users/delete/') ?>" + id,
+        type: "POST",
+        dataType: "json",
+        success: function(res)
+        {
+            if (res.success) {
+                location.reload();
+            } else {
+                alert(res.message || 'Delete failed');
+            }
+        },
+        error: function()
+        {
+            alert('Server error while deleting user');
+        }
     });
 }
 

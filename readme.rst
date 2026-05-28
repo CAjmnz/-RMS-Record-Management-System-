@@ -178,6 +178,28 @@ http://localhost/rms
 
 ---
 
+
+ 📈 patch notes
+
+🧱 User Management System (CRUD Stabilized)
+✔ Create User
+Fixed NULL field insertion issues (firstname bug identified for next patch)
+Full form-based user creation via AJAX
+✔ Read Users
+Fully integrated with DataTables
+Displays complete user dataset
+Soft-deleted users excluded properly
+✔ Update User
+AJAX-based edit system
+Modal-based editing fixed and stabilized
+Unified form structure between create and edit
+✔ Delete User
+Replaced confirm() with SweetAlert2 (SWAL)
+Soft delete implemented using deleted_at
+AJAX-based delete with success/error feedback
+
+---
+
  📈 Future Improvements
 
 - Form validation (client + server)

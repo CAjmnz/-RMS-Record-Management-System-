@@ -5,12 +5,6 @@ class Activity_log_model extends CI_Model
 {
     protected $table = 'activity_logs';
 
-    /**
-     * Insert an activity log entry.
-     *
-     * @param  array $data  Keys: user_id, action, description
-     * @return bool
-     */
     public function log(array $data)
     {
         if (empty($data['created_at'])) {
@@ -29,12 +23,6 @@ class Activity_log_model extends CI_Model
         return TRUE;
     }
 
-    /**
-     * Get recent activity logs.
-     *
-     * @param  int $limit
-     * @return array
-     */
     public function get_recent($limit = 10)
     {
         return $this->db
@@ -42,5 +30,42 @@ class Activity_log_model extends CI_Model
             ->limit((int) $limit)
             ->get($this->table)
             ->result();
+    }
+
+    // All logs for DataTables
+    public function get_all()
+    {
+        return $this->db
+            ->order_by('created_at', 'DESC')
+            ->get($this->table)
+            ->result();
+    }
+
+    // Log counts per day for the last N days (bar chart)
+    public function get_daily_counts($days = 7)
+    {
+        $results = $this->db
+            ->select('DATE(created_at) as log_date, COUNT(*) as total')
+            ->where('created_at >=', date('Y-m-d', strtotime("-{$days} days")))
+            ->group_by('DATE(created_at)')
+            ->order_by('log_date', 'ASC')
+            ->get($this->table)
+            ->result();
+
+        // Build a full date range so missing days show as 0
+        $map = [];
+        foreach ($results as $row) {
+            $map[$row->log_date] = (int) $row->total;
+        }
+
+        $labels = [];
+        $counts = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date     = date('Y-m-d', strtotime("-{$i} days"));
+            $labels[] = date('M d', strtotime($date));
+            $counts[] = isset($map[$date]) ? $map[$date] : 0;
+        }
+
+        return ['labels' => $labels, 'counts' => $counts];
     }
 }

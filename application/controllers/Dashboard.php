@@ -9,7 +9,7 @@ class Dashboard extends RMS_Controller
     {
         parent::__construct();
         $this->load->model('User_model');
-        $this->load->model('Activity_log_model'); // ✅ FIXED
+        $this->load->model('Activity_log_model');
     }
 
     public function index()
@@ -20,10 +20,29 @@ class Dashboard extends RMS_Controller
         $this->data['email']     = $this->session->userdata('email');
         $this->data['role']      = $this->session->userdata('role');
 
-        $this->data['stats'] = $this->User_model->get_stats();
+        $stats               = $this->User_model->get_stats();
+        $this->data['stats'] = $stats;
 
-        // ✅ REAL LOGS FROM DB
-        $this->data['logs'] = $this->Activity_log_model->get_recent(10);
+        // All logs for DataTable
+        $this->data['logs'] = $this->Activity_log_model->get_all();
+
+        // Bar chart — logs per day
+        $daily                          = $this->Activity_log_model->get_daily_counts(7);
+        $this->data['chart_log_labels'] = json_encode($daily['labels']);
+        $this->data['chart_log_counts'] = json_encode($daily['counts']);
+
+        // Donut 1 — Active vs Inactive
+        $this->data['chart_status_data'] = json_encode([
+            (int) $stats->active,
+            (int) $stats->inactive,
+        ]);
+
+        // Donut 2 — Admins vs Regular Users
+        $regular = (int) $stats->total - (int) $stats->admins;
+        $this->data['chart_role_data'] = json_encode([
+            (int) $stats->admins,
+            $regular,
+        ]);
 
         $this->load->view('dashboard/index', $this->data);
     }

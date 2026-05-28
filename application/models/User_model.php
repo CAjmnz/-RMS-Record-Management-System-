@@ -77,6 +77,7 @@ class User_model extends CI_Model
             'active'   => $this->db->where('is_active', 1)->where('deleted_at IS NULL', null, false)->count_all_results('users'),
             'inactive' => $this->db->where('is_active', 0)->where('deleted_at IS NULL', null, false)->count_all_results('users'),
             'admins'   => $this->db->where('role', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users'),
+            'nonadmins' => $this->db->where('role !=', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users'),
         ];
     }
 

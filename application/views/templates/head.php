@@ -293,6 +293,7 @@
         .sc-active   { background: #4e73df; }
         .sc-inactive { background: #858796; }
         .sc-admins   { background: #e74a3b; }
+        .sc-nonadmins { background: #f0ad4e; }  
 
         /* ── Activity Log ── */
         .activity-item {

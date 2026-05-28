@@ -127,8 +127,8 @@
                 </div>
                 <div class="form-row">
                     <input class="form-control mb-2 col-6" id="email" placeholder="Email">
-                    <input class="form-control mb-2 col-6" type="password"
-                           id="password" placeholder="Password">
+                   <input class="form-control mb-2 col-6" type="password"
+       id="password" placeholder="Password (default: rms-2026)">
                 </div>
                 <div class="form-row">
                     <select class="form-control mb-2 col-6" id="create_role">

@@ -49,98 +49,94 @@ class Users extends RMS_Controller
         ]);
     }
 
-    public function store()
-    {
-        // Admin only
-        if ($this->session->userdata('role') !== 'admin') {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ]);
-            return;
-        }
-
-        $firstname = trim($this->input->post('firstname'));
-        $lastname  = trim($this->input->post('lastname'));
-        $email     = trim($this->input->post('email'));
-        $password  = $this->input->post('password');
-        $role      = $this->input->post('role');
-
-        // Required validation
-        if (empty($firstname) || empty($email) || empty($password)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Firstname, email and password are required.'
-            ]);
-            return;
-        }
-
-        // Email format validation
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid email address.'
-            ]);
-            return;
-        }
-
-        // Duplicate email check
-        if ($this->User_model->email_exists($email)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Email already exists.'
-            ]);
-            return;
-        }
-
-        // Duplicate full name check
-        if ($this->User_model->full_name_exists($firstname, $lastname)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'This name combination already exists.'
-            ]);
-            return;
-        }
-
-        // Role fallback
-        if (empty($role)) {
-            $role = 'user';
-        }
-
-        $data = [
-            'employee_id' => $this->input->post('employee_id'),
-            'firstname'   => $firstname,
-            'lastname'    => $lastname,
-            'birthday'    => $this->input->post('birthday'),
-            'address'     => $this->input->post('address'),
-            'contactno'   => $this->input->post('contactno'),
-            'email'       => $email,
-            'password'    => password_hash($password, PASSWORD_DEFAULT),
-            'role'        => $role,
-            'is_active'   => $this->input->post('is_active'),
-            'job_title'   => $this->input->post('job_title'),
-            'department'  => $this->input->post('department'),
-            'created_at'  => date('Y-m-d H:i:s')
-        ];
-
-        $insert = $this->User_model->insert($data);
-
-        if ($insert) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'User created successfully.'
-            ]);
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Database insert failed.'
-            ]);
-        }
+   public function store()
+{
+    if ($this->session->userdata('role') !== 'admin') {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Unauthorized'
+        ]);
+        return;
     }
+
+    $firstname = trim($this->input->post('firstname', TRUE));
+    $lastname  = trim($this->input->post('lastname',  TRUE));
+    $email     = trim($this->input->post('email',     TRUE));
+    $password  = $this->input->post('password', FALSE);
+    $role      = $this->input->post('role',     TRUE);
+
+    if (empty($firstname) || empty($email)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Firstname and email are required.'
+        ]);
+        return;
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid email address.'
+        ]);
+        return;
+    }
+
+    if ($this->User_model->email_exists($email)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Email already exists.'
+        ]);
+        return;
+    }
+
+    if ($this->User_model->full_name_exists($firstname, $lastname)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'This name combination already exists.'
+        ]);
+        return;
+    }
+
+    if (empty($role)) {
+        $role = 'user';
+    }
+
+    // Default password if admin leaves it blank
+    $password = !empty($password) ? $password : 'rms-2026';
+
+    $data = [
+        'employee_id' => $this->input->post('employee_id', TRUE),
+        'firstname'   => $firstname,
+        'lastname'    => $lastname,
+        'birthday'    => $this->input->post('birthday',    TRUE),
+        'address'     => $this->input->post('address',     TRUE),
+        'contactno'   => $this->input->post('contactno',   TRUE),
+        'email'       => $email,
+        'password'    => password_hash($password, PASSWORD_DEFAULT),
+        'role'        => $role,
+        'is_active'   => $this->input->post('is_active',   TRUE),
+        'job_title'   => $this->input->post('job_title',   TRUE),
+        'department'  => $this->input->post('department',  TRUE),
+        'created_at'  => date('Y-m-d H:i:s')
+    ];
+
+    $insert = $this->User_model->insert($data);
+
+    if ($insert) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'User created successfully.'
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Database insert failed.'
+        ]);
+    }
+}
 
     public function update()
     {
-        // Admin only
         if ($this->session->userdata('role') !== 'admin') {
             echo json_encode([
                 'success' => false,
@@ -149,12 +145,12 @@ class Users extends RMS_Controller
             return;
         }
 
-        $id        = $this->input->post('id');
-        $firstname = trim($this->input->post('firstname'));
-        $lastname  = trim($this->input->post('lastname'));
-        $email     = trim($this->input->post('email'));
+        // XSS clean on all inputs via TRUE flag
+        $id        = $this->input->post('id',        TRUE);
+        $firstname = trim($this->input->post('firstname', TRUE));
+        $lastname  = trim($this->input->post('lastname',  TRUE));
+        $email     = trim($this->input->post('email',     TRUE));
 
-        // Duplicate full name check
         if ($this->User_model->full_name_exists($firstname, $lastname, $id)) {
             echo json_encode([
                 'success' => false,
@@ -163,7 +159,6 @@ class Users extends RMS_Controller
             return;
         }
 
-        // Duplicate email check
         if ($this->User_model->email_exists($email, $id)) {
             echo json_encode([
                 'success' => false,
@@ -175,15 +170,15 @@ class Users extends RMS_Controller
         $data = [
             'firstname'   => $firstname,
             'lastname'    => $lastname,
-            'employee_id' => $this->input->post('employee_id'),
-            'birthday'    => $this->input->post('birthday'),
-            'contactno'   => $this->input->post('contactno'),
-            'address'     => $this->input->post('address'),
+            'employee_id' => $this->input->post('employee_id', TRUE),
+            'birthday'    => $this->input->post('birthday',    TRUE),
+            'contactno'   => $this->input->post('contactno',   TRUE),
+            'address'     => $this->input->post('address',     TRUE),
             'email'       => $email,
-            'role'        => $this->input->post('role'),
-            'is_active'   => $this->input->post('is_active'),
-            'job_title'   => $this->input->post('job_title'),
-            'department'  => $this->input->post('department'),
+            'role'        => $this->input->post('role',        TRUE),
+            'is_active'   => $this->input->post('is_active',   TRUE),
+            'job_title'   => $this->input->post('job_title',   TRUE),
+            'department'  => $this->input->post('department',  TRUE),
             'updated_at'  => date('Y-m-d H:i:s')
         ];
 
@@ -196,7 +191,6 @@ class Users extends RMS_Controller
 
     public function delete($id)
     {
-        // Admin only
         if ($this->session->userdata('role') !== 'admin') {
             echo json_encode([
                 'success' => false,
@@ -205,7 +199,6 @@ class Users extends RMS_Controller
             return;
         }
 
-        // Self-delete protection
         $logged_user_id = $this->session->userdata('user_id');
 
         if ((int)$id === (int)$logged_user_id) {

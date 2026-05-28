@@ -44,12 +44,15 @@
                     <p class="profile-name">
                         <?php echo htmlspecialchars($user->firstname ?? ''); ?>
                         <?php echo htmlspecialchars($user->lastname ?? ''); ?>
+                        (<?php echo htmlspecialchars($user->nickname ?? ''); ?>)
                     </p>
 
                     <p class="profile-email">
                         <?php echo htmlspecialchars($user->email ?? '—'); ?>
                     </p>
-
+                    <p class="profile-email">
+                        <?php echo htmlspecialchars($user->employee_id ?? '—'); ?>
+                    </p>
                     <div class="mt-3">
                         <?php if (!empty($user->role) && $user->role === 'admin') : ?>
                             <span class="badge-role-admin">
@@ -104,6 +107,12 @@
                             <div class="profile-field-label">Last Name</div>
                             <div class="profile-field-value">
                                 <?php echo htmlspecialchars($user->lastname ?? '—'); ?>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="profile-field-label">NickName</div>
+                            <div class="profile-field-value">
+                                <?php echo htmlspecialchars($user->nickname ?? '—'); ?>
                             </div>
                         </div>
 

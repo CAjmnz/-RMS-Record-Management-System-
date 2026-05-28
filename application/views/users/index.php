@@ -109,7 +109,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5>Create User</h5>
-                <button class="close" data-dismiss="modal">&times;</button>
+                
             </div>
             <div class="modal-body">
                 <div id="createAlert"></div>
@@ -159,7 +159,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5>Edit User</h5>
-                <button class="close" data-dismiss="modal">&times;</button>
+                
             </div>
             <div class="modal-body">
                 <div id="editAlert"></div>  <!-- name duplicate error shows here -->

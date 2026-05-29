@@ -89,4 +89,16 @@ class User_model extends CI_Model
             ->get('users', $limit)
             ->result();
     }
+    public function employee_id_exists($employee_id, $exclude_id = null)
+{
+    $this->db
+        ->where('employee_id', $employee_id)
+        ->where('deleted_at IS NULL', null, false);
+
+    if ($exclude_id) {
+        $this->db->where('id !=', $exclude_id);
+    }
+
+    return $this->db->count_all_results('users') > 0;
+}
 }

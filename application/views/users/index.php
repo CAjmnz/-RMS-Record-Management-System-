@@ -6,21 +6,16 @@
       href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
 
 <style>
-/* ── Field wrapper ───────────────────────────────────────────── */
 .field-wrap {
     position: relative;
     width: 100%;
 }
-
-/* ── Invalid input ───────────────────────────────────────────── */
 .field-wrap input.is-invalid,
 .field-wrap select.is-invalid {
     border: 1.5px solid #dc3545 !important;
     box-shadow: none !important;
-    padding-right: 36px !important; /* room for icon */
+    padding-right: 36px !important;
 }
-
-/* ── Exclamation icon ────────────────────────────────────────── */
 .field-error-icon {
     display: none;
     position: absolute;
@@ -32,14 +27,9 @@
     cursor: pointer;
     z-index: 10;
 }
-
 .field-wrap.has-error .field-error-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
 }
-
-/* ── Tooltip bubble ──────────────────────────────────────────── */
 .field-error-icon .error-tooltip {
     display: none;
     position: absolute;
@@ -56,12 +46,8 @@
     pointer-events: none;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     z-index: 9999;
-
-    /* arrow on the right pointing to icon */
     letter-spacing: .2px;
 }
-
-/* arrow */
 .field-error-icon .error-tooltip::after {
     content: '';
     position: absolute;
@@ -72,7 +58,6 @@
     border-style: solid;
     border-color: transparent transparent transparent #1e1e2e;
 }
-
 .field-error-icon:hover .error-tooltip {
     display: block;
 }
@@ -179,92 +164,63 @@
             </div>
             <div class="modal-body">
                 <div id="createAlert"></div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="firstname" placeholder="First Name">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="lastname" placeholder="Last Name">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="employee_id" placeholder="Employee ID">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" type="date" id="birthday">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="contactno" placeholder="Contact Number">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="address" placeholder="Address">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="email" placeholder="Email">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" type="password"
                                    id="password" placeholder="Password (default: rms-2026)">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
@@ -272,10 +228,7 @@
                                 <option value="user">User</option>
                                 <option value="admin">Admin</option>
                             </select>
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
@@ -284,35 +237,24 @@
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
                             </select>
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="job_title" placeholder="Job Title">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="department" placeholder="Department">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -332,82 +274,56 @@
             <div class="modal-body">
                 <div id="editAlert"></div>
                 <input type="hidden" id="edit_id">
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="edit_firstname" placeholder="First Name">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="edit_lastname" placeholder="Last Name">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="edit_employee_id" placeholder="Employee ID">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" type="date" id="edit_birthday">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="edit_contactno" placeholder="Contact Number">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="edit_address" placeholder="Address">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="edit_email" placeholder="Email">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
@@ -415,10 +331,7 @@
                                 <option value="user">User</option>
                                 <option value="admin">Admin</option>
                             </select>
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
@@ -427,35 +340,24 @@
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
                             </select>
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="edit_job_title" placeholder="Job Title">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <input class="form-control" id="edit_department" placeholder="Department">
-                            <span class="field-error-icon">
-                                &#9888;
-                                <span class="error-tooltip"></span>
-                            </span>
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -467,7 +369,6 @@
 
 <?php endif; ?>
 
-<!-- SCRIPTS -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -499,7 +400,7 @@ $(document).ready(function () {
         }
     });
 
-    // Reset Create modal fully on close
+    // Reset Create modal on close
     $('#createUserModal').on('hidden.bs.modal', function () {
         clearValidation('create');
         $('#createAlert').html('');
@@ -507,14 +408,14 @@ $(document).ready(function () {
         $(this).find('select').prop('selectedIndex', 0);
     });
 
-    // Reset Edit modal errors on close
+    // Reset Edit modal on close
     $('#editUserModal').on('hidden.bs.modal', function () {
         clearValidation('edit');
         $('#editAlert').html('');
     });
 });
 
-// ── Remove error while typing ─────────────────────────────────────────────────
+// ── Clear error while typing ──────────────────────────────────────────────────
 $(document).on('input change', '.field-wrap input, .field-wrap select', function () {
     const wrap = $(this).closest('.field-wrap');
     $(this).removeClass('is-invalid');
@@ -540,61 +441,71 @@ function showFieldError(selector, message) {
     wrap.find('.error-tooltip').text(message);
 }
 
-// ── Shared validator ──────────────────────────────────────────────────────────
-function validateFields(prefix) {
-    const p       = '#' + prefix;
+// Maps backend errors object → tooltip icons on the correct modal
+// prefix = '' for create fields, 'edit_' for edit fields
+function applyBackendErrors(errors, prefix, alertSelector) {
+    Object.keys(errors).forEach(function(field) {
+        showFieldError('#' + prefix + field, errors[field]);
+    });
+
+    // Scroll to first error inside the modal
+    const firstError = $('.field-wrap.has-error').first();
+    if (firstError.length) {
+        firstError.closest('.modal-body').scrollTop(
+            firstError.position().top - 20
+        );
+        firstError.find('input, select').first().focus();
+    }
+
+    $(alertSelector).html(
+        '<div class="alert alert-danger">Please fix the highlighted fields.</div>'
+    );
+}
+
+// Frontend-only required field check (instant, before AJAX fires)
+function validateFields(prefix, alertSelector) {
+    clearValidation(prefix === '' ? 'create' : 'edit');
+    $(alertSelector).html('');
+
+    const p      = '#' + prefix;
     const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let   hasErr  = false;
 
-    const firstname  = $(p + 'firstname').val().trim();
-    const lastname   = $(p + 'lastname').val().trim();
-    const employeeId = $(p + 'employee_id').val().trim();
-    const contactno  = $(p + 'contactno').val().trim();
-    const address    = $(p + 'address').val().trim();
-    const email      = $(p + 'email').val().trim();
-    const department = $(p + 'department').val().trim();
-    const jobTitle   = $(p + 'job_title').val().trim();
+    const checks = [
+        { id: 'firstname',   msg: 'First name is required.' },
+        { id: 'lastname',    msg: 'Last name is required.' },
+        { id: 'employee_id', msg: 'Employee ID is required.' },
+        { id: 'birthday',    msg: 'Birthday is required.' },
+        { id: 'contactno',   msg: 'Contact number is required.' },
+        { id: 'address',     msg: 'Address is required.' },
+        { id: 'email',       msg: 'Email is required.' },
+        { id: 'job_title',   msg: 'Job title is required.' },
+        { id: 'department',  msg: 'Department is required.' },
+    ];
 
-    if (!firstname) {
-        showFieldError(p + 'firstname', 'First name is required.');
+    checks.forEach(function(c) {
+        if (!$(p + c.id).val().trim()) {
+            showFieldError(p + c.id, c.msg);
+            hasErr = true;
+        }
+    });
+
+    const contactno = $(p + 'contactno').val().trim();
+    if (contactno && !/^[0-9]{11}$/.test(contactno)) {
+        showFieldError(p + 'contactno', 'Must be exactly 11 numeric digits.');
         hasErr = true;
     }
-    if (!lastname) {
-        showFieldError(p + 'lastname', 'Last name is required.');
-        hasErr = true;
-    }
-    if (!employeeId) {
-        showFieldError(p + 'employee_id', 'Employee ID is required.');
-        hasErr = true;
-    }
-    if (!contactno) {
-        showFieldError(p + 'contactno', 'Contact number is required.');
-        hasErr = true;
-    } else if (!/^[0-9]+$/.test(contactno)) {
-        showFieldError(p + 'contactno', 'Must be numeric only.');
-        hasErr = true;
-    } else if (contactno.length !== 11) {
-        showFieldError(p + 'contactno', 'Must be exactly 11 digits.');
-        hasErr = true;
-    }
-    if (!address) {
-        showFieldError(p + 'address', 'Address is required.');
-        hasErr = true;
-    }
-    if (!email) {
-        showFieldError(p + 'email', 'Email is required.');
-        hasErr = true;
-    } else if (!emailRx.test(email)) {
+
+    const email = $(p + 'email').val().trim();
+    if (email && !emailRx.test(email)) {
         showFieldError(p + 'email', 'Invalid email format.');
         hasErr = true;
     }
-    if (!department) {
-        showFieldError(p + 'department', 'Department is required.');
-        hasErr = true;
-    }
-    if (!jobTitle) {
-        showFieldError(p + 'job_title', 'Job title is required.');
-        hasErr = true;
+
+    if (hasErr) {
+        $(alertSelector).html(
+            '<div class="alert alert-danger">Please fix the highlighted fields.</div>'
+        );
     }
 
     return hasErr;
@@ -602,15 +513,9 @@ function validateFields(prefix) {
 
 // ── Create ────────────────────────────────────────────────────────────────────
 function createUser() {
-    clearValidation('create');
-    $('#createAlert').html('');
 
-    if (validateFields('')) {
-        $('#createAlert').html(
-            '<div class="alert alert-danger">Please fix the highlighted fields.</div>'
-        );
-        return;
-    }
+    // Frontend validation first — hard stop if fails
+    if (validateFields('', '#createAlert')) return;
 
     $.post(
         "<?= base_url('users/store') ?>",
@@ -632,18 +537,26 @@ function createUser() {
             if (res.success) {
                 Swal.fire({
                     title: 'Created!',
-                    text: 'User has been created successfully.',
+                    text: res.message || 'User created successfully.',
                     icon: 'success',
                     timer: 1500,
                     showConfirmButton: false
                 });
                 setTimeout(() => location.reload(), 1500);
-            } else {
-                $('#createAlert').html(
-                    '<div class="alert alert-danger">' +
-                    (res.message || 'Create failed.') + '</div>'
-                );
+                return;
             }
+
+            // Backend field errors → map to tooltip icons
+            if (res.errors && Object.keys(res.errors).length) {
+                applyBackendErrors(res.errors, '', '#createAlert');
+                return;
+            }
+
+            // General backend error
+            $('#createAlert').html(
+                '<div class="alert alert-danger">' +
+                (res.message || 'Create failed.') + '</div>'
+            );
         },
         'json'
     ).fail(function(xhr) {
@@ -679,15 +592,9 @@ function editUser(id) {
 
 // ── Update ────────────────────────────────────────────────────────────────────
 function updateUser() {
-    clearValidation('edit');
-    $('#editAlert').html('');
 
-    if (validateFields('edit_')) {
-        $('#editAlert').html(
-            '<div class="alert alert-danger">Please fix the highlighted fields.</div>'
-        );
-        return;
-    }
+    // Frontend validation first — hard stop if fails
+    if (validateFields('edit_', '#editAlert')) return;
 
     $.post(
         "<?= base_url('users/update') ?>",
@@ -709,18 +616,26 @@ function updateUser() {
             if (res.success) {
                 Swal.fire({
                     title: 'Updated!',
-                    text: 'User has been updated successfully.',
+                    text: res.message || 'User updated successfully.',
                     icon: 'success',
                     timer: 1500,
                     showConfirmButton: false
                 });
                 setTimeout(() => location.reload(), 1500);
-            } else {
-                $('#editAlert').html(
-                    '<div class="alert alert-danger">' +
-                    (res.message || 'Update failed.') + '</div>'
-                );
+                return;
             }
+
+            // Backend field errors → map to tooltip icons
+            if (res.errors && Object.keys(res.errors).length) {
+                applyBackendErrors(res.errors, 'edit_', '#editAlert');
+                return;
+            }
+
+            // General backend error
+            $('#editAlert').html(
+                '<div class="alert alert-danger">' +
+                (res.message || 'Update failed.') + '</div>'
+            );
         },
         'json'
     ).fail(function(xhr) {

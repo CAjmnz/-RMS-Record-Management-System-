@@ -1,4 +1,4 @@
-📌 Record Management System (RMS)
+📌 Record Management System (RMS) CREATE USER ARC
 
 A **CodeIgniter 3-based Record Management System** with full CRUD functionality for user management, built with a clean UI and AJAX-powered interactions.
 

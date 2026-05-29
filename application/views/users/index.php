@@ -5,7 +5,79 @@
 <link rel="stylesheet"
       href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
 
-<!-- CSRF tokens for all AJAX POSTs -->
+<style>
+/* ── Field wrapper ───────────────────────────────────────────── */
+.field-wrap {
+    position: relative;
+    width: 100%;
+}
+
+/* ── Invalid input ───────────────────────────────────────────── */
+.field-wrap input.is-invalid,
+.field-wrap select.is-invalid {
+    border: 1.5px solid #dc3545 !important;
+    box-shadow: none !important;
+    padding-right: 36px !important; /* room for icon */
+}
+
+/* ── Exclamation icon ────────────────────────────────────────── */
+.field-error-icon {
+    display: none;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #dc3545;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.field-wrap.has-error .field-error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Tooltip bubble ──────────────────────────────────────────── */
+.field-error-icon .error-tooltip {
+    display: none;
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e1e2e;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    z-index: 9999;
+
+    /* arrow on the right pointing to icon */
+    letter-spacing: .2px;
+}
+
+/* arrow */
+.field-error-icon .error-tooltip::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 5px 0 5px 6px;
+    border-style: solid;
+    border-color: transparent transparent transparent #1e1e2e;
+}
+
+.field-error-icon:hover .error-tooltip {
+    display: block;
+}
+</style>
+
 <input type="hidden" id="csrf_token_name"  value="<?= $csrf_token_name ?>">
 <input type="hidden" id="csrf_token_value" value="<?= $csrf_token_value ?>">
 
@@ -66,16 +138,11 @@
                             </td>
                             <td><?= htmlspecialchars($user->contactno) ?></td>
                             <td><?= htmlspecialchars($user->address) ?></td>
-
-                            <!-- AM/PM formatted created_at -->
                             <td><?= date('M d, Y h:i A', strtotime($user->created_at)) ?></td>
-
                             <?php if ($role === 'admin'): ?>
                                 <td>
                                     <button class="btn btn-primary btn-sm"
                                             onclick="editUser(<?= $user->id ?>)">Edit</button>
-
-                                    <!-- Rule 2: no Delete button on logged-in user's own row -->
                                     <?php if ($user->id != $logged_user_id): ?>
                                         <button class="btn btn-danger btn-sm"
                                                 onclick="deleteUser(<?= $user->id ?>)">Delete</button>
@@ -109,41 +176,143 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5>Create User</h5>
-                
             </div>
             <div class="modal-body">
                 <div id="createAlert"></div>
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="firstname" placeholder="First Name">
-                    <input class="form-control mb-2 col-6" id="lastname" placeholder="Last Name">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="firstname" placeholder="First Name">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="lastname" placeholder="Last Name">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="employee_id" placeholder="Employee ID">
-                    <input class="form-control mb-2 col-6" type="date" id="birthday">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="employee_id" placeholder="Employee ID">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" type="date" id="birthday">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="contactno" placeholder="Contact Number">
-                    <input class="form-control mb-2 col-6" id="address" placeholder="Address">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="contactno" placeholder="Contact Number">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="address" placeholder="Address">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="email" placeholder="Email">
-                   <input class="form-control mb-2 col-6" type="password"
-       id="password" placeholder="Password (default: rms-2026)">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="email" placeholder="Email">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" type="password"
+                                   id="password" placeholder="Password (default: rms-2026)">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <select class="form-control mb-2 col-6" id="create_role">
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                    <select class="form-control mb-2 col-6" id="is_active">
-                        <option value="1">Active</option>
-                        <option value="0">Inactive</option>
-                    </select>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <select class="form-control" id="create_role">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <select class="form-control" id="is_active">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="job_title" placeholder="Job Title">
-                    <input class="form-control mb-2 col-6" id="department" placeholder="Department">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="job_title" placeholder="Job Title">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="department" placeholder="Department">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -159,40 +328,134 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5>Edit User</h5>
-                
             </div>
             <div class="modal-body">
-                <div id="editAlert"></div>  <!-- name duplicate error shows here -->
+                <div id="editAlert"></div>
                 <input type="hidden" id="edit_id">
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="edit_firstname" placeholder="First Name">
-                    <input class="form-control mb-2 col-6" id="edit_lastname" placeholder="Last Name">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="edit_firstname" placeholder="First Name">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="edit_lastname" placeholder="Last Name">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="edit_employee_id" placeholder="Employee ID">
-                    <input class="form-control mb-2 col-6" type="date" id="edit_birthday">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="edit_employee_id" placeholder="Employee ID">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" type="date" id="edit_birthday">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="edit_contactno" placeholder="Contact Number">
-                    <input class="form-control mb-2 col-6" id="edit_address" placeholder="Address">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="edit_contactno" placeholder="Contact Number">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="edit_address" placeholder="Address">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="edit_email" placeholder="Email">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="edit_email" placeholder="Email">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <select class="form-control mb-2 col-6" id="edit_role">
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                    <select class="form-control mb-2 col-6" id="edit_is_active">
-                        <option value="1">Active</option>
-                        <option value="0">Inactive</option>
-                    </select>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <select class="form-control" id="edit_role">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <select class="form-control" id="edit_is_active">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="form-row">
-                    <input class="form-control mb-2 col-6" id="edit_job_title" placeholder="Job Title">
-                    <input class="form-control mb-2 col-6" id="edit_department" placeholder="Department">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="edit_job_title" placeholder="Job Title">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <input class="form-control" id="edit_department" placeholder="Department">
+                            <span class="field-error-icon">
+                                &#9888;
+                                <span class="error-tooltip"></span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -211,7 +474,7 @@
 
 <script>
 
-// ── CSRF helper ───────────────────────────────────────────────────────────────
+// ── CSRF ──────────────────────────────────────────────────────────────────────
 function csrfData() {
     return {
         [document.getElementById('csrf_token_name').value]:
@@ -235,13 +498,116 @@ $(document).ready(function () {
             paginate: { first: 'First', last: 'Last', next: '&raquo;', previous: '&laquo;' }
         }
     });
+
+    // Reset Create modal fully on close
+    $('#createUserModal').on('hidden.bs.modal', function () {
+        clearValidation('create');
+        $('#createAlert').html('');
+        $(this).find('input:not([type=hidden])').val('');
+        $(this).find('select').prop('selectedIndex', 0);
+    });
+
+    // Reset Edit modal errors on close
+    $('#editUserModal').on('hidden.bs.modal', function () {
+        clearValidation('edit');
+        $('#editAlert').html('');
+    });
 });
+
+// ── Remove error while typing ─────────────────────────────────────────────────
+$(document).on('input change', '.field-wrap input, .field-wrap select', function () {
+    const wrap = $(this).closest('.field-wrap');
+    $(this).removeClass('is-invalid');
+    wrap.removeClass('has-error');
+    wrap.find('.error-tooltip').text('');
+});
+
+// ── Validation helpers ────────────────────────────────────────────────────────
+function clearValidation(formType) {
+    const modal = formType === 'edit' ? '#editUserModal' : '#createUserModal';
+    $(modal).find('.field-wrap').each(function () {
+        $(this).removeClass('has-error');
+        $(this).find('input, select').removeClass('is-invalid');
+        $(this).find('.error-tooltip').text('');
+    });
+}
+
+function showFieldError(selector, message) {
+    const input = $(selector);
+    const wrap  = input.closest('.field-wrap');
+    input.addClass('is-invalid');
+    wrap.addClass('has-error');
+    wrap.find('.error-tooltip').text(message);
+}
+
+// ── Shared validator ──────────────────────────────────────────────────────────
+function validateFields(prefix) {
+    const p       = '#' + prefix;
+    const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let   hasErr  = false;
+
+    const firstname  = $(p + 'firstname').val().trim();
+    const lastname   = $(p + 'lastname').val().trim();
+    const employeeId = $(p + 'employee_id').val().trim();
+    const contactno  = $(p + 'contactno').val().trim();
+    const address    = $(p + 'address').val().trim();
+    const email      = $(p + 'email').val().trim();
+    const department = $(p + 'department').val().trim();
+    const jobTitle   = $(p + 'job_title').val().trim();
+
+    if (!firstname) {
+        showFieldError(p + 'firstname', 'First name is required.');
+        hasErr = true;
+    }
+    if (!lastname) {
+        showFieldError(p + 'lastname', 'Last name is required.');
+        hasErr = true;
+    }
+    if (!employeeId) {
+        showFieldError(p + 'employee_id', 'Employee ID is required.');
+        hasErr = true;
+    }
+    if (!contactno) {
+        showFieldError(p + 'contactno', 'Contact number is required.');
+        hasErr = true;
+    } else if (!/^[0-9]+$/.test(contactno)) {
+        showFieldError(p + 'contactno', 'Must be numeric only.');
+        hasErr = true;
+    } else if (contactno.length !== 11) {
+        showFieldError(p + 'contactno', 'Must be exactly 11 digits.');
+        hasErr = true;
+    }
+    if (!address) {
+        showFieldError(p + 'address', 'Address is required.');
+        hasErr = true;
+    }
+    if (!email) {
+        showFieldError(p + 'email', 'Email is required.');
+        hasErr = true;
+    } else if (!emailRx.test(email)) {
+        showFieldError(p + 'email', 'Invalid email format.');
+        hasErr = true;
+    }
+    if (!department) {
+        showFieldError(p + 'department', 'Department is required.');
+        hasErr = true;
+    }
+    if (!jobTitle) {
+        showFieldError(p + 'job_title', 'Job title is required.');
+        hasErr = true;
+    }
+
+    return hasErr;
+}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 function createUser() {
-    if (!$('#firstname').val() || !$('#email').val() || !$('#password').val()) {
+    clearValidation('create');
+    $('#createAlert').html('');
+
+    if (validateFields('')) {
         $('#createAlert').html(
-            '<div class="alert alert-warning">First name, email and password are required.</div>'
+            '<div class="alert alert-danger">Please fix the highlighted fields.</div>'
         );
         return;
     }
@@ -249,18 +615,18 @@ function createUser() {
     $.post(
         "<?= base_url('users/store') ?>",
         Object.assign(csrfData(), {
-            firstname:   $('#firstname').val(),
-            lastname:    $('#lastname').val(),
-            employee_id: $('#employee_id').val(),
+            firstname:   $('#firstname').val().trim(),
+            lastname:    $('#lastname').val().trim(),
+            employee_id: $('#employee_id').val().trim(),
             birthday:    $('#birthday').val(),
-            contactno:   $('#contactno').val(),
-            address:     $('#address').val(),
-            email:       $('#email').val(),
+            contactno:   $('#contactno').val().trim(),
+            address:     $('#address').val().trim(),
+            email:       $('#email').val().trim(),
             password:    $('#password').val(),
             role:        $('#create_role').val(),
             is_active:   $('#is_active').val(),
-            job_title:   $('#job_title').val(),
-            department:  $('#department').val()
+            job_title:   $('#job_title').val().trim(),
+            department:  $('#department').val().trim()
         }),
         function(res) {
             if (res.success) {
@@ -275,22 +641,21 @@ function createUser() {
             } else {
                 $('#createAlert').html(
                     '<div class="alert alert-danger">' +
-                    (res.message || 'Create failed.') +
-                    '</div>'
+                    (res.message || 'Create failed.') + '</div>'
                 );
             }
         },
         'json'
     ).fail(function(xhr) {
         $('#createAlert').html(
-            '<div class="alert alert-danger">Server error (' + xhr.status + '). Check CI3 logs.</div>'
+            '<div class="alert alert-danger">Server error (' + xhr.status + ').</div>'
         );
     });
 }
 
 // ── Edit ──────────────────────────────────────────────────────────────────────
 function editUser(id) {
-    // Clear previous error on open
+    clearValidation('edit');
     $('#editAlert').html('');
 
     $.get("<?= base_url('users/get/') ?>" + id, function(res) {
@@ -314,21 +679,31 @@ function editUser(id) {
 
 // ── Update ────────────────────────────────────────────────────────────────────
 function updateUser() {
+    clearValidation('edit');
+    $('#editAlert').html('');
+
+    if (validateFields('edit_')) {
+        $('#editAlert').html(
+            '<div class="alert alert-danger">Please fix the highlighted fields.</div>'
+        );
+        return;
+    }
+
     $.post(
         "<?= base_url('users/update') ?>",
         Object.assign(csrfData(), {
             id:          $('#edit_id').val(),
-            firstname:   $('#edit_firstname').val(),
-            lastname:    $('#edit_lastname').val(),
-            employee_id: $('#edit_employee_id').val(),
+            firstname:   $('#edit_firstname').val().trim(),
+            lastname:    $('#edit_lastname').val().trim(),
+            employee_id: $('#edit_employee_id').val().trim(),
             birthday:    $('#edit_birthday').val(),
-            contactno:   $('#edit_contactno').val(),
-            address:     $('#edit_address').val(),
-            email:       $('#edit_email').val(),
+            contactno:   $('#edit_contactno').val().trim(),
+            address:     $('#edit_address').val().trim(),
+            email:       $('#edit_email').val().trim(),
             role:        $('#edit_role').val(),
             is_active:   $('#edit_is_active').val(),
-            job_title:   $('#edit_job_title').val(),
-            department:  $('#edit_department').val()
+            job_title:   $('#edit_job_title').val().trim(),
+            department:  $('#edit_department').val().trim()
         }),
         function(res) {
             if (res.success) {
@@ -341,18 +716,16 @@ function updateUser() {
                 });
                 setTimeout(() => location.reload(), 1500);
             } else {
-                // Name duplicate or any other error shows inside the modal
                 $('#editAlert').html(
                     '<div class="alert alert-danger">' +
-                    (res.message || 'Update failed.') +
-                    '</div>'
+                    (res.message || 'Update failed.') + '</div>'
                 );
             }
         },
         'json'
     ).fail(function(xhr) {
         $('#editAlert').html(
-            '<div class="alert alert-danger">Server error (' + xhr.status + '). Check CI3 logs.</div>'
+            '<div class="alert alert-danger">Server error (' + xhr.status + ').</div>'
         );
     });
 }
@@ -395,4 +768,5 @@ function deleteUser(id) {
         }
     });
 }
+
 </script>

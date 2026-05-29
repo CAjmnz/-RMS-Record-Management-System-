@@ -73,7 +73,8 @@
                 </div>
                 <div class="stat-icon"><i class="fas fa-user-check"></i></div>
                 <div class="stat-footer">
-                    <a href="<?= base_url('users?filter=active') ?>">View All &rarr;</a>
+                    <a href="<?= base_url('users?filter=active') ?>">View All →</a>
+
                 </div>
             </div>
         </div>
@@ -86,7 +87,7 @@
                 </div>
                 <div class="stat-icon"><i class="fas fa-user-slash"></i></div>
                 <div class="stat-footer">
-                    <a href="<?= base_url('users') ?>">View All &rarr;</a>
+                  <a href="<?= base_url('users?filter=inactive') ?>">View All →</a>
                 </div>
             </div>
         </div>
@@ -99,7 +100,8 @@
                 </div>
                 <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
                 <div class="stat-footer">
-                    <a href="<?= base_url('users') ?>">View All &rarr;</a>
+<a href="<?= base_url('users?filter=admins') ?>">View All →</a>
+
                 </div>
             </div>
         </div>
@@ -112,7 +114,7 @@
                 </div>
                 <div class="stat-icon"><i class="fas fa-users"></i></div>
                 <div class="stat-footer">
-                    <a href="<?= base_url('users') ?>">View All &rarr;</a>
+                    <a href="<?= base_url('users?filter=nonadmins') ?>">View All →</a>
                 </div>
             </div>
         </div>

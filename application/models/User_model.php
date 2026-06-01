@@ -1,9 +1,13 @@
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-class User_model extends CI_Model
+class User_model extends CI_Model 
 {
     // ─── Fetch all non-deleted users ──────────────────────────────────
+    public function get_all_users() {
+        return $this->db->order_by('id', 'DESC')
+                        ->get('users')
+                        ->result();
+    }
     public function get_all($filters = [])
     {
         $this->db->where('deleted_at IS NULL', null, false);

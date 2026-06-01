@@ -18,8 +18,8 @@ class Users extends RMS_Controller
         $filters = [];
 
         if ($role === 'user') $filters['hide_admins'] = true;
-        if ($filter === 'admins')    $filters['role']     = 'admin';
-        if ($filter === 'nonadmins') $filters['role_not'] = 'admin';
+        if ($filter === 'admins')    $filters['role']      = 'admin';
+        if ($filter === 'nonadmins') $filters['role_not']  = 'admin';
         if ($filter === 'active')    $filters['is_active'] = 1;
         if ($filter === 'inactive')  $filters['is_active'] = 0;
 
@@ -37,7 +37,9 @@ class Users extends RMS_Controller
     {
         $user = $this->User_model->get_by_id($id);
 
-        if (!$user) return $this->jsonFail('User not found');
+        if (!$user) {
+            return $this->jsonFail('User not found');
+        }
 
         return $this->jsonSuccess('OK', $user);
     }
@@ -150,7 +152,6 @@ class Users extends RMS_Controller
             'updated_at'  => date('Y-m-d H:i:s'),
         ];
 
-        // ── Required validation ───────────────────────────────────────
         $errors = [];
 
         foreach ([
@@ -173,7 +174,6 @@ class Users extends RMS_Controller
 
         if (!empty($errors)) return $this->jsonFail('Validation failed', $errors);
 
-        // ── Duplicate checks (exclude current user) ───────────────────
         if ($this->User_model->employee_id_exists($data['employee_id'], $id)) {
             return $this->jsonFail('Validation failed', [
                 'employee_id' => 'Employee ID already exists.'

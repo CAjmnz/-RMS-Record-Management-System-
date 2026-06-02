@@ -2,10 +2,15 @@
 <?php $this->load->view('templates/sidebar'); ?>
 <?php $this->load->view('templates/topbar'); ?>
 
-<link rel="stylesheet"
-      href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+
+<!-- Page CSS -->
+<link rel="stylesheet" href="<?= base_url('assets/css/users.css') ?>">
+
+
+<!-- CSRF tokens -->
 
 <div id="main-content">
+
 
     <?php if (!empty($flash_error)): ?>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -14,12 +19,14 @@
         </div>
     <?php endif; ?>
 
+
     <?php if (!empty($flash_success)): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <?= htmlspecialchars($flash_success) ?>
             <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
         </div>
     <?php endif; ?>
+
 
     <!-- Welcome Banner -->
     <div class="welcome-banner">
@@ -36,8 +43,10 @@
         </div>
     </div>
 
+
     <!-- Stat Cards -->
     <div class="section-title">System Overview</div>
+
 
     <?php
         $stats = isset($stats) ? $stats : (object)[
@@ -64,6 +73,7 @@
         </div>
     <div class="row">
 
+
         <div class="col-xl-3 col-md-6">
             <div class="stat-card sc-active">
                 <div class="stat-info">
@@ -74,6 +84,7 @@
                 <div class="stat-icon"><i class="fas fa-user-check"></i></div>
                 <div class="stat-footer">
                     <a href="<?= base_url('users?filter=active') ?>">View All →</a>
+
 
                 </div>
             </div>
@@ -102,6 +113,7 @@
                 <div class="stat-footer">
 <a href="<?= base_url('users?filter=admins') ?>">View All →</a>
 
+
                 </div>
             </div>
         </div>
@@ -120,10 +132,13 @@
         </div>
     </div>
 
+
     <!-- Logs + Charts -->
     <div class="section-title mt-2">Recent Activity</div>
 
+
     <div class="row">
+
 
         <!-- LEFT — Logs DataTable -->
         <div class="col-lg-6">
@@ -165,8 +180,10 @@
             </div>
         </div>
 
+
         <!-- RIGHT — Charts stacked -->
         <div class="col-lg-6">
+
 
             <!-- Top — Two donuts side by side -->
             <div class="card-rms mb-4">
@@ -176,6 +193,7 @@
                 </div>
                 <div style="padding: 16px;">
                     <div class="row">
+
 
                         <!-- Donut 1: Active vs Inactive -->
                         <div class="col-6 text-center">
@@ -191,6 +209,7 @@
                             </div>
                         </div>
 
+
                         <!-- Donut 2: Admins vs Regular -->
                         <div class="col-6 text-center">
                             <div style="font-size:11px;font-weight:600;
@@ -205,9 +224,11 @@
                             </div>
                         </div>
 
+
                     </div>
                 </div>
             </div>
+
 
             <!-- Bottom — Logs bar chart -->
             <div class="card-rms mb-4">
@@ -220,16 +241,20 @@
                 </div>
             </div>
 
+
         </div>
+
 
     </div>
 
+
 </div>
+
+
+<!-- Page JS -->
+<script src="<?= base_url('assets/js/modules/dashboard.main.js') ?>"></script>
+
 
 <?php $this->load->view('templates/footer'); ?>
 
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<script src="<?= base_url('assets/js/modules/dashboard.main.js') ?>"></script>

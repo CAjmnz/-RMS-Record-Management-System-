@@ -8,9 +8,9 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="<?= base_url('assets/css/bootstrap.min.css')?>">
     <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/all.min.css')?>">
     <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/dataTables.bootstrap4.min.css') ?>">
     <!-- App CSS -->
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
     <!-- Page-specific CSS (optional) -->
@@ -28,15 +28,15 @@
 </script>
 
 <!-- jQuery — ONCE, CDN only -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="<?= base_url('assets/js/jquery-3.7.1.min.js')?>"></script>
 <!-- Bootstrap -->
 <script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>"></script>
 <!-- DataTables -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+<script src="<?= base_url('assets/js/jquery.dataTables.min.js') ?>"></script>
+<script src="<?= base_url('assets/js/dataTables.bootstrap4.min.js') ?>"></script>
 <!-- SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="<?= base_url('assets/js/sweetalert2.all.min.js') ?>"></script>
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="<?= base_url('assets/js/chart.umd.min.js')?>"></script>
 <!-- App config -->
 <script src="<?= base_url('assets/js/config.js') ?>"></script>

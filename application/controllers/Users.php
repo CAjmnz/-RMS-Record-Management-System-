@@ -7,6 +7,7 @@ class Users extends RMS_Controller
     {
         parent::__construct();
         $this->load->model('User_model');
+        $this->load->library('form_validation'); 
     }
 
     public function index()
@@ -45,89 +46,68 @@ class Users extends RMS_Controller
     }
 
     public function store()
-    {
-        if ($this->session->userdata('role') !== 'admin') {
-            return $this->jsonFail('Unauthorized');
-        }
-
-        $data = [
-            'firstname'   => trim($this->input->post('firstname',   TRUE)),
-            'lastname'    => trim($this->input->post('lastname',    TRUE)),
-            'employee_id' => trim($this->input->post('employee_id', TRUE)),
-            'birthday'    => trim($this->input->post('birthday',    TRUE)),
-            'contactno'   => trim($this->input->post('contactno',   TRUE)),
-            'address'     => trim($this->input->post('address',     TRUE)),
-            'email'       => trim($this->input->post('email',       TRUE)),
-            'password'    => $this->input->post('password', FALSE),
-            'role'        => trim($this->input->post('role',        TRUE)),
-            'is_active'   => trim($this->input->post('is_active',   TRUE)),
-            'job_title'   => trim($this->input->post('job_title',   TRUE)),
-            'department'  => trim($this->input->post('department',  TRUE)),
-        ];
-
-        $errors = [];
-
-        foreach ([
-            'firstname','lastname','employee_id','birthday',
-            'contactno','address','email','role','department','job_title'
-        ] as $field) {
-            if (empty($data[$field])) {
-                $errors[$field] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
-            }
-        }
-
-        if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Invalid email format.';
-        }
-
-        if (!empty($data['contactno']) &&
-            (!ctype_digit($data['contactno']) || strlen($data['contactno']) !== 11)) {
-            $errors['contactno'] = 'Must be exactly 11 digits.';
-        }
-
-        if (!empty($errors)) return $this->jsonFail('Validation failed', $errors);
-
-        if ($this->User_model->employee_id_exists($data['employee_id'])) {
-            return $this->jsonFail('Validation failed', [
-                'employee_id' => 'Employee ID already exists.'
-            ]);
-        }
-
-        if ($this->User_model->email_exists($data['email'])) {
-            return $this->jsonFail('Validation failed', [
-                'email' => 'Email already exists.'
-            ]);
-        }
-
-        if ($this->User_model->full_name_exists($data['firstname'], $data['lastname'])) {
-            return $this->jsonFail('Validation failed', [
-                'firstname' => 'This name combination already exists.',
-                'lastname'  => 'This name combination already exists.'
-            ]);
-        }
-
-        $password = !empty($data['password']) ? $data['password'] : 'rms-2026';
-
-        $insert = $this->User_model->insert([
-            'employee_id' => $data['employee_id'],
-            'firstname'   => $data['firstname'],
-            'lastname'    => $data['lastname'],
-            'birthday'    => $data['birthday'],
-            'address'     => $data['address'],
-            'contactno'   => $data['contactno'],
-            'email'       => $data['email'],
-            'password'    => password_hash($password, PASSWORD_DEFAULT),
-            'role'        => $data['role'],
-            'is_active'   => $data['is_active'],
-            'job_title'   => $data['job_title'],
-            'department'  => $data['department'],
-            'created_at'  => date('Y-m-d H:i:s')
-        ]);
-
-        if (!$insert) return $this->jsonFail('Database insert failed.');
-
-        return $this->jsonSuccess('User created successfully.');
+{
+    if ($this->session->userdata('role') !== 'admin') {
+        return $this->jsonFail('Unauthorized');
     }
+
+    $data = [
+        'firstname'   => trim($this->input->post('firstname',   TRUE)),
+        'lastname'    => trim($this->input->post('lastname',    TRUE)),
+        'employee_id' => trim($this->input->post('employee_id', TRUE)),
+        'birthday'    => trim($this->input->post('birthday',    TRUE)),
+        'contactno'   => trim($this->input->post('contactno',   TRUE)),
+        'address'     => trim($this->input->post('address',     TRUE)),
+        'email'       => trim($this->input->post('email',       TRUE)),
+        'password'    => $this->input->post('password', FALSE),
+        'role'        => trim($this->input->post('role',        TRUE)),
+        'is_active'   => trim($this->input->post('is_active',   TRUE)),
+        'job_title'   => trim($this->input->post('job_title',   TRUE)),
+        'department'  => trim($this->input->post('department',  TRUE)),
+    ];
+
+$this->form_validation->set_rules('firstname', 'First Name', 'required|trim');
+$this->form_validation->set_rules('lastname', 'Last Name', 'required|trim');
+$this->form_validation->set_rules('employee_id', 'Employee ID', 'required|trim');
+$this->form_validation->set_rules('birthday', 'Birthday', 'required');
+$this->form_validation->set_rules('contactno', 'Contact Number', 'required|numeric|exact_length[11]');
+$this->form_validation->set_rules('address', 'Address', 'required|trim');
+$this->form_validation->set_rules('email', 'Email', 'required|valid_email|trim');
+$this->form_validation->set_rules('role', 'Role', 'required');
+$this->form_validation->set_rules('department', 'Department', 'required');
+$this->form_validation->set_rules('job_title', 'Job Title', 'required');
+
+if ($this->form_validation->run() === FALSE) {
+    return $this->jsonFail('Validation failed', $this->form_validation->error_array());
+}
+   
+    // DEFAULT PASSWORD
+    $password = !empty($data['password']) ? $data['password'] : 'rms-2026';
+
+    $insert = $this->User_model->insert([
+        'employee_id' => $data['employee_id'],
+        'firstname'   => $data['firstname'],
+        'lastname'    => $data['lastname'],
+        'birthday'    => $data['birthday'],
+        'address'     => $data['address'],
+        'contactno'   => $data['contactno'],
+        'email'       => $data['email'],
+        'password'    => password_hash($password, PASSWORD_DEFAULT),
+        'role'        => $data['role'],
+        'is_active'   => $data['is_active'],
+        'job_title'   => $data['job_title'],
+        'department'  => $data['department'],
+
+        // 🔥 IMPORTANT NEW FIELD
+        'must_change_password' => 1,
+
+        'created_at'  => date('Y-m-d H:i:s')
+    ]);
+
+    if (!$insert) return $this->jsonFail('Database insert failed.');
+
+    return $this->jsonSuccess('User created successfully.');
+}
 
     public function update()
     {
@@ -152,53 +132,29 @@ class Users extends RMS_Controller
             'updated_at'  => date('Y-m-d H:i:s'),
         ];
 
-        $errors = [];
+        $this->form_validation->set_rules('firstname', 'First Name', 'required|trim');
+$this->form_validation->set_rules('lastname', 'Last Name', 'required|trim');
+$this->form_validation->set_rules('employee_id', 'Employee ID', 'required|trim');
+$this->form_validation->set_rules('birthday', 'Birthday', 'required');
+$this->form_validation->set_rules('contactno', 'Contact Number', 'required|numeric|exact_length[11]');
+$this->form_validation->set_rules('address', 'Address', 'required|trim');
+$this->form_validation->set_rules('email', 'Email', 'required|valid_email|trim');
+$this->form_validation->set_rules('role', 'Role', 'required');
+$this->form_validation->set_rules('department', 'Department', 'required');
+$this->form_validation->set_rules('job_title', 'Job Title', 'required');
 
-        foreach ([
-            'firstname','lastname','employee_id','birthday',
-            'contactno','address','email','role','department','job_title'
-        ] as $field) {
-            if (empty($data[$field])) {
-                $errors[$field] = ucfirst(str_replace('_', ' ', $field)) . ' is required.';
-            }
-        }
+if ($this->form_validation->run() === FALSE) {
+    return $this->jsonFail('Validation failed', $this->form_validation->error_array());
+}
 
-        if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Invalid email format.';
-        }
+$update = $this->User_model->update($id, $data);
 
-        if (!empty($data['contactno']) &&
-            (!ctype_digit($data['contactno']) || strlen($data['contactno']) !== 11)) {
-            $errors['contactno'] = 'Must be exactly 11 digits.';
-        }
+if (!$update) {
+    return $this->jsonFail('Update failed.');
+}
 
-        if (!empty($errors)) return $this->jsonFail('Validation failed', $errors);
-
-        if ($this->User_model->employee_id_exists($data['employee_id'], $id)) {
-            return $this->jsonFail('Validation failed', [
-                'employee_id' => 'Employee ID already exists.'
-            ]);
-        }
-
-        if ($this->User_model->email_exists($data['email'], $id)) {
-            return $this->jsonFail('Validation failed', [
-                'email' => 'Email already exists.'
-            ]);
-        }
-
-        if ($this->User_model->full_name_exists($data['firstname'], $data['lastname'], $id)) {
-            return $this->jsonFail('Validation failed', [
-                'firstname' => 'This name combination already exists.',
-                'lastname'  => 'This name combination already exists.'
-            ]);
-        }
-
-        $update = $this->User_model->update($id, $data);
-
-        if (!$update) return $this->jsonFail('Update failed.');
-
-        return $this->jsonSuccess('User updated successfully.');
-    }
+return $this->jsonSuccess('User updated successfully.'); 
+}
 
     public function delete($id)
     {

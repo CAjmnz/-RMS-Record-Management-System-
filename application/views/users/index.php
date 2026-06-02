@@ -26,6 +26,28 @@
             <?php else: ?>
                 <span class="badge badge-secondary">Read-only</span>
             <?php endif; ?>
+            <div class="table-filters mb-3">
+
+    <select id="filterRole" class="form-control form-control-sm d-inline-block" style="width:150px;">
+        <option value="">All Roles</option>
+        <option value="admin">Admin</option>
+        <option value="user">User</option>
+    </select>
+
+    <select id="filterStatus" class="form-control form-control-sm d-inline-block" style="width:150px;">
+        <option value="">All Status</option>
+        <option value="1">Active</option>
+        <option value="0">Inactive</option>
+    </select>
+
+    <input type="date" id="filterDate" class="form-control form-control-sm d-inline-block" style="width:180px;">
+
+    <input type="text" id="filterDepartment" class="form-control form-control-sm d-inline-block"
+           placeholder="Department" style="width:180px;">
+
+    <button id="resetFilters" class="btn btn-sm btn-secondary">Reset</button>
+
+</div>
         </div>
 
         <div class="table-responsive">
@@ -108,13 +130,13 @@
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="firstname" placeholder="First Name">
+                        <input class="form-control" id="firstname" autocomplete="off" placeholder="First Name">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="lastname" placeholder="Last Name">
+                        <input class="form-control" id="lastname" autocomplete="off" placeholder="Last Name">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -122,7 +144,7 @@
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="employee_id" placeholder="Employee ID">
+                            <input class="form-control" id="employee_id" autocomplete="off" placeholder="Employee ID">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -136,13 +158,13 @@
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="contactno" placeholder="Contact Number">
+                            <input class="form-control" id="contactno" autocomplete="off" placeholder="Contact Number">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="address" placeholder="Address">
+                            <input class="form-control" id="address" autocomplete="off" placeholder="Address">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -150,14 +172,17 @@
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="email" placeholder="Email">
+                            <input class="form-control" id="email" autocomplete="off" placeholder="Email">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" type="password"
-                                   id="password" placeholder="Password (default: rms-2026)">
+                        <input class="form-control"
+       type="text"
+       id="password"
+       value="rms-2026"
+       autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -218,13 +243,13 @@
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_firstname" placeholder="First Name">
+                            <input class="form-control" id="edit_firstname" autocomplete="off" placeholder="First Name">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_lastname" placeholder="Last Name">
+                            <input class="form-control" id="edit_lastname" autocomplete="off" placeholder="Last Name">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -232,7 +257,7 @@
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_employee_id" placeholder="Employee ID">
+                            <input class="form-control" id="edit_employee_id" autocomplete="off" placeholder="Employee ID">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -246,13 +271,13 @@
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_contactno" placeholder="Contact Number">
+                            <input class="form-control" id="edit_contactno" autocomplete="off" placeholder="Contact Number">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_address" placeholder="Address">
+                            <input class="form-control" id="edit_address" autocomplete="off" placeholder="Address">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -260,7 +285,7 @@
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_email" placeholder="Email">
+                            <input class="form-control" id="edit_email" autocomplete="off" placeholder="Email">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -288,13 +313,13 @@
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_job_title" placeholder="Job Title">
+                            <input class="form-control" id="edit_job_title" autocomplete="off" placeholder="Job Title">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_department" placeholder="Department">
+                            <input class="form-control" id="edit_department" autocomplete="off" placeholder="Department">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>

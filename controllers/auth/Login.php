@@ -9,8 +9,8 @@ class Login extends Guest_Controller {
         $this->load->helper(['form', 'url']);
         $this->load->library('form_validation');
 
-        // Load model here with explicit alias — guarantees $this->auth_model is always set
         $this->load->model('auth/Auth_model', 'auth_model');
+        $this->load->model('User_model'); // 🔥 REQUIRED for password update
     }
 
     public function index()
@@ -21,7 +21,7 @@ class Login extends Guest_Controller {
 
     public function submit()
     {
-        $this->form_validation->set_rules('email',    'Email',    'required|trim|valid_email');
+        $this->form_validation->set_rules('email', 'Email', 'required|trim|valid_email');
         $this->form_validation->set_rules('password', 'Password', 'required');
 
         if ($this->form_validation->run() === FALSE) {
@@ -30,43 +30,66 @@ class Login extends Guest_Controller {
             return;
         }
 
-        $email    = $this->input->post('email',    TRUE);
+        $email    = $this->input->post('email', TRUE);
         $password = $this->input->post('password', TRUE);
 
-        // Use alias 'auth_model' — matches what we passed to load->model()
         $user = $this->auth_model->get_by_email($email);
 
-        // ── TEMP DEBUG — REMOVE AFTER LOGIN WORKS ──
-        echo '<pre>';
-        var_dump($email);
-        var_dump($password);
-        var_dump($user);
-        if ($user) {
-            var_dump($user->password);
-            var_dump(password_verify($password, $user->password));
-        }
-        echo '</pre>';
-        die();
-        // ── END DEBUG ──
+        // ❌ REMOVE DEBUG BLOCK COMPLETELY
 
-        if ( ! $user || ! password_verify($password, $user->password)) {
+        if (!$user || !password_verify($password, $user->password)) {
             $this->session->set_flashdata('error', 'Invalid email or password.');
             redirect('auth/login');
             return;
         }
 
-        $session_data = [
+        // 🔐 SESSION SET
+        $this->session->set_userdata([
             'user_id'   => $user->id,
             'firstname' => $user->firstname,
             'lastname'  => $user->lastname,
             'email'     => $user->email,
             'role'      => $user->role,
             'logged_in' => TRUE,
-        ];
-        $this->session->set_userdata($session_data);
+        ]);
 
-        $this->session->set_flashdata('success', 'Welcome back, ' . $user->firstname . '!');
+        // 🔥 MUST CHANGE PASSWORD CHECK
+        if ((int)$user->must_change_password === 1) {
+            redirect('auth/change_password');
+            return;
+        }
+
         redirect('dashboard');
+    }
+
+    // 🔐 PASSWORD UPDATE (FIRST LOGIN FLOW)
+    public function update_password()
+    {
+        $user_id = $this->session->userdata('user_id');
+
+        if (!$user_id) {
+            echo json_encode(['success' => false, 'message' => 'Not logged in']);
+            return;
+        }
+
+        $password = $this->input->post('password', TRUE);
+
+        if (empty($password)) {
+            echo json_encode(['success' => false, 'message' => 'Password required']);
+            return;
+        }
+
+        $update = $this->User_model->update($user_id, [
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'must_change_password' => 0
+        ]);
+
+        if (!$update) {
+            echo json_encode(['success' => false, 'message' => 'Update failed']);
+            return;
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Password updated']);
     }
 
     public function logout()

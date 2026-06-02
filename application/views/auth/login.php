@@ -74,6 +74,7 @@
                         name="email"
                         id="email"
                         class="form-control"
+                        autocomplete="off" 
                         placeholder="Enter your email"
                         value="<?php echo set_value('email'); ?>"
                         required
@@ -93,6 +94,7 @@
                             name="password"
                             id="password"
                             class="form-control"
+                            autocomplete="off" 
                             placeholder="Enter your password"
                             required
                         >

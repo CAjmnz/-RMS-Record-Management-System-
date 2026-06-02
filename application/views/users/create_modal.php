@@ -1,3 +1,4 @@
+<div id="createAlert"></div>
 <div class="modal fade" id="createUserModal">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">

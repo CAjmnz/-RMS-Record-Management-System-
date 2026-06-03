@@ -48,13 +48,15 @@ function clearValidation(type) {
 
 
 // SHOW FIELD ERROR
-function showFieldError(selector, message) {
-    const input = $(selector);
-    const wrap = input.closest('.field-wrap');
+function showFieldError(selector, message)
+{
+    let input = $(selector);
 
     input.addClass('is-invalid');
-    wrap.addClass('has-error');
-    wrap.find('.error-tooltip').text(message);
+
+    input.closest('.field-wrap')
+         .find('.error-tooltip')
+         .text(message);
 }
 
 

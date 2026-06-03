@@ -9,6 +9,24 @@
 <input type="hidden" id="csrf_token_name"  value="<?= $csrf_token_name ?>">
 <input type="hidden" id="csrf_token_value" value="<?= $csrf_token_value ?>">
 
+<!-- BASE_URL for JS -->
+<script>var BASE_URL = "<?= base_url() ?>";</script>
+
+<style>
+/* See More / See Less button — lives here so it inherits modal scope */
+.btn-see-more {
+    background: none;
+    border: none;
+    padding: 2px 0 0;
+    color: #721c24;
+    font-size: .79rem;
+    text-decoration: underline;
+    cursor: pointer;
+    display: inline-block;
+}
+.btn-see-more:focus { outline: none; }
+</style>
+
 <div id="main-content">
 
     <div class="section-title">User Management</div>
@@ -26,28 +44,29 @@
             <?php else: ?>
                 <span class="badge badge-secondary">Read-only</span>
             <?php endif; ?>
+
             <div class="table-filters mb-3">
+                <select id="filterRole" class="form-control form-control-sm d-inline-block" style="width:150px;">
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select>
 
-    <select id="filterRole" class="form-control form-control-sm d-inline-block" style="width:150px;">
-        <option value="">All Roles</option>
-        <option value="admin">Admin</option>
-        <option value="user">User</option>
-    </select>
+                <select id="filterStatus" class="form-control form-control-sm d-inline-block" style="width:150px;">
+                    <option value="">All Status</option>
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                </select>
 
-    <select id="filterStatus" class="form-control form-control-sm d-inline-block" style="width:150px;">
-        <option value="">All Status</option>
-        <option value="1">Active</option>
-        <option value="0">Inactive</option>
-    </select>
+                <input type="date" id="filterDate"
+                       class="form-control form-control-sm d-inline-block" style="width:180px;">
 
-    <input type="date" id="filterDate" class="form-control form-control-sm d-inline-block" style="width:180px;">
+                <input type="text" id="filterDepartment"
+                       class="form-control form-control-sm d-inline-block"
+                       placeholder="Department" style="width:180px;">
 
-    <input type="text" id="filterDepartment" class="form-control form-control-sm d-inline-block"
-           placeholder="Department" style="width:180px;">
-
-    <button id="resetFilters" class="btn btn-sm btn-secondary">Reset</button>
-
-</div>
+                <button id="resetFilters" class="btn btn-sm btn-secondary">Reset</button>
+            </div>
         </div>
 
         <div class="table-responsive">
@@ -61,6 +80,7 @@
                         <th>Contact</th>
                         <th>Address</th>
                         <th>Created</th>
+                        <th>Department</th>
                         <?php if ($role === 'admin'): ?>
                             <th>Actions</th>
                         <?php endif; ?>
@@ -88,11 +108,14 @@
                             </td>
                             <td><?= htmlspecialchars($user->contactno) ?></td>
                             <td><?= htmlspecialchars($user->address) ?></td>
-                            <td><?= date('M d, Y h:i A', strtotime($user->created_at)) ?></td>
+                            <td class="created-date" data-date="<?= $user->created_at ?>">
+                                <?= date('M d, Y h:i A', strtotime($user->created_at)) ?>
+                            </td>
+                            <td><?= htmlspecialchars($user->department) ?></td>
                             <?php if ($role === 'admin'): ?>
                                 <td>
-                                    <button class="btn btn-primary btn-sm"
-                                            onclick="editUser(<?= $user->id ?>)">Edit</button>
+                                    <button class="btn btn-primary btn-sm btn-edit"
+                                            data-id="<?= $user->id ?>">Edit</button>
                                     <?php if ($user->id != $logged_user_id): ?>
                                         <button class="btn btn-danger btn-sm"
                                                 onclick="deleteUser(<?= $user->id ?>)">Delete</button>
@@ -103,7 +126,7 @@
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="<?= $role === 'admin' ? 8 : 7 ?>"
+                        <td colspan="<?= $role === 'admin' ? 9 : 8 ?>"
                             class="text-center text-muted py-4">
                             No users found.
                         </td>
@@ -118,78 +141,94 @@
 
 <?php if ($role === 'admin'): ?>
 
-<!-- CREATE MODAL -->
-<div class="modal fade" id="createUserModal">
-    <div class="modal-dialog modal-lg">
+<!-- ════════════════════════════════════════
+     CREATE MODAL
+     ════════════════════════════════════════ -->
+<div class="modal fade" id="createUserModal"
+     tabindex="-1" role="dialog" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5>Create User</h5>
+                <h5 class="modal-title" id="createUserModalLabel">Create User</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="createAlert"></div>
+
+                <div id="createAlert" style="display:none;"></div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                        <input class="form-control" id="firstname" autocomplete="off" placeholder="First Name">
+                            <label for="firstname">First Name</label>
+                            <input class="form-control" id="firstname" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                        <input class="form-control" id="lastname" autocomplete="off" placeholder="Last Name">
+                            <label for="lastname">Last Name</label>
+                            <input class="form-control" id="lastname" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="employee_id" autocomplete="off" placeholder="Employee ID">
+                            <label for="employee_id">Employee ID</label>
+                            <input class="form-control" id="employee_id" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
+                            <label for="birthday">Birthday</label>
                             <input class="form-control" type="date" id="birthday">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="contactno" autocomplete="off" placeholder="Contact Number">
+                            <label for="contactno">Contact No</label>
+                            <input class="form-control" id="contactno" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="address" autocomplete="off" placeholder="Address">
+                            <label for="address">Address</label>
+                            <input class="form-control" id="address" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="email" autocomplete="off" placeholder="Email">
+                            <label for="email">Email</label>
+                            <input class="form-control" id="email" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                        <input class="form-control"
-       type="text"
-       id="password"
-       value="rms-2026"
-       autocomplete="off">
+                            <label for="password">Password</label>
+                            <input class="form-control" type="text" id="password"
+                                   value="rms-2026" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
+                            <label for="create_role">Role</label>
                             <select class="form-control" id="create_role">
                                 <option value="user">User</option>
                                 <option value="admin">Admin</option>
@@ -199,6 +238,7 @@
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
+                            <label for="is_active">Status</label>
                             <select class="form-control" id="is_active">
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
@@ -207,21 +247,25 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="job_title" placeholder="Job Title">
+                            <label for="job_title">Job Title</label>
+                            <input class="form-control" id="job_title" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="department" placeholder="Department">
+                            <label for="department">Department</label>
+                            <input class="form-control" id="department" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-            </div>
+
+            </div><!-- /modal-body -->
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button class="btn btn-success" onclick="createUser()">Create User</button>
@@ -230,69 +274,88 @@
     </div>
 </div>
 
-<!-- EDIT MODAL -->
-<div class="modal fade" id="editUserModal">
-    <div class="modal-dialog modal-lg">
+<!-- ════════════════════════════════════════
+     EDIT MODAL
+     ════════════════════════════════════════ -->
+<div class="modal fade" id="editUserModal"
+     tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5>Edit User</h5>
+                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="editAlert"></div>
+
+                <div id="editAlert" style="display:none;"></div>
+
                 <input type="hidden" id="edit_id">
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_firstname" autocomplete="off" placeholder="First Name">
+                            <label for="edit_firstname">First Name</label>
+                            <input class="form-control" id="edit_firstname" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_lastname" autocomplete="off" placeholder="Last Name">
+                            <label for="edit_lastname">Last Name</label>
+                            <input class="form-control" id="edit_lastname" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_employee_id" autocomplete="off" placeholder="Employee ID">
+                            <label for="edit_employee_id">Employee ID</label>
+                            <input class="form-control" id="edit_employee_id" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
+                            <label for="edit_birthday">Birthday</label>
                             <input class="form-control" type="date" id="edit_birthday">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_contactno" autocomplete="off" placeholder="Contact Number">
+                            <label for="edit_contactno">Contact No</label>
+                            <input class="form-control" id="edit_contactno" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_address" autocomplete="off" placeholder="Address">
-                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group col-6 mb-2">
-                        <div class="field-wrap">
-                            <input class="form-control" id="edit_email" autocomplete="off" placeholder="Email">
+                            <label for="edit_address">Address</label>
+                            <input class="form-control" id="edit_address" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
+                            <label for="edit_email">Email</label>
+                            <input class="form-control" id="edit_email" autocomplete="off">
+                            <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-6 mb-2">
+                        <div class="field-wrap">
+                            <label for="edit_role">Role</label>
                             <select class="form-control" id="edit_role">
                                 <option value="user">User</option>
                                 <option value="admin">Admin</option>
@@ -302,6 +365,7 @@
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
+                            <label for="edit_is_active">Status</label>
                             <select class="form-control" id="edit_is_active">
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
@@ -310,21 +374,25 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_job_title" autocomplete="off" placeholder="Job Title">
+                            <label for="edit_job_title">Job Title</label>
+                            <input class="form-control" id="edit_job_title" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
-                            <input class="form-control" id="edit_department" autocomplete="off" placeholder="Department">
+                            <label for="edit_department">Department</label>
+                            <input class="form-control" id="edit_department" autocomplete="off">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
                 </div>
-            </div>
+
+            </div><!-- /modal-body -->
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button class="btn btn-primary" onclick="updateUser()">Update User</button>

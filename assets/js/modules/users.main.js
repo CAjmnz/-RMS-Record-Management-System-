@@ -1,167 +1,485 @@
-// ── CSRF helper ─────────────────────────────
-function csrfData() {
-    return AppConfig.csrfData();
-}
+/**
+ * users.main.js
+ * Handles: Create, Edit, Delete users via AJAX
+ * Validation UI: field-wrap / field-error-icon / error-tooltip pattern
+ * Error summary: compact alert, 3-line cap with See More / See Less toggle
+ */
 
-// ── INIT ─────────────────────────────────────
-$(document).ready(function () {
+$(function () {
 
-    if ($('#usersTable').length) {
-        $('#usersTable').DataTable({
-            pageLength: 5,
-            lengthMenu: [5, 10, 25, 50, 100],
-            order: [],
-            columnDefs: [{ orderable: false, targets: -1 }]
+    /* ══════════════════════════════════════════════════════════════════
+       CSRF
+       ══════════════════════════════════════════════════════════════════ */
+    function csrfData() {
+        return {
+            [$("#csrf_token_name").val()]: $("#csrf_token_value").val()
+        };
+    }
+
+    // Refresh CSRF token from server response headers isn't available in CI3
+    // so we reload on success instead of re-using the token.
+
+
+    /* ══════════════════════════════════════════════════════════════════
+       COLUMN FILTERS  (Role / Status / Date / Department)
+       ══════════════════════════════════════════════════════════════════ */
+    function applyFilters() {
+        var role       = $("#filterRole").val().toLowerCase();
+        var status     = $("#filterStatus").val();
+        var dateFilter = $("#filterDate").val();
+        var dept       = $("#filterDepartment").val().toLowerCase().trim();
+
+        $("#usersTable tbody tr").each(function () {
+            var $row    = $(this);
+            var cells   = $row.find("td");
+
+            // If no-data row, always show
+            if (cells.length <= 1) { $row.show(); return; }
+
+            var rowRole   = cells.eq(2).text().trim().toLowerCase();
+            var rowStatus = cells.eq(3).text().trim().toLowerCase();
+            var rowDate   = cells.eq(6).attr("data-date") || "";
+            var rowDept   = cells.eq(7).text().trim().toLowerCase();
+
+            var show = true;
+
+            if (role   && rowRole.indexOf(role)     === -1) show = false;
+            if (status !== "") {
+                var wantActive = status === "1";
+                var isActive   = rowStatus === "active";
+                if (wantActive !== isActive) show = false;
+            }
+            if (dateFilter && rowDate.indexOf(dateFilter) === -1) show = false;
+            if (dept   && rowDept.indexOf(dept)      === -1) show = false;
+
+            $row.toggle(show);
         });
     }
 
-    // reset create modal
-    $('#createUserModal').on('hidden.bs.modal', function () {
-        clearValidation('#createUserModal');
-        $('#createAlert').html('');
-        $(this).find('input, select').val('');
+    $("#filterRole, #filterStatus, #filterDate, #filterDepartment").on("change input", applyFilters);
+
+    $("#resetFilters").on("click", function () {
+        $("#filterRole, #filterStatus, #filterDate, #filterDepartment").val("");
+        applyFilters();
     });
 
-    // reset edit modal
-    $('#editUserModal').on('hidden.bs.modal', function () {
-        clearValidation('#editUserModal');
-        $('#editAlert').html('');
-    });
 
-});
+    /* ══════════════════════════════════════════════════════════════════
+       VALIDATION UI HELPERS
+       ══════════════════════════════════════════════════════════════════ */
+    var MAX_VISIBLE = 3;
 
-// ── CLEAR VALIDATION ─────────────────────────
-function clearValidation(modal) {
-    $(modal).find('.is-invalid').removeClass('is-invalid');
-    $(modal).find('.error-text').text('');
-}
+    /**
+     * Mark one field as invalid: red border + tooltip icon.
+     * @param {jQuery} $input  - the input/select element
+     * @param {string} message - error message for the tooltip
+     */
+    function setFieldError($input, message) {
+        $input
+            .removeClass("is-valid")
+            .addClass("is-invalid");
 
-// ── SHOW FIELD ERROR ─────────────────────────
-function showFieldError(selector, message) {
-    $(selector).addClass('is-invalid');
-    $(selector).closest('.form-group')
-        .find('.error-text')
-        .text(message);
-}
+        var $wrap = $input.closest(".field-wrap");
+        $wrap.addClass("has-error");
+        $wrap.find(".error-tooltip").text(message);
+    }
 
-// ── BACKEND ERROR HANDLER ────────────────────
-function applyBackendErrors(errors, prefix, alertBox) {
+    /**
+     * Mark one field as valid: green border, remove icon.
+     */
+    function setFieldValid($input) {
+        $input
+            .removeClass("is-invalid")
+            .addClass("is-valid");
 
-    clearValidation('#createUserModal');
-    clearValidation('#editUserModal');
+        var $wrap = $input.closest(".field-wrap");
+        $wrap.removeClass("has-error");
+        $wrap.find(".error-tooltip").text("");
+    }
 
-    $.each(errors, function (field, msg) {
-        showFieldError('#' + prefix + field, msg);
-    });
+    /**
+     * Clear all validation state inside a modal.
+     * @param {string} modalId - e.g. "#createUserModal"
+     */
+    function clearAllErrors(modalId) {
+        var $modal = $(modalId);
 
-    $(alertBox).html(`
-        <div class="alert alert-danger">
-            Please fix the highlighted fields.
-        </div>
-    `);
-}
+        $modal.find(".form-control")
+              .removeClass("is-invalid is-valid");
 
-// ── CREATE USER ──────────────────────────────
-function createUser() {
+        $modal.find(".field-wrap")
+              .removeClass("has-error");
 
-    let payload = {
-        ...csrfData(),
-        firstname: $('#firstname').val(),
-        lastname: $('#lastname').val(),
-        employee_id: $('#employee_id').val(),
-        birthday: $('#birthday').val(),
-        contactno: $('#contactno').val(),
-        address: $('#address').val(),
-        email: $('#email').val(),
-        password: $('#password').val(),
-        role: $('#create_role').val(),
-        is_active: $('#is_active').val(),
-        job_title: $('#job_title').val(),
-        department: $('#department').val()
-    };
+        $modal.find(".error-tooltip")
+              .text("");
 
-    $.post(base_url + "users/store", payload, function (res) {
+        // Clear summary alert
+        var alertId = modalId === "#createUserModal" ? "#createAlert" : "#editAlert";
+        $(alertId).html("").hide();
+    }
 
-        if (res.success) {
-            Swal.fire("Success", res.message, "success");
-            setTimeout(() => location.reload(), 1000);
-            return;
-        }
+    /**
+     * Apply a full errors object to a modal's fields + summary box.
+     *
+     * @param {string} modalId  - "#createUserModal" or "#editUserModal"
+     * @param {string} alertId  - "#createAlert"     or "#editAlert"
+     * @param {object} errors   - { fieldName: "message", ... }
+     * @param {object} fieldMap - { fieldName: jQuery $input, ... }
+     */
+    function applyErrors(modalId, alertId, errors, fieldMap) {
 
-        if (res.errors) {
-            applyBackendErrors(res.errors, '', '#createAlert');
-            return;
-        }
-
-        $('#createAlert').html(
-            `<div class="alert alert-danger">${res.message}</div>`
-        );
-
-    }, "json");
-
-}
-
-// ── UPDATE USER ──────────────────────────────
-function updateUser() {
-
-    let payload = {
-        ...csrfData(),
-        id: $('#edit_id').val(),
-        firstname: $('#edit_firstname').val(),
-        lastname: $('#edit_lastname').val(),
-        employee_id: $('#edit_employee_id').val(),
-        birthday: $('#edit_birthday').val(),
-        contactno: $('#edit_contactno').val(),
-        address: $('#edit_address').val(),
-        email: $('#edit_email').val(),
-        role: $('#edit_role').val(),
-        is_active: $('#edit_is_active').val(),
-        job_title: $('#edit_job_title').val(),
-        department: $('#edit_department').val()
-    };
-
-    $.post(base_url + "users/update", payload, function (res) {
-
-        if (res.success) {
-            Swal.fire("Updated", res.message, "success");
-            setTimeout(() => location.reload(), 1000);
-            return;
-        }
-
-        if (res.errors) {
-            applyBackendErrors(res.errors, 'edit_', '#editAlert');
-            return;
-        }
-
-        $('#editAlert').html(
-            `<div class="alert alert-danger">${res.message}</div>`
-        );
-
-    }, "json");
-}
-
-// ── DELETE ───────────────────────────────────
-function deleteUser(id) {
-
-    Swal.fire({
-        title: "Delete user?",
-        icon: "warning",
-        showCancelButton: true
-    }).then((result) => {
-
-        if (!result.isConfirmed) return;
-
-        $.post(base_url + "users/delete/" + id, csrfData(), function (res) {
-
-            if (res.success) {
-                Swal.fire("Deleted", res.message, "success");
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                Swal.fire("Error", res.message, "error");
+        // ── Per-field UI ──────────────────────────────────────────────
+        $.each(fieldMap, function (name, $input) {
+            if (errors[name]) {
+                setFieldError($input, errors[name]);
+            } else if ($input.val() !== "") {
+                // Only green if the field has a value and no error
+                setFieldValid($input);
             }
+        });
 
-        }, "json");
+        // ── Build summary list ────────────────────────────────────────
+        var items = [];
+        $.each(errors, function (name, msg) {
+            var label = labelFor(name);
+            // Shorten message: remove trailing period for compactness
+            var short = msg.replace(/\.$/, "");
+            items.push(label + " — " + short);
+        });
 
+        if (items.length === 0) return;
+
+        var $alert = $(alertId);
+        var html   = '<div style="font-size:.82rem;line-height:1.5;">';
+        html += '<strong style="display:block;margin-bottom:4px;">&#9888; Please fix the following:</strong>';
+        html += '<ul class="mb-0 pl-3" id="errSummaryList_' + alertId.replace('#','') + '">';
+
+        items.forEach(function (text, idx) {
+            var hidden = idx >= MAX_VISIBLE ? ' class="err-extra d-none"' : '';
+            html += '<li' + hidden + '>' + $('<span>').text(text).html() + '</li>';
+        });
+
+        html += '</ul>';
+
+        if (items.length > MAX_VISIBLE) {
+            var remaining = items.length - MAX_VISIBLE;
+            html += '<button type="button" class="btn-see-more" data-expanded="0">'
+                  + 'See More (' + remaining + ' more)</button>';
+        }
+
+        html += '</div>';
+
+        $alert
+            .html(html)
+            .removeClass()
+            .addClass("alert alert-danger p-2 mt-1 mb-2")
+            .show();
+
+        // ── See More / See Less toggle ────────────────────────────────
+        $alert.find(".btn-see-more").on("click", function () {
+            var $btn      = $(this);
+            var expanded  = $btn.data("expanded") === 1 || $btn.data("expanded") === "1";
+            var remaining = items.length - MAX_VISIBLE;
+
+            if (expanded) {
+                $alert.find(".err-extra").addClass("d-none");
+                $btn.text("See More (" + remaining + " more)").data("expanded", 0);
+            } else {
+                $alert.find(".err-extra").removeClass("d-none");
+                $btn.text("See Less").data("expanded", 1);
+            }
+        });
+    }
+
+    /** Human-readable label for each field name */
+    function labelFor(name) {
+        var map = {
+            firstname   : "First Name",
+            lastname    : "Last Name",
+            employee_id : "Employee ID",
+            birthday    : "Birthday",
+            contactno   : "Contact No",
+            address     : "Address",
+            email       : "Email",
+            password    : "Password",
+            role        : "Role",
+            is_active   : "Status",
+            job_title   : "Job Title",
+            department  : "Department"
+        };
+        return map[name] || (name.charAt(0).toUpperCase() + name.slice(1));
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════
+       REAL-TIME FIELD FEEDBACK
+       Red → green as user corrects each field
+       ══════════════════════════════════════════════════════════════════ */
+    $("#createUserModal, #editUserModal").on("input change", ".form-control", function () {
+        var $el = $(this);
+        if ($el.hasClass("is-invalid")) {
+            if ($.trim($el.val()) !== "") {
+                setFieldValid($el);
+            }
+        }
     });
 
-}
+
+    /* ══════════════════════════════════════════════════════════════════
+       RESET ON MODAL CLOSE
+       ══════════════════════════════════════════════════════════════════ */
+    $("#createUserModal").on("hidden.bs.modal", function () {
+        $(this).find(".form-control").val("");
+        // Reset password default
+        $("#password").val("rms-2026");
+        $("#create_role").val("user");
+        $("#is_active").val("1");
+        clearAllErrors("#createUserModal");
+    });
+
+    $("#editUserModal").on("hidden.bs.modal", function () {
+        clearAllErrors("#editUserModal");
+    });
+
+
+    /* ══════════════════════════════════════════════════════════════════
+       CREATE USER
+       ══════════════════════════════════════════════════════════════════ */
+
+    // Field map: name → jQuery object (create modal)
+    function createFieldMap() {
+        return {
+            firstname   : $("#firstname"),
+            lastname    : $("#lastname"),
+            employee_id : $("#employee_id"),
+            birthday    : $("#birthday"),
+            contactno   : $("#contactno"),
+            address     : $("#address"),
+            email       : $("#email"),
+            password    : $("#password"),
+            role        : $("#create_role"),
+            is_active   : $("#is_active"),
+            job_title   : $("#job_title"),
+            department  : $("#department"),
+        };
+    }
+
+    window.createUser = function () {
+        clearAllErrors("#createUserModal");
+
+        var fm = createFieldMap();
+
+        var payload = $.extend({}, csrfData(), {
+            firstname   : fm.firstname.val(),
+            lastname    : fm.lastname.val(),
+            employee_id : fm.employee_id.val(),
+            birthday    : fm.birthday.val(),
+            contactno   : fm.contactno.val(),
+            address     : fm.address.val(),
+            email       : fm.email.val(),
+            password    : fm.password.val(),
+            role        : fm.role.val(),
+            is_active   : fm.is_active.val(),
+            job_title   : fm.job_title.val(),
+            department  : fm.department.val(),
+        });
+
+        $.ajax({
+            url     : BASE_URL + "users/store",
+            method  : "POST",
+            data    : payload,
+            dataType: "json",
+            success : function (res) {
+                if (res.success) {
+                    $("#createUserModal").modal("hide");
+                    showToast("success", res.message);
+                    setTimeout(function () { location.reload(); }, 1000);
+                } else {
+                    applyErrors("#createUserModal", "#createAlert", res.errors || {}, fm);
+                    if ($.isEmptyObject(res.errors) && res.message) {
+                        $("#createAlert")
+                            .html('<strong>&#9888; ' + res.message + '</strong>')
+                            .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2")
+                            .show();
+                    }
+                }
+            },
+            error: function () {
+                $("#createAlert")
+                    .html("<strong>&#9888; Server error. Please try again.</strong>")
+                    .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2")
+                    .show();
+            }
+        });
+    };
+
+
+    /* ══════════════════════════════════════════════════════════════════
+       EDIT USER — Load data into modal
+       ══════════════════════════════════════════════════════════════════ */
+    $(document).on("click", ".btn-edit", function () {
+        var id = $(this).data("id");
+        clearAllErrors("#editUserModal");
+
+        $.ajax({
+            url     : BASE_URL + "users/get/" + id,
+            method  : "GET",
+            dataType: "json",
+            success : function (res) {
+                if (!res.success) {
+                    showToast("danger", res.message || "Failed to load user.");
+                    return;
+                }
+                var u = res.data;
+                $("#edit_id").val(u.id);
+                $("#edit_firstname").val(u.firstname);
+                $("#edit_lastname").val(u.lastname);
+                $("#edit_employee_id").val(u.employee_id);
+                $("#edit_birthday").val(u.birthday);
+                $("#edit_contactno").val(u.contactno);
+                $("#edit_address").val(u.address);
+                $("#edit_email").val(u.email);
+                $("#edit_role").val(u.role);
+                $("#edit_is_active").val(u.is_active);
+                $("#edit_job_title").val(u.job_title);
+                $("#edit_department").val(u.department);
+
+                $("#editUserModal").modal("show");
+            },
+            error: function () {
+                showToast("danger", "Server error loading user.");
+            }
+        });
+    });
+
+
+    /* ══════════════════════════════════════════════════════════════════
+       UPDATE USER
+       ══════════════════════════════════════════════════════════════════ */
+
+    // Field map: name → jQuery object (edit modal)
+    function editFieldMap() {
+        return {
+            firstname   : $("#edit_firstname"),
+            lastname    : $("#edit_lastname"),
+            employee_id : $("#edit_employee_id"),
+            birthday    : $("#edit_birthday"),
+            contactno   : $("#edit_contactno"),
+            address     : $("#edit_address"),
+            email       : $("#edit_email"),
+            role        : $("#edit_role"),
+            is_active   : $("#edit_is_active"),
+            job_title   : $("#edit_job_title"),
+            department  : $("#edit_department"),
+        };
+    }
+
+    window.updateUser = function () {
+        clearAllErrors("#editUserModal");
+
+        var fm = editFieldMap();
+
+        var payload = $.extend({}, csrfData(), {
+            id          : $("#edit_id").val(),
+            firstname   : fm.firstname.val(),
+            lastname    : fm.lastname.val(),
+            employee_id : fm.employee_id.val(),
+            birthday    : fm.birthday.val(),
+            contactno   : fm.contactno.val(),
+            address     : fm.address.val(),
+            email       : fm.email.val(),
+            role        : fm.role.val(),
+            is_active   : fm.is_active.val(),
+            job_title   : fm.job_title.val(),
+            department  : fm.department.val(),
+        });
+
+        $.ajax({
+            url     : BASE_URL + "users/update",
+            method  : "POST",
+            data    : payload,
+            dataType: "json",
+            success : function (res) {
+                if (res.success) {
+                    $("#editUserModal").modal("hide");
+                    showToast("success", res.message);
+                    setTimeout(function () { location.reload(); }, 1000);
+                } else {
+                    applyErrors("#editUserModal", "#editAlert", res.errors || {}, fm);
+                    if ($.isEmptyObject(res.errors) && res.message) {
+                        $("#editAlert")
+                            .html('<strong>&#9888; ' + res.message + '</strong>')
+                            .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2")
+                            .show();
+                    }
+                }
+            },
+            error: function () {
+                $("#editAlert")
+                    .html("<strong>&#9888; Server error. Please try again.</strong>")
+                    .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2")
+                    .show();
+            }
+        });
+    };
+
+
+    /* ══════════════════════════════════════════════════════════════════
+       DELETE USER
+       ══════════════════════════════════════════════════════════════════ */
+    window.deleteUser = function (id) {
+        if (!confirm("Are you sure you want to delete this user? This cannot be undone.")) return;
+
+        $.ajax({
+            url     : BASE_URL + "users/delete/" + id,
+            method  : "POST",
+            data    : csrfData(),
+            dataType: "json",
+            success : function (res) {
+                if (res.success) {
+                    showToast("success", res.message);
+                    setTimeout(function () { location.reload(); }, 1000);
+                } else {
+                    showToast("danger", res.message || "Delete failed.");
+                }
+            },
+            error: function () {
+                showToast("danger", "Server error. Please try again.");
+            }
+        });
+    };
+
+
+    /* ══════════════════════════════════════════════════════════════════
+       TOAST NOTIFICATION
+       ══════════════════════════════════════════════════════════════════ */
+    function showToast(type, message) {
+        var bg = { success: "#28a745", danger: "#dc3545", warning: "#ffc107", info: "#17a2b8" };
+
+        var $toast = $("<div>")
+            .css({
+                position    : "fixed",
+                bottom      : "24px",
+                right       : "24px",
+                zIndex      : 99999,
+                background  : bg[type] || "#333",
+                color       : "#fff",
+                padding     : "10px 18px",
+                borderRadius: "6px",
+                fontSize    : ".875rem",
+                boxShadow   : "0 4px 12px rgba(0,0,0,.25)",
+                maxWidth    : "320px",
+                opacity     : 0,
+                transition  : "opacity .25s",
+            })
+            .text(message)
+            .appendTo("body");
+
+        setTimeout(function () { $toast.css("opacity", 1); }, 20);
+        setTimeout(function () {
+            $toast.css("opacity", 0);
+            setTimeout(function () { $toast.remove(); }, 300);
+        }, 3200);
+    }
+
+}); 

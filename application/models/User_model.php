@@ -1,20 +1,28 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-class User_model extends CI_Model 
+class User_model extends CI_Model
 {
     // ─── Fetch all non-deleted users ──────────────────────────────────
-    public function get_all_users() {
-        return $this->db->order_by('id', 'DESC')
-                        ->get('users')
-                        ->result();
-    }
+
     public function get_all($filters = [])
     {
         $this->db->where('deleted_at IS NULL', null, false);
 
-        // Rule 3: hide admins from regular users
         if (!empty($filters['hide_admins'])) {
             $this->db->where('role !=', 'admin');
+        }
+
+        if (!empty($filters['role'])) {
+            $this->db->where('role', $filters['role']);
+        }
+
+        if (!empty($filters['role_not'])) {
+            $this->db->where('role !=', $filters['role_not']);
+        }
+
+        if (isset($filters['is_active']) && $filters['is_active'] !== '') {
+            $this->db->where('is_active', $filters['is_active']);
         }
 
         return $this->db
@@ -23,30 +31,24 @@ class User_model extends CI_Model
             ->result();
     }
 
-    // ─── CRUD ─────────────────────────────────────────────────────────
+    // ─── Single user ──────────────────────────────────────────────────
+
     public function get_by_id($id)
     {
-        return $this->db->get_where('users', ['id' => $id])->row();
+        return $this->db
+            ->where('id', $id)
+            ->where('deleted_at IS NULL', null, false)
+            ->get('users')
+            ->row();
     }
 
-    public function email_exists($email, $exclude_id = null)
-    {
-        $this->db->where('email', $email)
-                 ->where('deleted_at IS NULL', null, false);
+    // ─── Duplicate checks ─────────────────────────────────────────────
 
-        if ($exclude_id) {
-            $this->db->where('id !=', $exclude_id);
-        }
-
-        return $this->db->count_all_results('users') > 0;
-    }
-
-    // Rule 1: case-insensitive full name combo check
     public function full_name_exists($firstname, $lastname, $exclude_id = null)
     {
         $this->db
-            ->where('LOWER(firstname)', strtolower($firstname))
-            ->where('LOWER(lastname)', strtolower($lastname))
+            ->where('LOWER(firstname)', strtolower(trim($firstname)))
+            ->where('LOWER(lastname)',  strtolower(trim($lastname)))
             ->where('deleted_at IS NULL', null, false);
 
         if ($exclude_id) {
@@ -56,9 +58,38 @@ class User_model extends CI_Model
         return $this->db->count_all_results('users') > 0;
     }
 
+    public function email_exists($email, $exclude_id = null)
+    {
+        $this->db
+            ->where('LOWER(email)', strtolower(trim($email)))
+            ->where('deleted_at IS NULL', null, false);
+
+        if ($exclude_id) {
+            $this->db->where('id !=', $exclude_id);
+        }
+
+        return $this->db->count_all_results('users') > 0;
+    }
+
+    public function employee_id_exists($employee_id, $exclude_id = null)
+    {
+        $this->db
+            ->where('employee_id', trim($employee_id))
+            ->where('deleted_at IS NULL', null, false);
+
+        if ($exclude_id) {
+            $this->db->where('id !=', $exclude_id);
+        }
+
+        return $this->db->count_all_results('users') > 0;
+    }
+
+    // ─── CRUD ─────────────────────────────────────────────────────────
+
     public function insert($data)
     {
-        return $this->db->insert('users', $data);
+        $this->db->insert('users', $data);
+        return $this->db->insert_id();
     }
 
     public function update($id, $data)
@@ -69,11 +100,13 @@ class User_model extends CI_Model
     public function soft_delete($id)
     {
         return $this->db->where('id', $id)->update('users', [
-            'deleted_at' => date('Y-m-d H:i:s')
+            'deleted_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
         ]);
     }
 
     // ─── Stats (Dashboard) ────────────────────────────────────────────
+
     public function get_stats()
     {
         return (object)[
@@ -81,7 +114,7 @@ class User_model extends CI_Model
             'active'   => $this->db->where('is_active', 1)->where('deleted_at IS NULL', null, false)->count_all_results('users'),
             'inactive' => $this->db->where('is_active', 0)->where('deleted_at IS NULL', null, false)->count_all_results('users'),
             'admins'   => $this->db->where('role', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users'),
-            'nonadmins' => $this->db->where('role !=', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users'),
+            'nonadmins'=> $this->db->where('role !=', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users'),
         ];
     }
 
@@ -93,16 +126,4 @@ class User_model extends CI_Model
             ->get('users', $limit)
             ->result();
     }
-    public function employee_id_exists($employee_id, $exclude_id = null)
-{
-    $this->db
-        ->where('employee_id', $employee_id)
-        ->where('deleted_at IS NULL', null, false);
-
-    if ($exclude_id) {
-        $this->db->where('id !=', $exclude_id);
-    }
-
-    return $this->db->count_all_results('users') > 0;
-}
 }

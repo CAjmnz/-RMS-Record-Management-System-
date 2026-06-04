@@ -269,25 +269,36 @@ $(function () {
 
         var fm = createFieldMap();
 
-        var payload = $.extend({}, csrfData(), {
-            firstname   : fm.firstname.val(),
-            lastname    : fm.lastname.val(),
-            employee_id : fm.employee_id.val(),
-            birthday    : fm.birthday.val(),
-            contactno   : fm.contactno.val(),
-            address     : fm.address.val(),
-            email       : fm.email.val(),
-            password    : fm.password.val(),
-            role        : fm.role.val(),
-            is_active   : fm.is_active.val(),
-            job_title   : fm.job_title.val(),
-            department  : fm.department.val(),
-        });
+        var formData = new FormData();
+        
+        formData.append("firstname", fm.firstname.val());
+        formData.append("lastname", fm.lastname.val());
+        formData.append("employee_id", fm.employee_id.val());
+        formData.append("birthday", fm.birthday.val());
+        formData.append("contactno", fm.contactno.val());
+        formData.append("address", fm.address.val());
+        formData.append("email", fm.email.val());
+        formData.append("password", fm.password.val());
+        formData.append("role", fm.role.val());
+        formData.append("is_active", fm.is_active.val());
+        formData.append("job_title", fm.job_title.val());
+        formData.append("department", fm.department.val());
+        
+        // CSRF
+        formData.append($("#csrf_token_name").val(), $("#csrf_token_value").val());
+        
+        // FILE
+        var file = $("#profile_picture")[0].files[0];
+        if (file) {
+            formData.append("profile_picture", file);
+        }
 
         $.ajax({
-            url     : BASE_URL + "users/store",
-            method  : "POST",
-            data    : payload,
+            url: BASE_URL + "users/store",
+            method: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
             dataType: "json",
             success : function (res) {
                 if (res.success) {
@@ -393,7 +404,10 @@ $(function () {
             job_title   : fm.job_title.val(),
             department  : fm.department.val(),
         });
-
+        var file = $("#edit_profile_picture")[0].files[0];
+if (file) {
+    formData.append("profile_picture", file);
+}
         $.ajax({
             url     : BASE_URL + "users/update",
             method  : "POST",

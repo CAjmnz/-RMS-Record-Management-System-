@@ -73,7 +73,6 @@
             <table class="table-rms" id="usersTable">
                 <thead>
                     <tr>
-                        <th>#</th>
                         <th>User</th>
                         <th>Role</th>
                         <th>Status</th>
@@ -90,11 +89,66 @@
                 <?php if (!empty($users)): ?>
                     <?php foreach ($users as $i => $user): ?>
                         <tr>
-                            <td><?= $i + 1 ?></td>
+
                             <td>
-                                <?= htmlspecialchars($user->firstname . ' ' . $user->lastname) ?>
-                                <br>
-                                <small class="text-muted"><?= htmlspecialchars($user->email) ?></small>
+                            <div style="display:flex;align-items:center;gap:15px;margin-bottom:20px;">
+
+<?php
+    $avatar = !empty($user->profile_picture)
+        ? base_url($user->profile_picture)
+        : null;
+
+    $initials = strtoupper(
+        substr($user->firstname, 0, 1) .
+        substr($user->lastname, 0, 1)
+    );
+?>
+
+<!-- AVATAR -->
+<?php if ($avatar): ?>
+    <img src="<?= $avatar ?>"
+         style="
+            width:70px;
+            height:70px;
+            border-radius:50%;
+            object-fit:cover;
+            border:3px solid #16c784;
+         ">
+<?php else: ?>
+    <div style="
+        width:70px;
+        height:70px;
+        border-radius:50%;
+        background:#16c784;
+        color:#fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:22px;
+        font-weight:600;
+    ">
+        <?= $initials ?>
+    </div>
+<?php endif; ?>
+
+<!-- NAME + META -->
+<div>
+    <h3 style="margin:0;font-weight:700;">
+        <?= htmlspecialchars($user->firstname . ' ' . $user->lastname) ?>
+    </h3>
+
+    <div style="color:#6c757d;font-size:14px;">
+        <?= htmlspecialchars($user->email) ?>
+    </div>
+
+    <?php if (!empty($user->role)): ?>
+        <span class="badge badge-<?= $user->role === 'admin' ? 'danger' : 'secondary' ?>">
+            <?= ucfirst($user->role) ?>
+        </span>
+    <?php endif; ?>
+</div>
+
+</div>
                             </td>
                             <td>
                                 <span class="badge badge-<?= $user->role === 'admin' ? 'danger' : 'secondary' ?>">

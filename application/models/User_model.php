@@ -126,4 +126,12 @@ class User_model extends CI_Model
             ->get('users', $limit)
             ->result();
     }
+    // ─── update (profile_picture) ────────────────────────────────────────────   
+    public function update_profile_picture($id, $path)
+{
+    return $this->db->where('id', $id)->update('users', [
+        'profile_picture' => $path,
+        'updated_at'      => date('Y-m-d H:i:s')
+    ]);
+}
 }

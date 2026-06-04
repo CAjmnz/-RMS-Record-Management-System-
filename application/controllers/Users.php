@@ -112,7 +112,15 @@ class Users extends RMS_Controller
         if (!empty($errors)) {
             return $this->jsonFail('Validation failed.', $errors);
         }
+        $upload = $this->upload_profile_picture();
 
+if (is_array($upload)) {
+    echo json_encode([
+        'success' => false,
+        'errors'  => ['profile_picture' => $upload['error']]
+    ]);
+    return;
+}
         // ── Insert ──
         $pass = (!empty($password)) ? $password : 'rms-2026';
 
@@ -132,6 +140,7 @@ class Users extends RMS_Controller
             'must_change_password'=> 1,
             'created_at'          => date('Y-m-d H:i:s'),
             'updated_at'          => date('Y-m-d H:i:s'),
+            
         ]);
 
         if (!$insert) {
@@ -233,6 +242,20 @@ class Users extends RMS_Controller
         }
 
         return $this->jsonSuccess('User updated successfully.');
+        $upload = $this->upload_profile_picture();
+
+if (is_array($upload)) {
+    echo json_encode([
+        'success' => false,
+        'errors'  => ['profile_picture' => $upload['error']]
+    ]);
+    return;
+}
+
+if ($upload) {
+    $data['profile_picture'] = $upload;
+}
+
     }
 
     // ───────────────────────────────
@@ -288,4 +311,30 @@ class Users extends RMS_Controller
         ]);
         exit;
     }
+     // ───────────────────────────────
+    // UPLOAD(PROFILE PICTURE)
+    // ───────────────────────────────
+    private function upload_profile_picture()
+{
+    if (empty($_FILES['profile_picture']['name'])) {
+        return null;
+    }
+
+    $config['upload_path']   = './uploads/profile_pictures/';
+    $config['allowed_types'] = 'jpg|jpeg|png|webp';
+    $config['max_size']      = 2048; // 2MB
+    $config['encrypt_name']  = TRUE;
+
+    $this->load->library('upload', $config);
+
+    if (!$this->upload->do_upload('profile_picture')) {
+        return [
+            'error' => $this->upload->display_errors('', '')
+        ];
+    }
+
+    $data = $this->upload->data();
+
+    return 'uploads/profile_pictures/' . $data['file_name'];
+}
 }

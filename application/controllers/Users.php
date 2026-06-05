@@ -346,7 +346,7 @@ if ($upload) {
         return null;
     }
 
-    $config['upload_path']   = './uploads/profile_pictures/';
+    $config['upload_path'] = FCPATH . 'uploads/profile_pictures/';
     $config['allowed_types'] = 'jpg|jpeg|png|webp';
     $config['max_size']      = 2048; // 2MB
     $config['encrypt_name']  = TRUE;

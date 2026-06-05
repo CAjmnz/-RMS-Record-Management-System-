@@ -12,20 +12,7 @@
 <!-- BASE_URL for JS -->
 <script>var BASE_URL = "<?= base_url() ?>";</script>
 
-<style>
-/* See More / See Less button — lives here so it inherits modal scope */
-.btn-see-more {
-    background: none;
-    border: none;
-    padding: 2px 0 0;
-    color: #721c24;
-    font-size: .79rem;
-    text-decoration: underline;
-    cursor: pointer;
-    display: inline-block;
-}
-.btn-see-more:focus { outline: none; }
-</style>
+
 
 <div id="main-content">
 
@@ -65,6 +52,8 @@
                        class="form-control form-control-sm d-inline-block"
                        placeholder="Department" style="width:180px;">
 
+                <button id="resetFilters" class="btn btn-sm btn-secondary">Reset</button>
+            </div>
                 <button id="resetFilters" class="btn btn-sm btn-secondary">Reset</button>
             </div>
         </div>
@@ -162,10 +151,12 @@
                             </td>
                             <td><?= htmlspecialchars($user->contactno) ?></td>
                             <td><?= htmlspecialchars($user->address) ?></td>
-                            <td class="created-date" data-date="<?= $user->created_at ?>">
+                            <td class="created-date" data-date="<?= date('Y-m-d', strtotime($user->created_at)) ?>">
                                 <?= date('M d, Y h:i A', strtotime($user->created_at)) ?>
                             </td>
-                            <td><?= htmlspecialchars($user->department) ?></td>
+                            <td class="department-cell" data-dept="<?= htmlspecialchars(strtolower($user->department), ENT_QUOTES, 'UTF-8') ?>">
+                                <?= htmlspecialchars($user->department) ?>
+                            </td>
                             <?php if ($role === 'admin'): ?>
                                 <td>
                                     <button class="btn btn-primary btn-sm btn-edit"
@@ -318,7 +309,20 @@
                         </div>
                     </div>
                 </div>
-
+                <div class="form-row">
+    <div class="form-group col-12 mb-2">
+        <div class="field-wrap">
+            <label for="profile_picture">Profile Picture</label>
+            <input class="form-control"
+                   type="file"
+                   id="profile_picture"
+                   accept="image/*">
+            <span class="field-error-icon">
+                ⚠<span class="error-tooltip"></span>
+            </span>
+        </div>
+    </div>
+</div>
             </div><!-- /modal-body -->
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -445,7 +449,20 @@
                         </div>
                     </div>
                 </div>
-
+                <div class="form-row">
+    <div class="form-group col-12 mb-2">
+        <div class="field-wrap">
+            <label for="edit_profile_picture">Change Profile Picture</label>
+            <input class="form-control"
+                   type="file"
+                   id="edit_profile_picture"
+                   accept="image/*">
+            <span class="field-error-icon">
+                ⚠<span class="error-tooltip"></span>
+            </span>
+        </div>
+    </div>
+</div>
             </div><!-- /modal-body -->
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -458,6 +475,7 @@
 <?php endif; ?>
 
 <!-- Page JS -->
-<script src="<?= base_url('assets/js/modules/users.main.js') ?>"></script>
-
 <?php $this->load->view('templates/footer'); ?>
+
+<!-- Page JS — AFTER footer so jQuery/Bootstrap/Swal are loaded first -->
+<script src="<?= base_url('assets/js/modules/users.main.js') ?>"></script>

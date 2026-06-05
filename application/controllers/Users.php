@@ -122,8 +122,19 @@ if (is_array($upload)) {
     return;
 }
         // ── Insert ──
-        $pass = (!empty($password)) ? $password : 'rms-2026';
+        $upload = $this->upload_profile_picture();
 
+        if (is_array($upload)) {
+            return $this->jsonFail('Upload failed.', [
+                'profile_picture' => $upload['error']
+            ]);
+        }
+        
+        // fallback if no file uploaded
+        $profile_picture = $upload ? $upload : null;
+        
+        $pass = (!empty($password)) ? $password : 'rms-2026';
+        
         $insert = $this->User_model->insert([
             'employee_id'         => $employee_id,
             'firstname'           => $firstname,
@@ -137,10 +148,10 @@ if (is_array($upload)) {
             'is_active'           => (int) $is_active,
             'job_title'           => $job_title,
             'department'          => $department,
+            'profile_picture'     => $profile_picture, // ✅ FIXED
             'must_change_password'=> 1,
             'created_at'          => date('Y-m-d H:i:s'),
             'updated_at'          => date('Y-m-d H:i:s'),
-            
         ]);
 
         if (!$insert) {
@@ -222,7 +233,16 @@ if (is_array($upload)) {
         }
 
         // ── Update ──
-        $updated = $this->User_model->update($id, [
+        $upload = $this->upload_profile_picture();
+
+        if (is_array($upload)) {
+            return $this->jsonFail('Upload failed.', [
+                'profile_picture' => $upload['error']
+            ]);
+        }
+        
+        // build update data properly
+        $data = [
             'firstname'   => $firstname,
             'lastname'    => $lastname,
             'employee_id' => $employee_id,
@@ -235,14 +255,20 @@ if (is_array($upload)) {
             'job_title'   => $job_title,
             'department'  => $department,
             'updated_at'  => date('Y-m-d H:i:s'),
-        ]);
-
+        ];
+        
+        // only update profile picture if new file uploaded
+        if ($upload) {
+            $data['profile_picture'] = $upload;
+        }
+        
+        $updated = $this->User_model->update($id, $data);
+        
         if (!$updated) {
             return $this->jsonFail('Update failed.');
         }
-
+        
         return $this->jsonSuccess('User updated successfully.');
-        $upload = $this->upload_profile_picture();
 
 if (is_array($upload)) {
     echo json_encode([

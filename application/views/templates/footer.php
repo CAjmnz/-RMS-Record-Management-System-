@@ -1,7 +1,24 @@
-<!-- App JS -->
+<!-- base_url for JS — must be before any script that uses it -->
+<script>
+    const base_url = "<?= base_url() ?>";
+</script>
+
+<!-- 1. jQuery FIRST -->
+<script src="<?= base_url('assets/js/jquery-3.7.1.min.js') ?>"></script>
+<!-- 2. Bootstrap (needs jQuery) -->
+<script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>"></script>
+<!-- 3. DataTables (needs jQuery) -->
+<script src="<?= base_url('assets/js/jquery.dataTables.min.js') ?>"></script>
+<script src="<?= base_url('assets/js/dataTables.bootstrap4.min.js') ?>"></script>
+<!-- 4. SweetAlert -->
+<script src="<?= base_url('assets/js/sweetalert2.all.min.js') ?>"></script>
+<!-- 5. Chart.js -->
+<script src="<?= base_url('assets/js/chart.umd.min.js') ?>"></script>
+<!-- 6. App config (needs base_url) -->
+<script src="<?= base_url('assets/js/config.js') ?>"></script>
+<!-- 7. App core -->
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
 
-<!-- Page-specific JS modules (optional) -->
 <?php if (isset($page_scripts)): ?>
     <?php foreach ($page_scripts as $script): ?>
         <script src="<?= base_url('assets/js/' . $script) ?>"></script>

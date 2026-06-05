@@ -134,4 +134,28 @@ class User_model extends CI_Model
         'updated_at'      => date('Y-m-d H:i:s')
     ]);
 }
+public function get_birth_year_counts()
+{
+    $rows = $this->db
+        ->select('YEAR(birthday) as birth_year, COUNT(*) as total')
+        ->where('deleted_at IS NULL', null, false)
+        ->where('birthday IS NOT NULL', null, false)
+        ->where('birthday !=', '0000-00-00')
+        ->group_by('YEAR(birthday)')
+        ->order_by('birth_year', 'ASC')
+        ->get('users')
+        ->result();
+
+    $labels = [];
+    $counts = [];
+
+    foreach ($rows as $row) {
+        if (!empty($row->birth_year)) {
+            $labels[] = (string) $row->birth_year;
+            $counts[]  = (int) $row->total;
+        }
+    }
+
+    return ['labels' => $labels, 'counts' => $counts];
+}
 }

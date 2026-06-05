@@ -2,18 +2,16 @@
 <?php $this->load->view('templates/sidebar'); ?>
 <?php $this->load->view('templates/topbar'); ?>
 
-
-<!-- Page CSS -->
 <link rel="stylesheet" href="<?= base_url('assets/css/users.css') ?>">
-<!-- charts -->
+
+<!-- Chart data -->
 <input type="hidden" id="chart_status_data" value='<?= $chart_status_data ?>'>
 <input type="hidden" id="chart_role_data"   value='<?= $chart_role_data ?>'>
 <input type="hidden" id="chart_log_labels"  value='<?= $chart_log_labels ?>'>
 <input type="hidden" id="chart_log_counts"  value='<?= $chart_log_counts ?>'>
-<!-- CSRF tokens -->
+<input type="hidden" id="chart_birth_data"  value='<?= $chart_birth_data ?>'>
 
 <div id="main-content">
-
 
     <?php if (!empty($flash_error)): ?>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -22,14 +20,12 @@
         </div>
     <?php endif; ?>
 
-
     <?php if (!empty($flash_success)): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <?= htmlspecialchars($flash_success) ?>
             <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
         </div>
     <?php endif; ?>
-
 
     <!-- Welcome Banner -->
     <div class="welcome-banner">
@@ -41,42 +37,49 @@
             <p><?= htmlspecialchars($email) ?></p>
             <span class="wb-badge"><?= ucfirst($role) ?></span>
         </div>
+
+        <!-- Avatar — photo or initials -->
         <div class="wb-avatar">
-            <?= strtoupper(substr($firstname, 0, 1) . substr($lastname, 0, 1)) ?>
+            <?php
+                $pp      = $profile_picture ?? null;
+                $pp_path = $pp ? FCPATH . $pp : null;
+            ?>
+            <?php if (!empty($pp) && file_exists($pp_path)): ?>
+                <img src="<?= base_url($pp) ?>?v=<?= time() ?>"
+                     alt="Avatar"
+                     style="width:60px;height:60px;border-radius:50%;
+                            object-fit:cover;border:3px solid #fff;">
+            <?php else: ?>
+                <?= strtoupper(substr($firstname, 0, 1) . substr($lastname, 0, 1)) ?>
+            <?php endif; ?>
         </div>
     </div>
-
 
     <!-- Stat Cards -->
     <div class="section-title">System Overview</div>
 
-
     <?php
         $stats = isset($stats) ? $stats : (object)[
-            'total'    => 0,
-            'active'   => 0,
-            'inactive' => 0,
-            'admins'   => 0,
-            'nonadmins' => 0
+            'total'    => 0, 'active'   => 0,
+            'inactive' => 0, 'admins'   => 0, 'nonadmins' => 0
         ];
     ?>
- 
-        <div class="col-xl-6  col-md-8">
-            <div class="stat-card sc-total">
-                <div class="stat-info">
-                    <div class="stat-label">Total Users</div>
-                    <div class="stat-number"><?= $stats->total ?></div>
-                    <div class="stat-sub">All registered accounts</div>
-                </div>
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-footer">
-                    <a href="<?= base_url('users') ?>">View All &rarr;</a>
-                </div>
+
+    <div class="col-xl-6 col-md-8">
+        <div class="stat-card sc-total">
+            <div class="stat-info">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-number"><?= $stats->total ?></div>
+                <div class="stat-sub">All registered accounts</div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-footer">
+                <a href="<?= base_url('users') ?>">View All &rarr;</a>
             </div>
         </div>
+    </div>
+
     <div class="row">
-
-
         <div class="col-xl-3 col-md-6">
             <div class="stat-card sc-active">
                 <div class="stat-info">
@@ -87,8 +90,6 @@
                 <div class="stat-icon"><i class="fas fa-user-check"></i></div>
                 <div class="stat-footer">
                     <a href="<?= base_url('users?filter=active') ?>">View All →</a>
-
-
                 </div>
             </div>
         </div>
@@ -101,7 +102,7 @@
                 </div>
                 <div class="stat-icon"><i class="fas fa-user-slash"></i></div>
                 <div class="stat-footer">
-                  <a href="<?= base_url('users?filter=inactive') ?>">View All →</a>
+                    <a href="<?= base_url('users?filter=inactive') ?>">View All →</a>
                 </div>
             </div>
         </div>
@@ -114,9 +115,7 @@
                 </div>
                 <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
                 <div class="stat-footer">
-<a href="<?= base_url('users?filter=admins') ?>">View All →</a>
-
-
+                    <a href="<?= base_url('users?filter=admins') ?>">View All →</a>
                 </div>
             </div>
         </div>
@@ -135,13 +134,10 @@
         </div>
     </div>
 
-
     <!-- Logs + Charts -->
     <div class="section-title mt-2">Recent Activity</div>
 
-
     <div class="row">
-
 
         <!-- LEFT — Logs DataTable -->
         <div class="col-lg-6">
@@ -183,12 +179,10 @@
             </div>
         </div>
 
-
-        <!-- RIGHT — Charts stacked -->
+        <!-- RIGHT — Charts -->
         <div class="col-lg-6">
 
-
-            <!-- Top — Two donuts side by side -->
+            <!-- Donuts -->
             <div class="card-rms mb-4">
                 <div class="card-header-rms">
                     <div class="header-dot"></div>
@@ -196,64 +190,46 @@
                 </div>
                 <div style="padding: 16px;">
                     <div class="row">
-
-
-                        <!-- Donut 1: Active vs Inactive -->
                         <div class="col-6 text-center">
-                            <div style="font-size:11px;font-weight:600;
-                                        text-transform:uppercase;
-                                        letter-spacing:.5px;
-                                        color:#6b7280;
-                                        margin-bottom:8px;">
+                            <div style="font-size:11px;font-weight:600;text-transform:uppercase;
+                                        letter-spacing:.5px;color:#6b7280;margin-bottom:8px;">
                                 Status
                             </div>
                             <div style="position:relative;width:100%;max-width:160px;margin:0 auto;">
                                 <canvas id="statusDonutChart"></canvas>
                             </div>
                         </div>
-
-
-                        <!-- Donut 2: Admins vs Regular -->
                         <div class="col-6 text-center">
-                            <div style="font-size:11px;font-weight:600;
-                                        text-transform:uppercase;
-                                        letter-spacing:.5px;
-                                        color:#6b7280;
-                                        margin-bottom:8px;">
+                            <div style="font-size:11px;font-weight:600;text-transform:uppercase;
+                                        letter-spacing:.5px;color:#6b7280;margin-bottom:8px;">
                                 Role
                             </div>
                             <div style="position:relative;width:100%;max-width:160px;margin:0 auto;">
                                 <canvas id="roleDonutChart"></canvas>
                             </div>
                         </div>
-
-
                     </div>
                 </div>
             </div>
 
-
-            <!-- Bottom — Logs bar chart -->
+            <!-- Birth Year Bar Chart -->
             <div class="card-rms mb-4">
                 <div class="card-header-rms">
                     <div class="header-dot"></div>
-                    Log Activity (Last 7 Days)
+                    Users by Birth Year
                 </div>
                 <div style="padding: 16px;">
                     <canvas id="logsBarChart"></canvas>
                 </div>
             </div>
 
-
         </div>
-
 
     </div>
 
-
 </div>
 
+<!-- Page JS -->
+<script src="<?= base_url('assets/js/modules/dashboard.main.js') ?>"></script>
 
 <?php $this->load->view('templates/footer'); ?>
-
-

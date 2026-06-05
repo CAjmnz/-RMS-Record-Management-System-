@@ -28,22 +28,20 @@
         }
 
         // ─────────────────────────────────────────────
-        // READ CHART DATA FROM PHP (via hidden inputs)
+        // READ CHART DATA FROM PHP
         // ─────────────────────────────────────────────
         function getJsonData(id) {
             var el = document.getElementById(id);
             if (!el) return [];
-            try {
-                return JSON.parse(el.value);
-            } catch (e) {
-                return [];
-            }
+            try { return JSON.parse(el.value); } catch (e) { return []; }
         }
 
         var statusData = getJsonData('chart_status_data');
         var roleData   = getJsonData('chart_role_data');
-        var logLabels  = getJsonData('chart_log_labels');
-        var logCounts  = getJsonData('chart_log_counts');
+        var birthData  = getJsonData('chart_birth_data');
+
+        var birthLabels = birthData.labels || [];
+        var birthCounts = birthData.counts || [];
 
         // ─────────────────────────────────────────────
         // CHART HELPERS
@@ -51,7 +49,6 @@
         function createDonutChart(id, labels, data, colors) {
             var el = document.getElementById(id);
             if (!el) return;
-
             new Chart(el.getContext('2d'), {
                 type: 'doughnut',
                 data: {
@@ -77,8 +74,7 @@
                                     var total = context.dataset.data
                                         .reduce(function (a, b) { return a + b; }, 0);
                                     var pct = total > 0
-                                        ? Math.round((context.parsed / total) * 100)
-                                        : 0;
+                                        ? Math.round((context.parsed / total) * 100) : 0;
                                     return ' ' + context.label + ': ' + context.parsed + ' (' + pct + '%)';
                                 }
                             }
@@ -88,16 +84,15 @@
             });
         }
 
-        function createBarChart(id, labels, data) {
+        function createBarChart(id, labels, data, label) {
             var el = document.getElementById(id);
             if (!el) return;
-
             new Chart(el.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label:           'Logs',
+                        label:           label || 'Count',
                         data:            data,
                         backgroundColor: 'rgba(99, 102, 241, 0.7)',
                         borderColor:     'rgba(99, 102, 241, 1)',
@@ -137,8 +132,9 @@
 
         createBarChart(
             'logsBarChart',
-            logLabels,
-            logCounts
+            birthLabels,
+            birthCounts,
+            'Users'
         );
 
     });

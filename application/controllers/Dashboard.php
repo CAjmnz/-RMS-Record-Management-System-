@@ -13,37 +13,39 @@ class Dashboard extends RMS_Controller
     }
 
     public function index()
-    {
-        $this->data['title']     = 'Dashboard — RMS';
-        $this->data['firstname'] = $this->session->userdata('firstname');
-        $this->data['lastname']  = $this->session->userdata('lastname');
-        $this->data['email']     = $this->session->userdata('email');
-        $this->data['role']      = $this->session->userdata('role');
+{
+    $this->data['title']           = 'Dashboard — RMS';
+    $this->data['firstname']       = $this->session->userdata('firstname');
+    $this->data['lastname']        = $this->session->userdata('lastname');
+    $this->data['email']           = $this->session->userdata('email');
+    $this->data['role']            = $this->session->userdata('role');
+    $this->data['profile_picture'] = $this->session->userdata('profile_picture'); // ← add
 
-        $stats               = $this->User_model->get_stats();
-        $this->data['stats'] = $stats;
+    $stats               = $this->User_model->get_stats();
+    $this->data['stats'] = $stats;
 
-        // All logs for DataTable
-        $this->data['logs'] = $this->Activity_log_model->get_all();
+    $this->data['logs'] = $this->Activity_log_model->get_all();
 
-        // Bar chart — logs per day
-        $daily                          = $this->Activity_log_model->get_daily_counts(7);
-        $this->data['chart_log_labels'] = json_encode($daily['labels']);
-        $this->data['chart_log_counts'] = json_encode($daily['counts']);
+    $daily                          = $this->Activity_log_model->get_daily_counts(7);
+    $this->data['chart_log_labels'] = json_encode($daily['labels']);
+    $this->data['chart_log_counts'] = json_encode($daily['counts']);
 
-        // Donut 1 — Active vs Inactive
-        $this->data['chart_status_data'] = json_encode([
-            (int) $stats->active,
-            (int) $stats->inactive,
-        ]);
+    $this->data['chart_status_data'] = json_encode([
+        (int) $stats->active,
+        (int) $stats->inactive,
+    ]);
 
-        // Donut 2 — Admins vs Regular Users
-        $regular = (int) $stats->total - (int) $stats->admins;
-        $this->data['chart_role_data'] = json_encode([
-            (int) $stats->admins,
-            $regular,
-        ]);
+    $regular = (int) $stats->total - (int) $stats->admins;
+    $this->data['chart_role_data'] = json_encode([
+        (int) $stats->admins,
+        $regular,
+    ]);
 
-        $this->load->view('dashboard/index', $this->data);
-    }
+    // Birth year chart
+    $this->data['chart_birth_data'] = json_encode(
+        $this->User_model->get_birth_year_counts()
+    );
+
+    $this->load->view('dashboard/index', $this->data);
+}
 }

@@ -75,12 +75,13 @@ class Login extends Guest_Controller
         $this->attempt_model->clear($ip); // wipe failed attempts on success
 
         $session_data = [
-            'user_id'   => $user->id,
-            'firstname' => $user->firstname,
-            'lastname'  => $user->lastname,
-            'email'     => $user->email,
-            'role'      => $user->role,
-            'logged_in' => TRUE,
+            'user_id'         => $user->id,
+            'firstname'       => $user->firstname,
+            'lastname'        => $user->lastname,
+            'email'           => $user->email,
+            'role'            => $user->role,
+            'profile_picture' => $user->profile_picture ?? null, // ← add this line
+            'logged_in'       => TRUE,
         ];
         $this->session->set_userdata($session_data);
 

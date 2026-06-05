@@ -18,6 +18,11 @@
 <script src="<?= base_url('assets/js/config.js') ?>"></script>
 <!-- 7. App core -->
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
+<!-- 8.dashboard  -->
+<script src="<?= base_url('assets/js/modules/dashboard.main.js') ?>"></script>
+
+<!-- 9. Users module -->
+<script src="http://localhost/rms/assets/js/modules/users.main.js"></script>
 
 <?php if (isset($page_scripts)): ?>
     <?php foreach ($page_scripts as $script): ?>

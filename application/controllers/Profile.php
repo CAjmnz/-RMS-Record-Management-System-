@@ -40,15 +40,13 @@ class Profile extends RMS_Controller
         $user    = $this->User_model->get_by_id($user_id);
 
         // ── Validation ────────────────────────────────────────────────
-        $this->form_validation->set_rules('firstname',   'First Name',   'trim|required|max_length[50]');
-        $this->form_validation->set_rules('lastname',    'Last Name',    'trim|required|max_length[50]');
-        $this->form_validation->set_rules('nickname',    'Nickname',     'trim|max_length[50]');
-        $this->form_validation->set_rules('address',     'Address',      'trim|required');
-        $this->form_validation->set_rules('contactno',   'Contact',      'trim|required|max_length[20]');
-        $this->form_validation->set_rules('employee_id', 'Employee ID',  'trim|max_length[50]');
-        $this->form_validation->set_rules('birthday',    'Birthday',     'trim');
+        $this->form_validation->set_rules('firstname', 'First Name', 'trim|required|max_length[50]');
+        $this->form_validation->set_rules('lastname',  'Last Name',  'trim|required|max_length[50]');
+        $this->form_validation->set_rules('nickname',  'Nickname',   'trim|max_length[50]');
+        $this->form_validation->set_rules('address',   'Address',    'trim|required');
+        $this->form_validation->set_rules('contactno', 'Contact',    'trim|required|max_length[20]');
+        $this->form_validation->set_rules('birthday',  'Birthday',   'trim');
 
-        // Password rules only if user is trying to change it
         $new_password = $this->input->post('new_password');
         if (!empty($new_password)) {
             $this->form_validation->set_rules('current_password', 'Current Password', 'trim|required');
@@ -64,28 +62,68 @@ class Profile extends RMS_Controller
 
         // ── Build update data ─────────────────────────────────────────
         $data = [
-            'firstname'   => $this->input->post('firstname',   TRUE),
-            'lastname'    => $this->input->post('lastname',    TRUE),
-            'nickname'    => $this->input->post('nickname',    TRUE),
-            'address'     => $this->input->post('address',     TRUE),
-            'contactno'   => $this->input->post('contactno',   TRUE),
-            'employee_id' => $this->input->post('employee_id', TRUE),
-            'birthday'    => $this->input->post('birthday',    TRUE),
-            'updated_at'  => date('Y-m-d H:i:s'),
+            'firstname'  => $this->input->post('firstname',  TRUE),
+            'lastname'   => $this->input->post('lastname',   TRUE),
+            'nickname'   => $this->input->post('nickname',   TRUE),
+            'address'    => $this->input->post('address',    TRUE),
+            'contactno'  => $this->input->post('contactno',  TRUE),
+            'birthday'   => $this->input->post('birthday',   TRUE),
+            'updated_at' => date('Y-m-d H:i:s'),
         ];
+
+        // ── Profile picture upload ────────────────────────────────────
+        // ── Profile picture upload ────────────────────────────────────
+if (!empty($_FILES['profile_picture']['name'])) {
+
+    $upload_path = FCPATH . 'uploads/profile_pictures/';
+
+    if (!is_dir($upload_path)) {
+        mkdir($upload_path, 0755, TRUE);
+    }
+
+    $config = [
+        'upload_path'   => $upload_path,
+        'allowed_types' => 'jpg|jpeg|png|gif|webp',
+        'max_size'      => 2048,
+        'encrypt_name'  => TRUE,
+    ];
+
+    $this->load->library('upload', $config);
+
+    if ($this->upload->do_upload('profile_picture')) {
+        $upload_data = $this->upload->data();
+        $new_path    = 'uploads/profile_pictures/' . $upload_data['file_name'];
+
+        // Delete old picture if exists
+        if (!empty($user->profile_picture)) {
+            $old_file = FCPATH . $user->profile_picture;
+            if (file_exists($old_file)) {
+                unlink($old_file);
+            }
+        }
+
+        $data['profile_picture'] = $new_path;
+
+        // ✅ Update session so topbar shows new picture immediately
+        $this->session->set_userdata('profile_picture', $new_path);
+
+    } else {
+        $this->session->set_flashdata('error', $this->upload->display_errors('', ''));
+        redirect('profile/edit');
+        return;
+    }
+}
 
         // ── Password change (optional) ────────────────────────────────
         if (!empty($new_password)) {
             $current_password = $this->input->post('current_password', FALSE);
 
-            // Verify current password against DB
             if (!password_verify($current_password, $user->password)) {
                 $this->session->set_flashdata('error', 'Current password is incorrect.');
                 redirect('profile/edit');
                 return;
             }
 
-            // Confirm new password matches
             $confirm = $this->input->post('confirm_password', FALSE);
             if ($new_password !== $confirm) {
                 $this->session->set_flashdata('error', 'New passwords do not match.');
@@ -99,7 +137,6 @@ class Profile extends RMS_Controller
         // ── Save ──────────────────────────────────────────────────────
         $this->User_model->update($user_id, $data);
 
-        // Update session name if firstname changed
         $this->session->set_userdata('firstname', $data['firstname']);
 
         $this->session->set_flashdata('success', 'Profile updated successfully.');

@@ -4,16 +4,16 @@
 
 <div id="main-content">
 
-    <?php if (!empty($flash_error)) : ?>
+    <?php if (!empty($flash_error)): ?>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?php echo htmlspecialchars($flash_error); ?>
+            <?= htmlspecialchars($flash_error) ?>
             <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($flash_success)) : ?>
+    <?php if (!empty($flash_success)): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?php echo htmlspecialchars($flash_success); ?>
+            <?= htmlspecialchars($flash_success) ?>
             <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
         </div>
     <?php endif; ?>
@@ -31,52 +31,65 @@
                     <?php
                         $initials = '';
                         if (!empty($user->firstname) && !empty($user->lastname)) {
-                            $initials = strtoupper(substr($user->firstname, 0, 1) . substr($user->lastname, 0, 1));
+                            $initials = strtoupper(
+                                substr($user->firstname, 0, 1) .
+                                substr($user->lastname,  0, 1)
+                            );
                         }
                     ?>
 
+                    <!-- ── Avatar — photo or initials ── -->
                     <div class="profile-avatar-wrap">
-                        <div class="profile-avatar">
-                            <?php echo $initials ?: 'U'; ?>
-                        </div>
+                        <?php if (!empty($user->profile_picture) && file_exists(FCPATH . $user->profile_picture)): ?>
+                            <img src="<?= base_url($user->profile_picture) ?>?v=<?= time() ?>"
+                                 alt="Profile Picture"
+                                 style="width:90px;height:90px;border-radius:50%;
+                                        object-fit:cover;border:3px solid #16c784;">
+                        <?php else: ?>
+                            <div class="profile-avatar">
+                                <?= $initials ?: 'U' ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <p class="profile-name">
-                        <?php echo htmlspecialchars($user->firstname ?? ''); ?>
-                        <?php echo htmlspecialchars($user->lastname ?? ''); ?>
-                        (<?php echo htmlspecialchars($user->nickname ?? ''); ?>)
+                        <?= htmlspecialchars($user->firstname ?? '') ?>
+                        <?= htmlspecialchars($user->lastname  ?? '') ?>
+                        (<?= htmlspecialchars($user->nickname ?? '') ?>)
                     </p>
 
                     <p class="profile-email">
-                        <?php echo htmlspecialchars($user->email ?? '—'); ?>
+                        <?= htmlspecialchars($user->email ?? '—') ?>
                     </p>
                     <p class="profile-email">
-                        <?php echo htmlspecialchars($user->employee_id ?? '—'); ?>
+                        <?= htmlspecialchars($user->employee_id ?? '—') ?>
                     </p>
+
                     <div class="mt-3">
-                        <?php if (!empty($user->role) && $user->role === 'admin') : ?>
+                        <?php if (!empty($user->role) && $user->role === 'admin'): ?>
                             <span class="badge-role-admin">
                                 <i class="fas fa-shield-alt mr-1"></i>Admin
                             </span>
-                        <?php else : ?>
+                        <?php else: ?>
                             <span class="badge-role-user">
                                 <i class="fas fa-user mr-1"></i>User
                             </span>
                         <?php endif; ?>
 
-                        <?php if (!empty($user->is_active)) : ?>
+                        <?php if (!empty($user->is_active)): ?>
                             <span class="badge-active ml-2">
                                 <i class="fas fa-circle mr-1" style="font-size:8px;"></i>Active
                             </span>
-                        <?php else : ?>
+                        <?php else: ?>
                             <span class="badge-inactive ml-2">Inactive</span>
                         <?php endif; ?>
                     </div>
 
                     <div class="mt-4">
-                        <a href="<?php echo base_url('profile/edit'); ?>"
+                        <a href="<?= base_url('profile/edit') ?>"
                            class="btn btn-sm btn-block"
-                           style="background:#1a1a2e;color:#fff;border-radius:6px;font-size:12px;font-weight:600;">
+                           style="background:#1a1a2e;color:#fff;border-radius:6px;
+                                  font-size:12px;font-weight:600;">
                             <i class="fas fa-pen mr-1"></i> Edit Profile
                         </a>
                     </div>
@@ -99,34 +112,35 @@
                         <div class="col-md-6 mb-4">
                             <div class="profile-field-label">First Name</div>
                             <div class="profile-field-value">
-                                <?php echo htmlspecialchars($user->firstname ?? '—'); ?>
+                                <?= htmlspecialchars($user->firstname ?? '—') ?>
                             </div>
                         </div>
 
                         <div class="col-md-6 mb-4">
                             <div class="profile-field-label">Last Name</div>
                             <div class="profile-field-value">
-                                <?php echo htmlspecialchars($user->lastname ?? '—'); ?>
+                                <?= htmlspecialchars($user->lastname ?? '—') ?>
                             </div>
                         </div>
+
                         <div class="col-md-6 mb-4">
-                            <div class="profile-field-label">NickName</div>
+                            <div class="profile-field-label">Nickname</div>
                             <div class="profile-field-value">
-                                <?php echo htmlspecialchars($user->nickname ?? '—'); ?>
+                                <?= htmlspecialchars($user->nickname ?? '—') ?>
                             </div>
                         </div>
 
                         <div class="col-md-6 mb-4">
                             <div class="profile-field-label">Email Address</div>
                             <div class="profile-field-value">
-                                <?php echo htmlspecialchars($user->email ?? '—'); ?>
+                                <?= htmlspecialchars($user->email ?? '—') ?>
                             </div>
                         </div>
 
                         <div class="col-md-6 mb-4">
                             <div class="profile-field-label">Contact Number</div>
                             <div class="profile-field-value">
-                                <?php echo htmlspecialchars($user->contactno ?? '—'); ?>
+                                <?= htmlspecialchars($user->contactno ?? '—') ?>
                             </div>
                         </div>
 
@@ -134,10 +148,10 @@
                             <div class="profile-field-label">Birthday</div>
                             <div class="profile-field-value">
                                 <?php
-                                $bday = $user->birthday ?? null;
-                                echo ($bday && $bday !== '0000-00-00')
-                                    ? htmlspecialchars(date('F d, Y', strtotime($bday)))
-                                    : '—';
+                                    $bday = $user->birthday ?? null;
+                                    echo ($bday && $bday !== '0000-00-00')
+                                        ? htmlspecialchars(date('F d, Y', strtotime($bday)))
+                                        : '—';
                                 ?>
                             </div>
                         </div>
@@ -145,32 +159,34 @@
                         <div class="col-md-6 mb-4">
                             <div class="profile-field-label">Address</div>
                             <div class="profile-field-value">
-                                <?php echo htmlspecialchars($user->address ?? '—'); ?>
+                                <?= htmlspecialchars($user->address ?? '—') ?>
                             </div>
                         </div>
 
                         <div class="col-md-6 mb-4">
                             <div class="profile-field-label">Member Since</div>
                             <div class="profile-field-value">
-                                <?php echo !empty($user->created_at) ? date('F d, Y', strtotime($user->created_at)) : '—'; ?>
+                                <?= !empty($user->created_at)
+                                    ? date('F d, Y', strtotime($user->created_at))
+                                    : '—' ?>
                             </div>
                         </div>
 
                         <div class="col-md-6 mb-4">
                             <div class="profile-field-label">Last Updated</div>
                             <div class="profile-field-value">
-                                <?php echo !empty($user->updated_at) ? date('F d, Y', strtotime($user->updated_at)) : '—'; ?>
+                                <?= !empty($user->updated_at)
+                                    ? date('F d, Y', strtotime($user->updated_at))
+                                    : '—' ?>
                             </div>
                         </div>
 
                     </div>
                 </div>
-
             </div>
         </div>
 
     </div>
-
 </div>
 
 <?php $this->load->view('templates/footer'); ?>

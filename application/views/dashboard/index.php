@@ -5,8 +5,11 @@
 
 <!-- Page CSS -->
 <link rel="stylesheet" href="<?= base_url('assets/css/users.css') ?>">
-
-
+<!-- charts -->
+<input type="hidden" id="chart_status_data" value='<?= $chart_status_data ?>'>
+<input type="hidden" id="chart_role_data"   value='<?= $chart_role_data ?>'>
+<input type="hidden" id="chart_log_labels"  value='<?= $chart_log_labels ?>'>
+<input type="hidden" id="chart_log_counts"  value='<?= $chart_log_counts ?>'>
 <!-- CSRF tokens -->
 
 <div id="main-content">
@@ -249,10 +252,6 @@
 
 
 </div>
-
-
-<!-- Page JS -->
-<script src="<?= base_url('assets/js/modules/dashboard.main.js') ?>"></script>
 
 
 <?php $this->load->view('templates/footer'); ?>

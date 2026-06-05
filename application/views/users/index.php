@@ -54,8 +54,6 @@
 
                 <button id="resetFilters" class="btn btn-sm btn-secondary">Reset</button>
             </div>
-                <button id="resetFilters" class="btn btn-sm btn-secondary">Reset</button>
-            </div>
         </div>
 
         <div class="table-responsive">
@@ -97,16 +95,16 @@
 <?php if ($avatar): ?>
     <img src="<?= $avatar ?>"
          style="
-            width:70px;
-            height:70px;
+            width:45px;
+            height:45px;
             border-radius:50%;
             object-fit:cover;
             border:3px solid #16c784;
          ">
 <?php else: ?>
     <div style="
-        width:70px;
-        height:70px;
+        width:45px;
+        height:45px;
         border-radius:50%;
         background:#16c784;
         color:#fff;
@@ -122,19 +120,15 @@
 
 <!-- NAME + META -->
 <div>
-    <h3 style="margin:0;font-weight:700;">
+    <h3 style="margin:0;font-size:16px;">
         <?= htmlspecialchars($user->firstname . ' ' . $user->lastname) ?>
     </h3>
 
-    <div style="color:#6c757d;font-size:14px;">
+    <div style="color:#6c757d;font-size:12px;">
         <?= htmlspecialchars($user->email) ?>
     </div>
 
-    <?php if (!empty($user->role)): ?>
-        <span class="badge badge-<?= $user->role === 'admin' ? 'danger' : 'secondary' ?>">
-            <?= ucfirst($user->role) ?>
-        </span>
-    <?php endif; ?>
+    
 </div>
 
 </div>
@@ -477,5 +471,3 @@
 <!-- Page JS -->
 <?php $this->load->view('templates/footer'); ?>
 
-<!-- Page JS — AFTER footer so jQuery/Bootstrap/Swal are loaded first -->
-<script src="<?= base_url('assets/js/modules/users.main.js') ?>"></script>

@@ -38,10 +38,19 @@
                         }
                     ?>
 
+                    <!-- ── Avatar — photo or initials ── -->
                     <div class="profile-avatar-wrap">
-                        <div class="profile-avatar">
-                            <?= $initials ?: 'U' ?>
-                        </div>
+                        <?php if (!empty($user->profile_picture) && file_exists(FCPATH . $user->profile_picture)): ?>
+                            <img src="<?= base_url($user->profile_picture) ?>?v=<?= time() ?>"
+                                 alt="Profile Picture"
+                                 id="avatarPreview"
+                                 style="width:90px;height:90px;border-radius:50%;
+                                        object-fit:cover;border:3px solid #16c784;">
+                        <?php else: ?>
+                            <div class="profile-avatar" id="avatarInitials">
+                                <?= $initials ?: 'U' ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <p class="profile-name">
@@ -80,7 +89,8 @@
                     <div class="mt-4">
                         <a href="<?= base_url('profile') ?>"
                            class="btn btn-sm btn-block"
-                           style="background:#1a1a2e;color:#fff;border-radius:6px;font-size:12px;font-weight:600;">
+                           style="background:#1a1a2e;color:#fff;border-radius:6px;
+                                  font-size:12px;font-weight:600;">
                             <i class="fas fa-arrow-left mr-1"></i> Back to Profile
                         </a>
                     </div>
@@ -92,7 +102,28 @@
         <!-- Right — edit form -->
         <div class="col-lg-8">
 
-            <?= form_open('profile/update') ?>
+            <!-- multipart REQUIRED for file upload -->
+            <?= form_open('profile/update', ['enctype' => 'multipart/form-data']) ?>
+
+                <!-- ── Profile Picture ────────────────────────────────── -->
+                <div class="card-rms mb-4">
+                    <div class="card-header-rms">
+                        <div class="header-dot"></div>
+                        Profile Picture
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <div class="form-group mb-0">
+                            <label>Choose a new photo
+                                <small class="text-muted">(JPG, PNG, GIF, WEBP — max 2MB)</small>
+                            </label>
+                            <input type="file"
+                                   name="profile_picture"
+                                   id="profile_picture_input"
+                                   class="form-control"
+                                   accept="image/*">
+                        </div>
+                    </div>
+                </div>
 
                 <!-- ── Personal Information ───────────────────────────── -->
                 <div class="card-rms mb-4">
@@ -225,5 +256,31 @@
         </div>
     </div>
 </div>
+
+<!-- Live preview when a new image is selected -->
+<script>
+document.getElementById('profile_picture_input').addEventListener('change', function () {
+    var file = this.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function (e) {
+        var preview = document.getElementById('avatarPreview');
+        var initials = document.getElementById('avatarInitials');
+
+        if (preview) {
+            preview.src = e.target.result;
+        } else if (initials) {
+            // Replace initials div with an img tag
+            var img = document.createElement('img');
+            img.id = 'avatarPreview';
+            img.src = e.target.result;
+            img.style.cssText = 'width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #16c784;';
+            initials.parentNode.replaceChild(img, initials);
+        }
+    };
+    reader.readAsDataURL(file);
+});
+</script>
 
 <?php $this->load->view('templates/footer'); ?>

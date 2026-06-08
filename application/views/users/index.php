@@ -12,8 +12,6 @@
 <!-- BASE_URL for JS -->
 <script>var BASE_URL = "<?= base_url() ?>";</script>
 
-
-
 <div id="main-content">
 
     <div class="section-title">User Management</div>
@@ -48,11 +46,14 @@
                 <input type="date" id="filterDate"
                        class="form-control form-control-sm d-inline-block" style="width:180px;">
 
+                <!-- ✅ id kept as filterDepartment (matches users.js) -->
                 <input type="text" id="filterDepartment"
                        class="form-control form-control-sm d-inline-block"
                        placeholder="Department" style="width:180px;">
 
-                <button id="resetFilters" class="btn btn-sm btn-secondary">Reset</button>
+                <button id="resetFilters" class="btn btn-secondary btn-sm">
+                    Reset Filters
+                </button>
             </div>
         </div>
 
@@ -60,6 +61,17 @@
             <table class="table-rms" id="usersTable">
                 <thead>
                     <tr>
+                        <!--
+                            Col 0 : User  (avatar + name + email — combined in JS render)
+                            Col 1 : Role
+                            Col 2 : Status
+                            Col 3 : Contact
+                            Col 4 : Address
+                            Col 5 : Created
+                            Col 6 : Department
+                            Col 7 : Birthday
+                            Col 8 : Actions  (admin only — always last)
+                        -->
                         <th>User</th>
                         <th>Role</th>
                         <th>Status</th>
@@ -67,111 +79,13 @@
                         <th>Address</th>
                         <th>Created</th>
                         <th>Department</th>
+                        <th>Birthday</th>
                         <?php if ($role === 'admin'): ?>
                             <th>Actions</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
-                <tbody>
-                <?php if (!empty($users)): ?>
-                    <?php foreach ($users as $i => $user): ?>
-                        <tr>
-
-                            <td>
-                            <div style="display:flex;align-items:center;gap:15px;margin-bottom:20px;">
-
-<?php
-    $avatar = !empty($user->profile_picture)
-        ? base_url($user->profile_picture)
-        : null;
-
-    $initials = strtoupper(
-        substr($user->firstname, 0, 1) .
-        substr($user->lastname, 0, 1)
-    );
-?>
-
-<!-- AVATAR -->
-<?php if ($avatar): ?>
-    <img src="<?= $avatar ?>"
-         style="
-            width:45px;
-            height:45px;
-            border-radius:50%;
-            object-fit:cover;
-            border:3px solid #16c784;
-         ">
-<?php else: ?>
-    <div style="
-        width:45px;
-        height:45px;
-        border-radius:50%;
-        background:#16c784;
-        color:#fff;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:22px;
-        font-weight:600;
-    ">
-        <?= $initials ?>
-    </div>
-<?php endif; ?>
-
-<!-- NAME + META -->
-<div>
-    <h3 style="margin:0;font-size:16px;">
-        <?= htmlspecialchars($user->firstname . ' ' . $user->lastname) ?>
-    </h3>
-
-    <div style="color:#6c757d;font-size:12px;">
-        <?= htmlspecialchars($user->email) ?>
-    </div>
-
-    
-</div>
-
-</div>
-                            </td>
-                            <td>
-                                <span class="badge badge-<?= $user->role === 'admin' ? 'danger' : 'secondary' ?>">
-                                    <?= ucfirst($user->role) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge badge-<?= $user->is_active ? 'success' : 'warning' ?>">
-                                    <?= $user->is_active ? 'Active' : 'Inactive' ?>
-                                </span>
-                            </td>
-                            <td><?= htmlspecialchars($user->contactno) ?></td>
-                            <td><?= htmlspecialchars($user->address) ?></td>
-                            <td class="created-date" data-date="<?= date('Y-m-d', strtotime($user->created_at)) ?>">
-                                <?= date('M d, Y h:i A', strtotime($user->created_at)) ?>
-                            </td>
-                            <td class="department-cell" data-dept="<?= htmlspecialchars(strtolower($user->department), ENT_QUOTES, 'UTF-8') ?>">
-                                <?= htmlspecialchars($user->department) ?>
-                            </td>
-                            <?php if ($role === 'admin'): ?>
-                                <td>
-                                    <button class="btn btn-primary btn-sm btn-edit"
-                                            data-id="<?= $user->id ?>">Edit</button>
-                                    <?php if ($user->id != $logged_user_id): ?>
-                                        <button class="btn btn-danger btn-sm"
-                                                onclick="deleteUser(<?= $user->id ?>)">Delete</button>
-                                    <?php endif; ?>
-                                </td>
-                            <?php endif; ?>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="<?= $role === 'admin' ? 9 : 8 ?>"
-                            class="text-center text-muted py-4">
-                            No users found.
-                        </td>
-                    </tr>
-                <?php endif; ?>
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
 
@@ -303,20 +217,17 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
-    <div class="form-group col-12 mb-2">
-        <div class="field-wrap">
-            <label for="profile_picture">Profile Picture</label>
-            <input class="form-control"
-                   type="file"
-                   id="profile_picture"
-                   accept="image/*">
-            <span class="field-error-icon">
-                ⚠<span class="error-tooltip"></span>
-            </span>
-        </div>
-    </div>
-</div>
+                    <div class="form-group col-12 mb-2">
+                        <div class="field-wrap">
+                            <label for="profile_picture">Profile Picture</label>
+                            <input class="form-control" type="file" id="profile_picture" accept="image/*">
+                            <span class="field-error-icon">⚠<span class="error-tooltip"></span></span>
+                        </div>
+                    </div>
+                </div>
+
             </div><!-- /modal-body -->
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -443,20 +354,17 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="form-row">
-    <div class="form-group col-12 mb-2">
-        <div class="field-wrap">
-            <label for="edit_profile_picture">Change Profile Picture</label>
-            <input class="form-control"
-                   type="file"
-                   id="edit_profile_picture"
-                   accept="image/*">
-            <span class="field-error-icon">
-                ⚠<span class="error-tooltip"></span>
-            </span>
-        </div>
-    </div>
-</div>
+                    <div class="form-group col-12 mb-2">
+                        <div class="field-wrap">
+                            <label for="edit_profile_picture">Change Profile Picture</label>
+                            <input class="form-control" type="file" id="edit_profile_picture" accept="image/*">
+                            <span class="field-error-icon">⚠<span class="error-tooltip"></span></span>
+                        </div>
+                    </div>
+                </div>
+
             </div><!-- /modal-body -->
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -470,4 +378,3 @@
 
 <!-- Page JS -->
 <?php $this->load->view('templates/footer'); ?>
-

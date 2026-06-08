@@ -106,6 +106,7 @@
                 </div>
             </div>
         </div>
+        <?php if ($role === 'admin'): ?>
         <div class="col-xl-3 col-md-6">
             <div class="stat-card sc-admins">
                 <div class="stat-info">
@@ -132,6 +133,7 @@
                 </div>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 
     <!-- Logs + Charts -->

@@ -1,6 +1,6 @@
-<!-- base_url for JS — must be before any script that uses it -->
+<!-- BASE_URL for JS — uppercase, matches all module files -->
 <script>
-    const base_url = "<?= base_url() ?>";
+    var BASE_URL = "<?= base_url() ?>";
 </script>
 
 <!-- 1. jQuery FIRST -->
@@ -14,15 +14,14 @@
 <script src="<?= base_url('assets/js/sweetalert2.all.min.js') ?>"></script>
 <!-- 5. Chart.js -->
 <script src="<?= base_url('assets/js/chart.umd.min.js') ?>"></script>
-<!-- 6. App config (needs base_url) -->
+<!-- 6. App config (needs BASE_URL) -->
 <script src="<?= base_url('assets/js/config.js') ?>"></script>
 <!-- 7. App core -->
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
-<!-- 8.dashboard  -->
+<!-- 8. Dashboard module -->
 <script src="<?= base_url('assets/js/modules/dashboard.main.js') ?>"></script>
-
 <!-- 9. Users module -->
-<script src="http://localhost/rms/assets/js/modules/users.main.js"></script>
+<script src="<?= base_url('assets/js/modules/users.main.js') ?>"></script>
 
 <?php if (isset($page_scripts)): ?>
     <?php foreach ($page_scripts as $script): ?>

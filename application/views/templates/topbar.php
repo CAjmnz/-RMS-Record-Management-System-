@@ -58,7 +58,7 @@ $initials = strtoupper(substr($firstname, 0, 1) . substr($lastname, 0, 1));
                     </div>
 
                 <?php endif; ?>
-
+            
             </div>
           
         </div>

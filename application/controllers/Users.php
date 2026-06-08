@@ -18,12 +18,9 @@ class Users extends RMS_Controller
         $role           = $this->session->userdata('role');
         $logged_user_id = $this->session->userdata('user_id');
 
-        $filters = [];
-        if ($role === 'user') $filters['hide_admins'] = true;
-
-        $this->data['users']          = $this->User_model->get_all($filters);
-        $this->data['role']           = $role;
-        $this->data['logged_user_id'] = $logged_user_id;
+        $this->data['users']            = [];
+        $this->data['role']             = $role;
+        $this->data['logged_user_id']   = $logged_user_id;
         $this->data['csrf_token_name']  = $this->security->get_csrf_token_name();
         $this->data['csrf_token_value'] = $this->security->get_csrf_hash();
 
@@ -54,7 +51,6 @@ class Users extends RMS_Controller
             return $this->jsonFail('Unauthorized.');
         }
 
-        // Collect inputs
         $firstname   = trim($this->input->post('firstname',   TRUE));
         $lastname    = trim($this->input->post('lastname',    TRUE));
         $employee_id = trim($this->input->post('employee_id', TRUE));
@@ -68,7 +64,6 @@ class Users extends RMS_Controller
         $job_title   = trim($this->input->post('job_title',   TRUE));
         $department  = trim($this->input->post('department',  TRUE));
 
-        // ── Required field errors ──
         $errors = [];
 
         if ($firstname   === '') $errors['firstname']   = 'First Name is required.';
@@ -76,15 +71,14 @@ class Users extends RMS_Controller
         if ($employee_id === '') $errors['employee_id'] = 'Employee ID is required.';
         if ($birthday    === '') $errors['birthday']    = 'Birthday is required.';
         if ($contactno   === '') $errors['contactno']   = 'Contact Number is required.';
-        elseif (!ctype_digit($contactno))           $errors['contactno'] = 'Contact Number must be numeric.';
-        elseif (strlen($contactno) !== 11)          $errors['contactno'] = 'Contact Number must be exactly 11 digits.';
+        elseif (!ctype_digit($contactno))      $errors['contactno'] = 'Contact Number must be numeric.';
+        elseif (strlen($contactno) !== 11)     $errors['contactno'] = 'Contact Number must be exactly 11 digits.';
         if ($address     === '') $errors['address']     = 'Address is required.';
         if ($email       === '') $errors['email']       = 'Email is required.';
         elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Email must be a valid email address.';
         if ($job_title   === '') $errors['job_title']   = 'Job Title is required.';
         if ($department  === '') $errors['department']  = 'Department is required.';
 
-        // ── Birthday: must be before today ──
         if (empty($errors['birthday']) && $birthday !== '') {
             if ($birthday >= date('Y-m-d')) {
                 $errors['birthday'] = 'Birthday cannot be today or a future date.';
@@ -95,7 +89,6 @@ class Users extends RMS_Controller
             return $this->jsonFail('Validation failed.', $errors);
         }
 
-        // ── Duplicate checks ──
         if ($this->User_model->full_name_exists($firstname, $lastname)) {
             $errors['firstname'] = 'This First Name + Last Name combination already exists.';
             $errors['lastname']  = 'This First Name + Last Name combination already exists.';
@@ -112,16 +105,8 @@ class Users extends RMS_Controller
         if (!empty($errors)) {
             return $this->jsonFail('Validation failed.', $errors);
         }
-        $upload = $this->upload_profile_picture();
 
-if (is_array($upload)) {
-    echo json_encode([
-        'success' => false,
-        'errors'  => ['profile_picture' => $upload['error']]
-    ]);
-    return;
-}
-        // ── Insert ──
+        // ── Upload (called ONCE) ──
         $upload = $this->upload_profile_picture();
 
         if (is_array($upload)) {
@@ -129,29 +114,27 @@ if (is_array($upload)) {
                 'profile_picture' => $upload['error']
             ]);
         }
-        
-        // fallback if no file uploaded
+
         $profile_picture = $upload ? $upload : null;
-        
         $pass = (!empty($password)) ? $password : 'rms-2026';
-        
+
         $insert = $this->User_model->insert([
-            'employee_id'         => $employee_id,
-            'firstname'           => $firstname,
-            'lastname'            => $lastname,
-            'birthday'            => $birthday,
-            'address'             => $address,
-            'contactno'           => $contactno,
-            'email'               => strtolower($email),
-            'password'            => password_hash($pass, PASSWORD_DEFAULT),
-            'role'                => $role,
-            'is_active'           => (int) $is_active,
-            'job_title'           => $job_title,
-            'department'          => $department,
-            'profile_picture'     => $profile_picture, // ✅ FIXED
-            'must_change_password'=> 1,
-            'created_at'          => date('Y-m-d H:i:s'),
-            'updated_at'          => date('Y-m-d H:i:s'),
+            'employee_id'          => $employee_id,
+            'firstname'            => $firstname,
+            'lastname'             => $lastname,
+            'birthday'             => $birthday,
+            'address'              => $address,
+            'contactno'            => $contactno,
+            'email'                => strtolower($email),
+            'password'             => password_hash($pass, PASSWORD_DEFAULT),
+            'role'                 => $role,
+            'is_active'            => (int) $is_active,
+            'job_title'            => $job_title,
+            'department'           => $department,
+            'profile_picture'      => $profile_picture,
+            'must_change_password' => 1,
+            'created_at'           => date('Y-m-d H:i:s'),
+            'updated_at'           => date('Y-m-d H:i:s'),
         ]);
 
         if (!$insert) {
@@ -187,7 +170,6 @@ if (is_array($upload)) {
             return $this->jsonFail('Invalid user ID.');
         }
 
-        // ── Required field errors ──
         $errors = [];
 
         if ($firstname   === '') $errors['firstname']   = 'First Name is required.';
@@ -195,15 +177,14 @@ if (is_array($upload)) {
         if ($employee_id === '') $errors['employee_id'] = 'Employee ID is required.';
         if ($birthday    === '') $errors['birthday']    = 'Birthday is required.';
         if ($contactno   === '') $errors['contactno']   = 'Contact Number is required.';
-        elseif (!ctype_digit($contactno))           $errors['contactno'] = 'Contact Number must be numeric.';
-        elseif (strlen($contactno) !== 11)          $errors['contactno'] = 'Contact Number must be exactly 11 digits.';
+        elseif (!ctype_digit($contactno))      $errors['contactno'] = 'Contact Number must be numeric.';
+        elseif (strlen($contactno) !== 11)     $errors['contactno'] = 'Contact Number must be exactly 11 digits.';
         if ($address     === '') $errors['address']     = 'Address is required.';
         if ($email       === '') $errors['email']       = 'Email is required.';
         elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Email must be a valid email address.';
         if ($job_title   === '') $errors['job_title']   = 'Job Title is required.';
         if ($department  === '') $errors['department']  = 'Department is required.';
 
-        // ── Birthday: must be before today ──
         if (empty($errors['birthday']) && $birthday !== '') {
             if ($birthday >= date('Y-m-d')) {
                 $errors['birthday'] = 'Birthday cannot be today or a future date.';
@@ -214,7 +195,6 @@ if (is_array($upload)) {
             return $this->jsonFail('Validation failed.', $errors);
         }
 
-        // ── Duplicate checks (exclude self) ──
         if ($this->User_model->full_name_exists($firstname, $lastname, $id)) {
             $errors['firstname'] = 'This First Name + Last Name combination already exists.';
             $errors['lastname']  = 'This First Name + Last Name combination already exists.';
@@ -232,7 +212,7 @@ if (is_array($upload)) {
             return $this->jsonFail('Validation failed.', $errors);
         }
 
-        // ── Update ──
+        // ── Upload (called ONCE) ──
         $upload = $this->upload_profile_picture();
 
         if (is_array($upload)) {
@@ -240,8 +220,7 @@ if (is_array($upload)) {
                 'profile_picture' => $upload['error']
             ]);
         }
-        
-        // build update data properly
+
         $data = [
             'firstname'   => $firstname,
             'lastname'    => $lastname,
@@ -256,32 +235,18 @@ if (is_array($upload)) {
             'department'  => $department,
             'updated_at'  => date('Y-m-d H:i:s'),
         ];
-        
-        // only update profile picture if new file uploaded
+
         if ($upload) {
             $data['profile_picture'] = $upload;
         }
-        
+
         $updated = $this->User_model->update($id, $data);
-        
+
         if (!$updated) {
             return $this->jsonFail('Update failed.');
         }
-        
+
         return $this->jsonSuccess('User updated successfully.');
-
-if (is_array($upload)) {
-    echo json_encode([
-        'success' => false,
-        'errors'  => ['profile_picture' => $upload['error']]
-    ]);
-    return;
-}
-
-if ($upload) {
-    $data['profile_picture'] = $upload;
-}
-
     }
 
     // ───────────────────────────────
@@ -314,6 +279,126 @@ if ($upload) {
     }
 
     // ───────────────────────────────
+    // AJAX LIST (SERVER-SIDE DATATABLE)
+    // ───────────────────────────────
+    public function ajax_list()
+    {
+        // ── DataTables params ──
+        $draw   = (int) $this->input->post('draw');
+        $start  = (int) $this->input->post('start');
+        $length = (int) $this->input->post('length');
+        if ($length <= 0) $length = 10;
+
+        $searchArr = $this->input->post('search');
+        $search    = isset($searchArr['value']) ? trim($searchArr['value']) : '';
+
+        $orderArr         = $this->input->post('order');
+        $orderColumnIndex = isset($orderArr[0]['column']) ? (int) $orderArr[0]['column'] : 5;
+        $orderDir         = isset($orderArr[0]['dir'])    ? $orderArr[0]['dir']          : 'desc';
+
+        // ── Filter params from custom dropdowns ──
+        $filterRole   = $this->input->post('role')   ?: null;
+        $filterStatus = $this->input->post('status');
+        $filterStatus = ($filterStatus !== null && $filterStatus !== '') ? $filterStatus : null;
+        $filterDate   = $this->input->post('date')   ?: null;
+        $filterDept   = $this->input->post('dept')   ?: null;
+
+        $sessionRole = $this->session->userdata('role');
+
+        // ── Column index → DB column mapping ──
+        // <thead> column order (profile_picture is merged into the User cell in JS):
+        // 0:User(avatar+name+email)  1:role  2:status  3:contact
+        // 4:address  5:created  6:department  7:birthday  8:actions
+        $columnMap = [
+            0 => 'firstname',   // User col — sort by firstname
+            1 => 'role',
+            2 => 'is_active',
+            3 => 'contactno',
+            4 => 'address',
+            5 => 'created_at',
+            6 => 'department',
+            7 => 'birthday',
+            8 => 'id',          // actions — not sortable, fallback to id
+        ];
+
+        $orderColumn = isset($columnMap[$orderColumnIndex])
+            ? $columnMap[$orderColumnIndex]
+            : 'created_at';
+
+        // ── Query ──
+        $result = $this->User_model->get_datatable(
+            $start,
+            $length,
+            $search,
+            $orderColumn,
+            $orderDir,
+            $filterRole,
+            $filterStatus,
+            $filterDate,
+            $filterDept
+        );
+
+        // ── Build rows ──
+        $data = [];
+
+        foreach ($result['data'] as $row) {
+
+            // Profile picture
+            if (!empty($row->profile_picture)) {
+                $profile = '<img src="' . base_url($row->profile_picture) . '" '
+                         . 'class="profile-avatar" alt="avatar">';
+            } else {
+                $initial = strtoupper(substr($row->firstname, 0, 1));
+                $profile = '<div class="profile-initials-sm">' . $initial . '</div>';
+            }
+
+            // Actions — always present in structure; empty string for non-admins
+            $actions = '';
+            if ($sessionRole === 'admin') {
+                $deleteBtn = '';
+                if ((int) $row->id !== (int) $this->session->userdata('user_id')) {
+                    $deleteBtn = '<button class="dropdown-item text-danger btn-delete" '
+                               . 'data-id="' . $row->id . '">Delete</button>';
+                }
+
+                $actions = '
+                    <div class="dropdown rms-dropdown">
+                        <button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>
+                        <div class="dropdown-menu dropdown-menu-right rms-dropdown-menu">
+                            <button class="dropdown-item btn-edit" data-id="' . $row->id . '">Edit</button>
+                            ' . $deleteBtn . '
+                        </div>
+                    </div>';
+            }
+
+            $data[] = [
+                'profile_picture' => $profile,
+                'user'            => '<div><strong>' . htmlspecialchars($row->firstname . ' ' . $row->lastname)
+                                   . '</strong><br><small>' . htmlspecialchars($row->email) . '</small></div>',
+                'role'            => ucfirst($row->role),
+                'status'          => $row->is_active
+                                   ? '<span class="badge badge-success">Active</span>'
+                                   : '<span class="badge badge-secondary">Inactive</span>',
+                'contact'         => htmlspecialchars($row->contactno ?? ''),
+                'address'         => htmlspecialchars($row->address   ?? ''),
+                'created'         => date('M d, Y h:i A', strtotime($row->created_at)),
+                'department'      => htmlspecialchars($row->department ?? ''),
+                'birthday'        => !empty($row->birthday) ? date('M d, Y', strtotime($row->birthday)) : '',
+                'actions'         => $actions,
+            ];
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'draw'            => $draw,
+            'recordsTotal'    => (int) ($result['total']    ?? 0),
+            'recordsFiltered' => (int) ($result['filtered'] ?? 0),
+            'data'            => $data,
+        ]);
+        exit;
+    }
+
+    // ───────────────────────────────
     // JSON HELPERS
     // ───────────────────────────────
     private function jsonFail($message, $errors = [])
@@ -337,30 +422,30 @@ if ($upload) {
         ]);
         exit;
     }
-     // ───────────────────────────────
-    // UPLOAD(PROFILE PICTURE)
+
+    // ───────────────────────────────
+    // PROFILE PICTURE UPLOAD
     // ───────────────────────────────
     private function upload_profile_picture()
-{
-    if (empty($_FILES['profile_picture']['name'])) {
-        return null;
-    }
+    {
+        if (empty($_FILES['profile_picture']['name'])) {
+            return null;
+        }
 
-    $config['upload_path'] = FCPATH . 'uploads/profile_pictures/';
-    $config['allowed_types'] = 'jpg|jpeg|png|webp';
-    $config['max_size']      = 2048; // 2MB
-    $config['encrypt_name']  = TRUE;
-
-    $this->load->library('upload', $config);
-
-    if (!$this->upload->do_upload('profile_picture')) {
-        return [
-            'error' => $this->upload->display_errors('', '')
+        $config = [
+            'upload_path'   => FCPATH . 'uploads/profile_pictures/',
+            'allowed_types' => 'jpg|jpeg|png|webp',
+            'max_size'      => 2048,
+            'encrypt_name'  => TRUE,
         ];
+
+        $this->load->library('upload', $config);
+
+        if (!$this->upload->do_upload('profile_picture')) {
+            return ['error' => $this->upload->display_errors('', '')];
+        }
+
+        $uploadData = $this->upload->data();
+        return 'uploads/profile_pictures/' . $uploadData['file_name'];
     }
-
-    $data = $this->upload->data();
-
-    return 'uploads/profile_pictures/' . $data['file_name'];
-}
 }

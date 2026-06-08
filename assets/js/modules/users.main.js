@@ -10,83 +10,95 @@ $(function () {
     }
 
     /* ══════════════════════════════════════════════════════════════════
-       DATATABLES
+       DATATABLES — server-side
        ══════════════════════════════════════════════════════════════════ */
-    var table = null;
-
-    if ($('#usersTable').length) {
-        table = $('#usersTable').DataTable({
-            pageLength: 5,
-            lengthMenu: [5, 10, 25, 50, 100],
-            order: [],
-            columnDefs: [{ orderable: false, targets: -1 }],
-            language: {
-                search:       'Search:',
-                lengthMenu:   'Show _MENU_ entries',
-                info:         'Showing _START_ to _END_ of _TOTAL_ entries',
-                infoEmpty:    'Showing 0 to 0 of 0 entries',
-                infoFiltered: '(filtered from _MAX_ total entries)',
-                paginate: {
-                    first:    'First',
-                    last:     'Last',
-                    next:     '&raquo;',
-                    previous: '&laquo;'
-                }
+    // ✅ FIX 1: assign to `table` so filters and reset can call table.ajax.reload()
+    var table = $('#usersTable').DataTable({
+        processing : true,
+        serverSide : true,
+        ajax: {
+            url  : BASE_URL + "users/ajax_list",
+            type : "POST",
+            // ✅ FIX 3: send filter values with every request
+            data : function (d) {
+                d.role   = $("#filterRole").val()       || "";
+                d.status = $("#filterStatus").val()     || "";
+                d.date   = $("#filterDate").val()       || "";
+                d.dept   = $("#filterDepartment").val() || "";
             }
-        });
-    }
+        },
+        columns: [
+            // ✅ FIX 2: col 0 — avatar + name/email merged into one cell
+            {
+                data      : null,
+                orderable : true,
+                render    : function (row) {
+                    var avatar = row.profile_picture
+                        ? row.profile_picture
+                        : '<div class="profile-initials-sm">'
+                            + (row.firstname ? row.firstname.charAt(0).toUpperCase() : "?")
+                          + "</div>";
+                    return '<div style="display:flex;align-items:center;gap:10px;">'
+                         + avatar + row.user + "</div>";
+                }
+            },
+            { data: "role",       orderable: true  },
+            { data: "status",     orderable: true  },
+            { data: "contact",    orderable: false },
+            { data: "address",    orderable: false },
+            { data: "created",    orderable: true  },
+            { data: "department", orderable: true  },
+            { data: "birthday",   orderable: true  },
+            // ✅ FIX 2: actions column (backend returns "" for non-admins)
+            { data: "actions",    orderable: false }
+        ],
+        columnDefs : [{ targets: -1, orderable: false }],
+        order      : [[5, "desc"]],
+        pageLength : 5,
+        lengthMenu : [5, 10, 25, 50],
+        language: {
+            processing  : '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>',
+            emptyTable  : "No users found.",
+            zeroRecords : "No matching users found."
+        },
+        // Dropdown toggle after each draw
+        drawCallback: function () {
+            // close any open menus on redraw
+            $(".rms-dropdown-menu.show").removeClass("show");
+        }
+    });
+
+    /* ══════════════════════════════════════════════════════════════════
+       CUSTOM DROPDOWN (no Bootstrap dependency — works in DataTables)
+       ══════════════════════════════════════════════════════════════════ */
+    // Toggle open/close
+    $(document).on("click", ".rms-dropdown-toggle", function (e) {
+        e.stopPropagation();
+        var $menu = $(this).siblings(".rms-dropdown-menu");
+        $(".rms-dropdown-menu.show").not($menu).removeClass("show");
+        $menu.toggleClass("show");
+    });
+
+    // Close when clicking anywhere else
+    $(document).on("click", function () {
+        $(".rms-dropdown-menu.show").removeClass("show");
+    });
 
     /* ══════════════════════════════════════════════════════════════════
        COLUMN FILTERS
        ══════════════════════════════════════════════════════════════════ */
-       function applyFilters() {
-        if (!table) return;
-
-        var role = $("#filterRole").val().toLowerCase();
-
-        var statusRaw = $("#filterStatus").val();
-        var status = "";
-        if (statusRaw === "1") status = "active";
-        else if (statusRaw === "0") status = "inactive";
-
-        var date = $("#filterDate").val();
-        var dept = $("#filterDepartment").val().toLowerCase().trim();
-
-        $.fn.dataTable.ext.search.length = 0;
-
-        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-            if (settings.nTable.id !== "usersTable") return true;
-
-            var api = new $.fn.dataTable.Api(settings);
-            var $row = $(api.row(dataIndex).node());
-
-            var rowRole   = (data[1] || "").toLowerCase();
-            var rowStatus = (data[2] || "").toLowerCase();
-
-            var rowDate = $row.find("td.created-date").attr("data-date") || "";
-            if (rowDate.length > 10) {
-                rowDate = rowDate.substring(0, 10);
-            }
-
-            var rowDept = ($row.find("td.department-cell").attr("data-dept") || "").toLowerCase();
-
-            if (role   && rowRole.indexOf(role) === -1) return false;
-            if (status && rowStatus.indexOf(status) === -1) return false;
-            if (date   && rowDate !== date) return false;
-            if (dept   && rowDept.indexOf(dept) === -1) return false;
-
-            return true;
+    $("#filterRole, #filterStatus, #filterDate, #filterDepartment")
+        .on("change input", function () {
+            table.ajax.reload();
         });
 
-        table.draw();
-    }
-
-    $("#filterRole, #filterStatus, #filterDate, #filterDepartment").on("change input", applyFilters);
-
+    // ✅ FIX 4: correct IDs matching the view
     $("#resetFilters").on("click", function () {
-        $("#filterRole, #filterStatus, #filterDate, #filterDepartment").val("");
-        $.fn.dataTable.ext.search.length = 0;
-        if (table) table.draw();
+        $("#filterRole").val("");
+        $("#filterStatus").val("");
+        $("#filterDate").val("");
+        $("#filterDepartment").val("");
+        table.ajax.reload();
     });
 
     /* ══════════════════════════════════════════════════════════════════
@@ -135,25 +147,25 @@ $(function () {
 
         if (items.length === 0) return;
 
-        var uid  = alertId.replace('#', '');
+        var uid  = alertId.replace("#", "");
         var html = '<div style="font-size:.82rem;line-height:1.5;">';
         html += '<strong style="display:block;margin-bottom:4px;">&#9888; Please fix the following:</strong>';
         html += '<ul class="mb-0 pl-3" id="errList_' + uid + '">';
 
         items.forEach(function (text, idx) {
-            var hidden = idx >= MAX_VISIBLE ? ' class="err-extra d-none"' : '';
-            html += '<li' + hidden + '>' + $('<span>').text(text).html() + '</li>';
+            var hidden = idx >= MAX_VISIBLE ? ' class="err-extra d-none"' : "";
+            html += "<li" + hidden + ">" + $("<span>").text(text).html() + "</li>";
         });
 
-        html += '</ul>';
+        html += "</ul>";
 
         if (items.length > MAX_VISIBLE) {
             var remaining = items.length - MAX_VISIBLE;
             html += '<button type="button" class="btn-see-more" data-expanded="0">'
-                  + 'See More (' + remaining + ' more)</button>';
+                  + "See More (" + remaining + " more)</button>";
         }
 
-        html += '</div>';
+        html += "</div>";
 
         $(alertId)
             .html(html)
@@ -165,7 +177,6 @@ $(function () {
             var $btn     = $(this);
             var expanded = $btn.data("expanded") === 1 || $btn.data("expanded") === "1";
             var rem      = items.length - MAX_VISIBLE;
-
             if (expanded) {
                 $(alertId).find(".err-extra").addClass("d-none");
                 $btn.text("See More (" + rem + " more)").data("expanded", 0);
@@ -276,26 +287,23 @@ $(function () {
         formData.append("is_active",   fm.is_active.val());
         formData.append("job_title",   fm.job_title.val().trim());
         formData.append("department",  fm.department.val().trim());
-
-        // CSRF
         formData.append($("#csrf_token_name").val(), $("#csrf_token_value").val());
 
-        // Profile picture
         var file = $("#profile_picture")[0].files[0];
         if (file) formData.append("profile_picture", file);
 
         $.ajax({
-            url:         BASE_URL + "users/store",
-            method:      "POST",
-            data:        formData,
-            processData: false,
-            contentType: false,
-            dataType:    "json",
+            url         : BASE_URL + "users/store",
+            method      : "POST",
+            data        : formData,
+            processData : false,
+            contentType : false,
+            dataType    : "json",
             success: function (res) {
                 if (res.success) {
                     $("#createUserModal").modal("hide");
                     showToast("success", res.message || "User created successfully.");
-                    setTimeout(function () { location.reload(); }, 1000);
+                    setTimeout(function () { table.ajax.reload(null, false); }, 800);
                 } else {
                     applyErrors("#createUserModal", "#createAlert", res.errors || {}, fm);
                     if ($.isEmptyObject(res.errors) && res.message) {
@@ -320,12 +328,13 @@ $(function () {
        ══════════════════════════════════════════════════════════════════ */
     $(document).on("click", ".btn-edit", function () {
         var id = $(this).data("id");
+        $(".rms-dropdown-menu.show").removeClass("show");
         clearAllErrors("#editUserModal");
 
         $.ajax({
-            url:      BASE_URL + "users/get/" + id,
-            method:   "GET",
-            dataType: "json",
+            url      : BASE_URL + "users/get/" + id,
+            method   : "GET",
+            dataType : "json",
             success: function (res) {
                 if (!res.success) {
                     showToast("danger", res.message || "Failed to load user.");
@@ -373,26 +382,23 @@ $(function () {
         formData.append("is_active",   fm.is_active.val());
         formData.append("job_title",   fm.job_title.val().trim());
         formData.append("department",  fm.department.val().trim());
-
-        // CSRF
         formData.append($("#csrf_token_name").val(), $("#csrf_token_value").val());
 
-        // Profile picture
         var file = $("#edit_profile_picture")[0] && $("#edit_profile_picture")[0].files[0];
         if (file) formData.append("profile_picture", file);
 
         $.ajax({
-            url:         BASE_URL + "users/update",
-            method:      "POST",
-            data:        formData,
-            processData: false,
-            contentType: false,
-            dataType:    "json",
+            url         : BASE_URL + "users/update",
+            method      : "POST",
+            data        : formData,
+            processData : false,
+            contentType : false,
+            dataType    : "json",
             success: function (res) {
                 if (res.success) {
                     $("#editUserModal").modal("hide");
                     showToast("success", res.message || "User updated successfully.");
-                    setTimeout(function () { location.reload(); }, 1000);
+                    setTimeout(function () { table.ajax.reload(null, false); }, 800);
                 } else {
                     applyErrors("#editUserModal", "#editAlert", res.errors || {}, fm);
                     if ($.isEmptyObject(res.errors) && res.message) {
@@ -415,27 +421,30 @@ $(function () {
     /* ══════════════════════════════════════════════════════════════════
        DELETE USER
        ══════════════════════════════════════════════════════════════════ */
-    window.deleteUser = function (id) {
+    $(document).on("click", ".btn-delete", function () {
+        var id = $(this).data("id");
+        $(".rms-dropdown-menu.show").removeClass("show");
+
         Swal.fire({
-            title:              'Are you sure?',
-            text:               'This user will be soft-deleted.',
-            icon:               'warning',
-            showCancelButton:   true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor:  '#3085d6',
-            confirmButtonText:  'Yes, delete it!'
+            title              : "Are you sure?",
+            text               : "This user will be soft-deleted.",
+            icon               : "warning",
+            showCancelButton   : true,
+            confirmButtonColor : "#d33",
+            cancelButtonColor  : "#3085d6",
+            confirmButtonText  : "Yes, delete it!"
         }).then(function (result) {
             if (!result.isConfirmed) return;
 
             $.ajax({
-                url:      BASE_URL + "users/delete/" + id,
-                method:   "POST",
-                data:     csrfData(),
-                dataType: "json",
+                url      : BASE_URL + "users/delete/" + id,
+                method   : "POST",
+                data     : csrfData(),
+                dataType : "json",
                 success: function (res) {
                     if (res.success) {
                         showToast("success", res.message || "User deleted.");
-                        setTimeout(function () { location.reload(); }, 1000);
+                        setTimeout(function () { table.ajax.reload(null, false); }, 800);
                     } else {
                         showToast("danger", res.message || "Delete failed.");
                     }
@@ -445,7 +454,7 @@ $(function () {
                 }
             });
         });
-    };
+    });
 
     /* ══════════════════════════════════════════════════════════════════
        TOAST NOTIFICATION
@@ -460,19 +469,19 @@ $(function () {
 
         var $toast = $("<div>")
             .css({
-                position    : "fixed",
-                bottom      : "24px",
-                right       : "24px",
-                zIndex      : 99999,
-                background  : bg[type] || "#333",
-                color       : "#fff",
-                padding     : "10px 18px",
-                borderRadius: "6px",
-                fontSize    : ".875rem",
-                boxShadow   : "0 4px 12px rgba(0,0,0,.25)",
-                maxWidth    : "320px",
-                opacity     : 0,
-                transition  : "opacity .25s"
+                position     : "fixed",
+                bottom       : "24px",
+                right        : "24px",
+                zIndex       : 99999,
+                background   : bg[type] || "#333",
+                color        : "#fff",
+                padding      : "10px 18px",
+                borderRadius : "6px",
+                fontSize     : ".875rem",
+                boxShadow    : "0 4px 12px rgba(0,0,0,.25)",
+                maxWidth     : "320px",
+                opacity      : 0,
+                transition   : "opacity .25s"
             })
             .text(message)
             .appendTo("body");

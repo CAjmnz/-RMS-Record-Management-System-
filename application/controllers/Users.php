@@ -248,7 +248,34 @@ class Users extends RMS_Controller
 
         return $this->jsonSuccess('User updated successfully.');
     }
-
+        // ───────────────────────────────
+    // RESET PASSWORD 
+    // ───────────────────────────────
+    public function reset_password($id)
+    {
+        if ($this->session->userdata('role') !== 'admin') {
+            return $this->jsonFail('Unauthorized.');
+        }
+    
+        $user = $this->User_model->get_by_id($id);
+    
+        if (!$user) {
+            return $this->jsonFail('User not found.');
+        }
+    
+        $updated = $this->User_model->update($id, [
+            'password' => password_hash('rms-2026', PASSWORD_DEFAULT),
+            'must_change_password' => 1,
+            'password_reset_count' => ((int)$user->password_reset_count) + 1,
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+    
+        if (!$updated) {
+            return $this->jsonFail('Password reset failed.');
+        }
+    
+        return $this->jsonSuccess('Password reset successfully.');
+    }
     // ───────────────────────────────
     // DELETE (AJAX)
     // ───────────────────────────────

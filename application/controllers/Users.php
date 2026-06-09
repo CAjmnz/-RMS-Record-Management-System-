@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class Users extends RMS_Controller
 {
@@ -33,12 +33,12 @@ class Users extends RMS_Controller
     // ───────────────────────────────
     public function get($id)
     {
-        
+
         $newId = $this->encryption->decrypt(
             base64_decode(
-            urldecode($id)
+                urldecode($id)
             )
-            ); 
+        );
 
         if (!$newId) return $this->jsonFail("Invalid ID.");
 
@@ -61,44 +61,56 @@ class Users extends RMS_Controller
             return $this->jsonFail('Unauthorized.');
         }
 
-        $firstname   = trim($this->input->post('firstname',   TRUE));
-        $lastname    = trim($this->input->post('lastname',    TRUE));
-        $employee_id = trim($this->input->post('employee_id', TRUE));
-        $birthday    = trim($this->input->post('birthday',    TRUE));
-        $contactno   = trim($this->input->post('contactno',   TRUE));
-        $address     = trim($this->input->post('address',     TRUE));
-        $email       = trim($this->input->post('email',       TRUE));
+        $firstname   = trim($this->input->post('firstname', TRUE));
+        $lastname    = trim($this->input->post('lastname', TRUE));
+        $birthday    = trim($this->input->post('birthday', TRUE));
+        $contactno   = trim($this->input->post('contactno', TRUE));
+        $address     = trim($this->input->post('address', TRUE));
+        $email       = trim($this->input->post('email', TRUE));
         $password    = $this->input->post('password', FALSE);
-        $role        = trim($this->input->post('role',        TRUE));
-        $is_active   = trim($this->input->post('is_active',   TRUE));
-        $job_title   = trim($this->input->post('job_title',   TRUE));
-        $department  = trim($this->input->post('department',  TRUE));
+        $role        = trim($this->input->post('role', TRUE));
+        $is_active   = trim($this->input->post('is_active', TRUE));
+        $job_title   = trim($this->input->post('job_title', TRUE));
+        $department  = trim($this->input->post('department', TRUE));
+
+        // ✅ AUTO-GENERATED EMPLOYEE ID (NEW)
+        $employee_id = $this->generateEmployeeId();
 
         $errors = [];
 
-        if ($firstname   === '') $errors['firstname']   = 'First Name is required.';
-        if ($lastname    === '') $errors['lastname']    = 'Last Name is required.';
-        if ($employee_id === '') $errors['employee_id'] = 'Employee ID is required.';
-        if ($birthday    === '') $errors['birthday']    = 'Birthday is required.';
-        if ($contactno   === '') $errors['contactno']   = 'Contact Number is required.';
-        elseif (!ctype_digit($contactno))      $errors['contactno'] = 'Contact Number must be numeric.';
-        elseif (strlen($contactno) !== 11)     $errors['contactno'] = 'Contact Number must be exactly 11 digits.';
-        if ($address     === '') $errors['address']     = 'Address is required.';
-        if ($email       === '') $errors['email']       = 'Email is required.';
-        elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Email must be a valid email address.';
-        if ($job_title   === '') $errors['job_title']   = 'Job Title is required.';
-        if ($department  === '') $errors['department']  = 'Department is required.';
+        if ($firstname === '') $errors['firstname'] = 'First Name is required.';
+        if ($lastname === '')  $errors['lastname']  = 'Last Name is required.';
 
-        if (empty($errors['birthday']) && $birthday !== '') {
-            if ($birthday > date('Y-m-d')) {
-                $errors['birthday'] = 'Birthday cannot be  a future date.';
-            }
+        if ($birthday === '') {
+            $errors['birthday'] = 'Birthday is required.';
+        } elseif ($birthday > date('Y-m-d')) {
+            $errors['birthday'] = 'Birthday cannot be a future date.';
         }
+
+        if ($contactno === '') {
+            $errors['contactno'] = 'Contact Number is required.';
+        } elseif (!ctype_digit($contactno)) {
+            $errors['contactno'] = 'Contact Number must be numeric.';
+        } elseif (strlen($contactno) !== 11) {
+            $errors['contactno'] = 'Contact Number must be exactly 11 digits.';
+        }
+
+        if ($address === '')  $errors['address'] = 'Address is required.';
+
+        if ($email === '') {
+            $errors['email'] = 'Email is required.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Email must be a valid email address.';
+        }
+
+        if ($job_title === '')  $errors['job_title'] = 'Job Title is required.';
+        if ($department === '') $errors['department'] = 'Department is required.';
 
         if (!empty($errors)) {
             return $this->jsonFail('Validation failed.', $errors);
         }
 
+        // 🔍 Duplicate checks
         if ($this->User_model->full_name_exists($firstname, $lastname)) {
             $errors['firstname'] = 'This First Name + Last Name combination already exists.';
             $errors['lastname']  = 'This First Name + Last Name combination already exists.';
@@ -108,15 +120,13 @@ class Users extends RMS_Controller
             $errors['email'] = 'This email is already registered.';
         }
 
-        if ($this->User_model->employee_id_exists($employee_id)) {
-            $errors['employee_id'] = 'This Employee ID is already taken.';
-        }
+        // ❗ employee_id check REMOVED (auto-generated, cannot duplicate)
 
         if (!empty($errors)) {
             return $this->jsonFail('Validation failed.', $errors);
         }
 
-        // ── Upload (called ONCE) ──
+        // ── Upload ──
         $upload = $this->upload_profile_picture();
 
         if (is_array($upload)) {
@@ -126,10 +136,11 @@ class Users extends RMS_Controller
         }
 
         $profile_picture = $upload ? $upload : null;
+
         $pass = (!empty($password)) ? $password : 'rms-2026';
 
         $insert = $this->User_model->insert([
-            'employee_id'          => $employee_id,
+            'employee_id'          => $employee_id, // ✅ AUTO GENERATED
             'firstname'            => $firstname,
             'lastname'             => $lastname,
             'birthday'             => $birthday,
@@ -169,11 +180,11 @@ class Users extends RMS_Controller
             base64_decode(
                 urldecode($raw_id)
             )
-        ); 
+        );
 
         $firstname   = trim($this->input->post('firstname',   TRUE));
         $lastname    = trim($this->input->post('lastname',    TRUE));
-        $employee_id = trim($this->input->post('employee_id', TRUE));
+        $employee_id = $this->generateEmployeeID();
         $birthday    = trim($this->input->post('birthday',    TRUE));
         $contactno   = trim($this->input->post('contactno',   TRUE));
         $address     = trim($this->input->post('address',     TRUE));
@@ -204,7 +215,7 @@ class Users extends RMS_Controller
 
         if (!empty($birthday)) {
             $today = date('Y-m-d');
-        
+
             if ($birthday > $today) {
                 $errors['birthday'] = 'Birthday cannot be in the future';
             }
@@ -277,12 +288,12 @@ class Users extends RMS_Controller
             return $this->jsonFail('Unauthorized.');
         }
 
-       // $id = $this->hashids->decode($id);
-         $id = $this->encryption->decrypt(
-        base64_decode(
-            urldecode($id)
-        )
-    ); 
+        // $id = $this->hashids->decode($id);
+        $id = $this->encryption->decrypt(
+            base64_decode(
+                urldecode($id)
+            )
+        );
         if (!$id) return $this->jsonFail('Invalid ID.');
 
         $user = $this->User_model->get_by_id($id);
@@ -300,7 +311,7 @@ class Users extends RMS_Controller
         return $this->jsonSuccess('Password has been reset to the default.');
     }
 
-        // ───────────────────────────────
+    // ───────────────────────────────
     // DELETE (AJAX)
     // ───────────────────────────────
     public function delete($id)
@@ -315,12 +326,12 @@ class Users extends RMS_Controller
             return $this->jsonFail('You cannot delete your own account.');
         }
 
-       // $id = $this->hashids->decode($id);
-       $id = $this->encryption->decrypt(
-        base64_decode(
-            urldecode($id)
-        )
-    ); 
+        // $id = $this->hashids->decode($id);
+        $id = $this->encryption->decrypt(
+            base64_decode(
+                urldecode($id)
+            )
+        );
 
         if (!$id) return $this->jsonFail('Invalid ID.');
 
@@ -409,7 +420,7 @@ class Users extends RMS_Controller
             // Profile picture
             if (!empty($row->profile_picture)) {
                 $profile = '<img src="' . base_url($row->profile_picture) . '" '
-                         . 'class="profile-avatar" alt="avatar">';
+                    . 'class="profile-avatar" alt="avatar">';
             } else {
                 $initial = strtoupper(substr($row->firstname, 0, 1));
                 $profile = '<div class="profile-initials-sm">' . $initial . '</div>';
@@ -421,15 +432,15 @@ class Users extends RMS_Controller
                 base64_encode(
                     $this->encryption->encrypt($row->id)
                 )
-            ); 
-            
+            );
+
             // Actions — always present in structure; empty string for non-admins
             $actions = '';
             if ($sessionRole === 'admin') {
                 $deleteBtn = '';
                 if ((int) $row->id !== (int) $this->session->userdata('user_id')) {
                     $deleteBtn = '<button class="dropdown-item text-danger btn-delete" '
-                               . 'data-id="' .  $encrypted_id . '">Delete</button>';
+                        . 'data-id="' .  $encrypted_id . '">Delete</button>';
                 }
 
                 $actions = '
@@ -446,11 +457,11 @@ class Users extends RMS_Controller
             $data[] = [
                 'profile_picture' => $profile,
                 'user'            => '<div><strong>' . htmlspecialchars($row->firstname . ' ' . $row->lastname)
-                                   . '</strong><br><small>' . htmlspecialchars($row->email) . '</small></div>',
+                    . '</strong><br><small>' . htmlspecialchars($row->email) . '</small></div>',
                 'role'            => ucfirst($row->role),
                 'status'          => $row->is_active
-                                   ? '<span class="badge badge-success">Active</span>'
-                                   : '<span class="badge badge-secondary">Inactive</span>',
+                    ? '<span class="badge badge-success">Active</span>'
+                    : '<span class="badge badge-secondary">Inactive</span>',
                 'contact'         => htmlspecialchars($row->contactno ?? ''),
                 'address'         => htmlspecialchars($row->address   ?? ''),
                 'created'         => date('M d, Y h:i A', strtotime($row->created_at)),
@@ -530,5 +541,40 @@ class Users extends RMS_Controller
 
         $uploadData = $this->upload->data();
         return 'uploads/profile_pictures/' . $uploadData['file_name'];
+    }
+    private function generateEmployeeID()
+    {
+        $year = date('Y');
+
+        $this->db->select('employee_id');
+        $this->db->from('users');
+        $this->db->like('employee_id', $year, 'after');
+        $this->db->order_by('employee_id', 'DESC');
+        $this->db->limit(1);
+
+        $last = $this->db->get()->row();
+
+        if (!$last) {
+            return $year . '-0001';
+        }
+
+        $parts = explode('-', $last->employee_id);
+        $number = isset($parts[1]) ? (int)$parts[1] : 0;
+
+        $next = str_pad($number + 1, 4, '0', STR_PAD_LEFT);
+
+        return $year . '-' . $next;
+    }
+    public function generate_employee_id()
+    {
+        if ($this->session->userdata('role') !== 'admin') {
+            return $this->jsonFail('Unauthorized');
+        }
+
+        $id = $this->generateEmployeeID();
+
+        return $this->jsonSuccess('OK', [
+            'employee_id' => $id
+        ]);
     }
 }

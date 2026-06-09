@@ -1,234 +1,235 @@
-window.UsersUI = (function () {
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-    var dt = null;
+class Users extends RMS_Controller
+{
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->model('User_model');
+        $this->load->library('form_validation');
+        $this->load->library('hashids');
+    }
 
-    // ─── Init Server-Side DataTable ───────────────────────────────────
-    function initDataTable() {
-        if ($.fn.DataTable.isDataTable('#usersTable')) {
-            $('#usersTable').DataTable().destroy();
+    public function index()
+    {
+        $this->data['role'] = $this->session->userdata('role');
+        $this->data['logged_user_id'] = $this->session->userdata('user_id');
+        $this->data['csrf_token_name'] = $this->security->get_csrf_token_name();
+        $this->data['csrf_token_value'] = $this->security->get_csrf_hash();
+        $this->load->view('users/index', $this->data);
+    }
+
+    // ─────────────────────────────
+    // CREATE USER
+    // ─────────────────────────────
+    public function store()
+    {
+        if ($this->session->userdata('role') !== 'admin') {
+            return $this->jsonFail('Unauthorized.');
         }
 
-        dt = $('#usersTable').DataTable({
-            processing : true,
-            serverSide : true,
-            ajax: {
-                url  : BASE_URL + 'users/ajax_list',
-                type : 'POST',
-                data : function (d) {
-                    d.role   = $('#filterRole').val()       || '';
-                    d.status = $('#filterStatus').val()     || '';
-                    d.date   = $('#filterDate').val()       || '';
-                    d.dept   = $('#filterDepartment').val() || '';
-                }
-            },
+        $firstname   = trim($this->input->post('firstname', TRUE));
+        $lastname    = trim($this->input->post('lastname', TRUE));
+        $employee_id = trim($this->input->post('employee_id', TRUE));
+        $birthday    = trim($this->input->post('birthday', TRUE));
+        $contactno   = trim($this->input->post('contactno', TRUE));
+        $address     = trim($this->input->post('address', TRUE));
+        $email       = trim($this->input->post('email', TRUE));
+        $password    = $this->input->post('password', FALSE);
+        $role        = trim($this->input->post('role', TRUE));
+        $is_active   = trim($this->input->post('is_active', TRUE));
+        $job_title   = trim($this->input->post('job_title', TRUE));
+        $department  = trim($this->input->post('department', TRUE));
 
-            columns: [
-                // col 0 — User: avatar + name + email merged
-                {
-                    data      : null,
-                    orderable : true,
-                    render    : function (data) {
-                        var avatar = data.profile_picture
-                            ? data.profile_picture
-                            : '<div class="profile-initials-sm">'
-                                + data.user.charAt(0).toUpperCase()
-                              + '</div>';
-                        return '<div style="display:flex;align-items:center;gap:10px;">'
-                             + avatar
-                             + data.user
-                             + '</div>';
-                    }
-                },
-                { data: 'role',       orderable: true  },
-                { data: 'status',     orderable: true  },
-                { data: 'contact',    orderable: false },
-                { data: 'address',    orderable: false },
-                { data: 'created',    orderable: true  },
-                { data: 'department', orderable: true  },
-                { data: 'birthday',   orderable: true  },
-                { data: 'actions',    orderable: false }
-            ],
+        $errors = [];
 
-            columnDefs : [{ targets: -1, orderable: false }],
-            order      : [[5, 'desc']],
-            pageLength : 10,
-            lengthMenu : [5, 10, 25, 50],
+        // REQUIRED FIELDS
+        if ($firstname === '') $errors['firstname'] = 'First Name is required.';
+        if ($lastname === '')  $errors['lastname']  = 'Last Name is required.';
+        if ($employee_id === '') $errors['employee_id'] = 'Employee ID is required.';
 
-            language: {
-                processing  : '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>',
-                emptyTable  : 'No users found.',
-                zeroRecords : 'No matching users found.'
-            },
 
-            drawCallback: function () { /* dropdown handled by delegated click below */ }
-        });
+// 📅 BIRTHDAY STRICT (NO FUTURE DATE)
+if ($birthday === '') {
+    $errors['birthday'] = 'Birthday is required.';
+} else {
+    $today = date('Y-m-d');
 
-        // Custom filters
-        $(document).on('change input', '#filterRole, #filterStatus, #filterDate, #filterDepartment', function () {
-            dt.ajax.reload();
-        });
+    if ($birthday > $today) {
+        $errors['birthday'] = 'Birthday cannot be in the future';
+    }
+}
 
-        $('#resetFilters').on('click', function () {
-            $('#filterRole, #filterStatus').val('');
-            $('#filterDate, #filterDepartment').val('');
-            dt.ajax.reload();
-        });
+        // 📞 CONTACT STRICT 11 DIGITS
+        if ($contactno === '') {
+            $errors['contactno'] = 'Contact Number is required.';
+        } elseif (!preg_match('/^[0-9]{11}$/', $contactno)) {
+            $errors['contactno'] = 'Contact number must be exactly 11 digits';
+        }
 
-        // ── Delegated: Edit button ────────────────────────────────────
-        $(document).on('click', '.btn-edit', function () {
-            var id = $(this).data('id');
-            loadEditUser(id);
-        });
-        // ── Delegated: reset button ────────────────────────────────────
-        $(document).off('click', '.btn-reset-password');
+        if ($address === '') $errors['address'] = 'Address is required.';
 
-$(document).on('click', '.btn-reset-password', function (e) {
-    e.preventDefault();
-    e.stopPropagation();
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Valid email is required.';
+        }
 
-    console.log('RESET CLICK FIRED');
+        if ($job_title === '') $errors['job_title'] = 'Job Title is required.';
+        if ($department === '') $errors['department'] = 'Department is required.';
 
-    var id = $(this).data('id');
+        if (!empty($errors)) {
+            return $this->jsonFail('Validation failed.', $errors);
+        }
 
-    if (!id) {
-        console.log('NO ID FOUND');
-        return;
+        // DUPLICATES
+        if ($this->User_model->full_name_exists($firstname, $lastname)) {
+            $errors['firstname'] = 'Name already exists.';
+        }
+
+        if ($this->User_model->email_exists($email)) {
+            $errors['email'] = 'Email already exists.';
+        }
+
+        if ($this->User_model->employee_id_exists($employee_id)) {
+            $errors['employee_id'] = 'Employee ID already exists.';
+        }
+
+        if (!empty($errors)) {
+            return $this->jsonFail('Validation failed.', $errors);
+        }
+
+        // 🖼️ UPLOAD (STRICT 1MB)
+        $upload = $this->upload_profile_picture();
+        if (is_array($upload)) {
+            return $this->jsonFail('Upload failed.', [
+                'profile_picture' => $upload['error']
+            ]);
+        }
+
+        // 🔐 PASSWORD RULE
+        $plainPassword = !empty($password) ? $password : 'rms-2026';
+        $hashedPassword = password_hash($plainPassword, PASSWORD_BCRYPT);
+
+        $this->User_model->insert([
+            'employee_id' => $employee_id,
+            'firstname'   => $firstname,
+            'lastname'    => $lastname,
+            'birthday'    => $birthday,
+            'contactno'   => $contactno,
+            'address'     => $address,
+            'email'       => strtolower($email),
+            'password'    => $hashedPassword,
+            'role'        => $role,
+            'is_active'   => (int)$is_active,
+            'job_title'   => $job_title,
+            'department'  => $department,
+            'profile_picture' => $upload,
+            'created_at'  => date('Y-m-d H:i:s'),
+            'updated_at'  => date('Y-m-d H:i:s')
+        ]);
+
+        return $this->jsonSuccess('User created successfully.');
     }
 
-    Swal.fire({
-        title: 'Reset Password?',
-        text: 'Password will be reset to rms-2026',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, reset'
-    }).then((result) => {
+    // ─────────────────────────────
+    // UPDATE USER
+    // ─────────────────────────────
+    public function update()
+    {
+        if ($this->session->userdata('role') !== 'admin') {
+            return $this->jsonFail('Unauthorized.');
+        }
 
-        if (!result.isConfirmed) return;
+        $id = (int)$this->hashids->decode($this->input->post('id'));
 
-        $.ajax({
-            url: BASE_URL + 'users/reset-password/' + id,
-            type: 'POST',
-            dataType: 'json',
+        if (!$id) return $this->jsonFail('Invalid ID.');
 
-            success: function(res) {
-                console.log('RESPONSE:', res);
+        $firstname   = trim($this->input->post('firstname', TRUE));
+        $lastname    = trim($this->input->post('lastname', TRUE));
+        $employee_id = trim($this->input->post('employee_id', TRUE));
+        $birthday    = trim($this->input->post('birthday', TRUE));
+        $contactno   = trim($this->input->post('contactno', TRUE));
+        $address     = trim($this->input->post('address', TRUE));
+        $email       = trim($this->input->post('email', TRUE));
+        $role        = trim($this->input->post('role', TRUE));
+        $is_active   = trim($this->input->post('is_active', TRUE));
+        $job_title   = trim($this->input->post('job_title', TRUE));
+        $department  = trim($this->input->post('department', TRUE));
 
-                Swal.fire(
-                    res.success ? 'Success' : 'Error',
-                    res.message,
-                    res.success ? 'success' : 'error'
-                );
+        $errors = [];
 
-                if (res.success) {
-                    if (typeof table !== 'undefined') {
-                        table.ajax.reload(null, false);
-                    }
-                }
-            },
+        if ($birthday > date('Y-m-d')) {
+            $errors['birthday'] = 'Birthday cannot be in the future';
+        }
 
-            error: function(xhr) {
-                console.log('AJAX ERROR:', xhr.responseText);
+        if (!preg_match('/^[0-9]{11}$/', $contactno)) {
+            $errors['contactno'] = 'Contact number must be exactly 11 digits';
+        }
 
-                Swal.fire('Error', 'Server error occurred', 'error');
-            }
-        });
+        if (!empty($errors)) {
+            return $this->jsonFail('Validation failed.', $errors);
+        }
 
-    });
-});
+        $upload = $this->upload_profile_picture();
 
-        // ── Delegated: Delete button ──────────────────────────────────
-        $(document).on('click', '.btn-delete', function () {
-            var id = $(this).data('id');
-            deleteUser(id);
-        });
+        $data = [
+            'firstname'  => $firstname,
+            'lastname'   => $lastname,
+            'employee_id'=> $employee_id,
+            'birthday'   => $birthday,
+            'contactno'  => $contactno,
+            'address'    => $address,
+            'email'      => strtolower($email),
+            'role'       => $role,
+            'is_active'  => (int)$is_active,
+            'job_title'  => $job_title,
+            'department' => $department,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
 
-        // ── Custom dropdown toggle (no Bootstrap dependency) ─────────
-        $(document).on("click", ".rms-dropdown-toggle", function (e) {
-            e.stopPropagation();
-            var menu = $(this).siblings(".rms-dropdown-menu");
-            $(".rms-dropdown-menu.show").not(menu).removeClass("show");
-            menu.toggleClass("show");
-        });
+        if ($upload && !is_array($upload)) {
+            $data['profile_picture'] = $upload;
+        }
 
-        // Close dropdown when clicking anywhere else
-        $(document).on("click", function () {
-            $(".rms-dropdown-menu.show").removeClass("show");
-        });
+        $this->User_model->update($id, $data);
+
+        return $this->jsonSuccess('User updated successfully.');
     }
 
-    // ─── Reload (no page jump) ────────────────────────────────────────
-    function reloadTable() {
-        if (dt) dt.ajax.reload(null, false);
+    // ─────────────────────────────
+    // UPLOAD (STRICT)
+    // ─────────────────────────────
+    private function upload_profile_picture()
+    {
+        if (empty($_FILES['profile_picture']['name'])) return null;
+
+        if ($_FILES['profile_picture']['size'] > 1024 * 1024) {
+            return ['error' => 'Profile picture must not exceed 1MB'];
+        }
+
+        $config['upload_path']   = FCPATH . 'uploads/profile_pictures/';
+        $config['allowed_types'] = 'jpg|jpeg|png';
+        $config['max_size']      = 1024;
+        $config['encrypt_name']  = TRUE;
+
+        $this->load->library('upload', $config);
+
+        if (!$this->upload->do_upload('profile_picture')) {
+            return ['error' => $this->upload->display_errors('', '')];
+        }
+
+        return 'uploads/profile_pictures/' . $this->upload->data('file_name');
     }
 
-    // ─── Load user into edit modal ────────────────────────────────────
-    function loadEditUser(id) {
-        $.get(BASE_URL + 'users/get/' + id, function (res) {
-            if (!res.success) {
-                Swal.fire('Error', res.message, 'error');
-                return;
-            }
-            var u = res.data;
-            $('#edit_id').val(u.id);
-            $('#edit_firstname').val(u.firstname);
-            $('#edit_lastname').val(u.lastname);
-            $('#edit_employee_id').val(u.employee_id);
-            $('#edit_birthday').val(u.birthday);
-            $('#edit_contactno').val(u.contactno);
-            $('#edit_address').val(u.address);
-            $('#edit_email').val(u.email);
-            $('#edit_role').val(u.role);
-            $('#edit_is_active').val(u.is_active);
-            $('#edit_job_title').val(u.job_title);
-            $('#edit_department').val(u.department);
-            $('#editUserModal').modal('show');
-        }, 'json');
+    private function jsonFail($msg, $errors = [])
+    {
+        echo json_encode(['success'=>false,'message'=>$msg,'errors'=>$errors]);
+        exit;
     }
 
-    // ─── Modal reset handlers ─────────────────────────────────────────
-    function resetModals() {
-        $('#createUserModal').on('hidden.bs.modal', function () {
-            if (window.UsersValidation) UsersValidation.clearValidation('create');
-            $('#createAlert').html('').hide();
-            $(this).find('input:not([type=hidden])').val('');
-            $(this).find('select').prop('selectedIndex', 0);
-        });
-
-        $('#editUserModal').on('hidden.bs.modal', function () {
-            if (window.UsersValidation) UsersValidation.clearValidation('edit');
-            $('#editAlert').html('').hide();
-        });
+    private function jsonSuccess($msg)
+    {
+        echo json_encode(['success'=>true,'message'=>$msg]);
+        exit;
     }
-
-    // ─── Live validation clear ────────────────────────────────────────
-    function bindLiveValidation() {
-        $(document).on('input change', '.field-wrap input, .field-wrap select', function () {
-            var wrap = $(this).closest('.field-wrap');
-            $(this).removeClass('is-invalid');
-            wrap.removeClass('has-error');
-            wrap.find('.error-tooltip').text('');
-        });
-    }
-
-    // ─── Success toast → reload table (no page refresh) ──────────────
-    function showSuccess(message) {
-        Swal.fire({
-            title             : 'Success',
-            text              : message,
-            icon              : 'success',
-            timer             : 1500,
-            showConfirmButton : false
-        }).then(function () {
-            reloadTable();
-        });
-    }
-
-    return {
-        initDataTable      : initDataTable,
-        reloadTable        : reloadTable,
-        resetModals        : resetModals,
-        bindLiveValidation : bindLiveValidation,
-        showSuccess        : showSuccess
-    };
-
-})();
+}

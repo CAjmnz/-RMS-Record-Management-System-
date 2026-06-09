@@ -10,6 +10,27 @@ $(function () {
     }
 
     /* ══════════════════════════════════════════════════════════════════
+       CONTACT NUMBER — block non-numeric input at the JS layer
+       Strips anything that isn't a digit as the user types.
+       Backend validation is still the final authority.
+       ══════════════════════════════════════════════════════════════════ */
+    $(document).on("input", "#contactno, #edit_contactno", function () {
+        // Remove any non-digit character instantly
+        var cleaned = $(this).val().replace(/\D/g, "");
+        // Enforce max 11 digits
+        if (cleaned.length > 11) cleaned = cleaned.slice(0, 11);
+        $(this).val(cleaned);
+    });
+
+    // Block non-numeric keypresses (arrows, backspace, delete, tab still allowed)
+    $(document).on("keypress", "#contactno, #edit_contactno", function (e) {
+        var char = String.fromCharCode(e.which);
+        if (!/[0-9]/.test(char)) {
+            e.preventDefault();
+        }
+    });
+
+    /* ══════════════════════════════════════════════════════════════════
        DATATABLES — server-side, role-aware columns
        ══════════════════════════════════════════════════════════════════ */
 

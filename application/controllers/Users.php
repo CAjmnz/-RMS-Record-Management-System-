@@ -33,10 +33,16 @@ class Users extends RMS_Controller
     // ───────────────────────────────
     public function get($id)
     {
-        $id = $this->hashids->decode($id);
-        if (!$id) return $this->jsonFail("Invalid ID.");
+        
+        $newId = $this->encryption->decrypt(
+            base64_decode(
+            urldecode($id)
+            )
+            ); 
 
-        $user = $this->User_model->get_by_id($id);
+        if (!$newId) return $this->jsonFail("Invalid ID.");
+
+        $user = $this->User_model->get_by_id($newId);
 
         if (!$user) {
             return $this->jsonFail('User not found.');
@@ -84,8 +90,8 @@ class Users extends RMS_Controller
         if ($department  === '') $errors['department']  = 'Department is required.';
 
         if (empty($errors['birthday']) && $birthday !== '') {
-            if ($birthday >= date('Y-m-d')) {
-                $errors['birthday'] = 'Birthday cannot be today or a future date.';
+            if ($birthday > date('Y-m-d')) {
+                $errors['birthday'] = 'Birthday cannot be  a future date.';
             }
         }
 
@@ -158,7 +164,13 @@ class Users extends RMS_Controller
         }
 
         $raw_id = trim($this->input->post('id', TRUE));
-        $id     = (int) $this->hashids->decode($raw_id);
+        //$id     = (int) $this->hashids->decode($raw_id);
+        $id = $this->encryption->decrypt(
+            base64_decode(
+                urldecode($raw_id)
+            )
+        ); 
+
         $firstname   = trim($this->input->post('firstname',   TRUE));
         $lastname    = trim($this->input->post('lastname',    TRUE));
         $employee_id = trim($this->input->post('employee_id', TRUE));
@@ -190,9 +202,11 @@ class Users extends RMS_Controller
         if ($job_title   === '') $errors['job_title']   = 'Job Title is required.';
         if ($department  === '') $errors['department']  = 'Department is required.';
 
-        if (empty($errors['birthday']) && $birthday !== '') {
-            if ($birthday >= date('Y-m-d')) {
-                $errors['birthday'] = 'Birthday cannot be today or a future date.';
+        if (!empty($birthday)) {
+            $today = date('Y-m-d');
+        
+            if ($birthday > $today) {
+                $errors['birthday'] = 'Birthday cannot be in the future';
             }
         }
 
@@ -263,7 +277,12 @@ class Users extends RMS_Controller
             return $this->jsonFail('Unauthorized.');
         }
 
-        $id = $this->hashids->decode($id);
+       // $id = $this->hashids->decode($id);
+         $id = $this->encryption->decrypt(
+        base64_decode(
+            urldecode($id)
+        )
+    ); 
         if (!$id) return $this->jsonFail('Invalid ID.');
 
         $user = $this->User_model->get_by_id($id);
@@ -296,7 +315,13 @@ class Users extends RMS_Controller
             return $this->jsonFail('You cannot delete your own account.');
         }
 
-        $id = $this->hashids->decode($id);
+       // $id = $this->hashids->decode($id);
+       $id = $this->encryption->decrypt(
+        base64_decode(
+            urldecode($id)
+        )
+    ); 
+
         if (!$id) return $this->jsonFail('Invalid ID.');
 
         $user = $this->User_model->get_by_id($id);
@@ -392,22 +417,27 @@ class Users extends RMS_Controller
 
             // Hash the real DB id — never expose raw integers in the DOM
             $hashed_id = $this->hashids->encode($row->id);
-
+            $encrypted_id = urlencode(
+                base64_encode(
+                    $this->encryption->encrypt($row->id)
+                )
+            ); 
+            
             // Actions — always present in structure; empty string for non-admins
             $actions = '';
             if ($sessionRole === 'admin') {
                 $deleteBtn = '';
                 if ((int) $row->id !== (int) $this->session->userdata('user_id')) {
                     $deleteBtn = '<button class="dropdown-item text-danger btn-delete" '
-                               . 'data-id="' . $hashed_id . '">Delete</button>';
+                               . 'data-id="' .  $encrypted_id . '">Delete</button>';
                 }
 
                 $actions = '
                     <div class="rms-dropdown">
                         <button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>
                         <div class="rms-dropdown-menu">
-                            <button class="dropdown-item btn-edit" data-id="' . $hashed_id . '">Edit</button>
-                            <button class="dropdown-item btn-reset-password" data-id="' . $hashed_id . '">Reset Password</button>
+                            <button class="dropdown-item btn-edit" data-id="' .  $encrypted_id . '">Edit</button>
+                            <button class="dropdown-item btn-reset-password" data-id="' .  $encrypted_id . '">Reset Password</button>
                             ' . $deleteBtn . '
                         </div>
                     </div>';
@@ -476,15 +506,26 @@ class Users extends RMS_Controller
 
         $config = [
             'upload_path'   => FCPATH . 'uploads/profile_pictures/',
-            'allowed_types' => 'jpg|jpeg|png|webp',
-            'max_size'      => 2048,
+            'allowed_types' => 'jpg|jpeg|png',
+            'max_size'      => 1024,  // 1MB max
             'encrypt_name'  => TRUE,
         ];
 
         $this->load->library('upload', $config);
 
         if (!$this->upload->do_upload('profile_picture')) {
-            return ['error' => $this->upload->display_errors('', '')];
+            // Check what actually failed and return a clean, specific message
+            $raw = $this->upload->display_errors('', '');
+
+            if (stripos($raw, 'larger than') !== false || stripos($raw, 'permitted size') !== false) {
+                $error = 'Profile picture — The file you are attempting to upload should only be 1MB or less.';
+            } elseif (stripos($raw, 'type') !== false || stripos($raw, 'mime') !== false || stripos($raw, 'allowed') !== false) {
+                $error = 'Profile picture — Only JPG, JPEG, and PNG files are allowed.';
+            } else {
+                $error = 'Profile picture — Upload failed. Please try again.';
+            }
+
+            return ['error' => $error];
         }
 
         $uploadData = $this->upload->data();

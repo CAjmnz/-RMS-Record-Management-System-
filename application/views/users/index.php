@@ -140,7 +140,8 @@
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <label for="birthday">Birthday</label>
-                            <input class="form-control" type="date" id="birthday">
+                            <input class="form-control" type="date" id="birthday"
+                                   max="<?= date('Y-m-d') ?>">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -150,7 +151,9 @@
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <label for="contactno">Contact No</label>
-                            <input class="form-control" id="contactno" autocomplete="off">
+                            <input class="form-control" id="contactno" autocomplete="off"
+                                   inputmode="numeric" maxlength="11" pattern="[0-9]{11}"
+                                   placeholder="09XXXXXXXXX">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -285,7 +288,8 @@
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <label for="edit_birthday">Birthday</label>
-                            <input class="form-control" type="date" id="edit_birthday">
+                            <input class="form-control" type="date" id="edit_birthday"
+                                   max="<?= date('Y-m-d') ?>">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>
@@ -295,7 +299,9 @@
                     <div class="form-group col-6 mb-2">
                         <div class="field-wrap">
                             <label for="edit_contactno">Contact No</label>
-                            <input class="form-control" id="edit_contactno" autocomplete="off">
+                            <input class="form-control" id="edit_contactno" autocomplete="off"
+                                   inputmode="numeric" maxlength="11" pattern="[0-9]{11}"
+                                   placeholder="09XXXXXXXXX">
                             <span class="field-error-icon">&#9888;<span class="error-tooltip"></span></span>
                         </div>
                     </div>

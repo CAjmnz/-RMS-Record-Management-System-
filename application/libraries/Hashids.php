@@ -12,7 +12,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class Hashids
 {
-    private $salt       = 'RMS_SECRET_SALT_2026';
+    private $salt;
+    public function __construct()
+{
+    $CI =& get_instance();
+    $this->salt = $CI->config->item('encryption_key');
+}
     private $alphabet   = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     private $min_length = 6;
 

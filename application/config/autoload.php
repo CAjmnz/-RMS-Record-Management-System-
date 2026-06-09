@@ -11,7 +11,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | These are heavy and only needed on specific controllers.
 | Load them in the controller constructor that needs them.
 */
-$autoload['libraries'] = ['session', 'database'];
+$autoload['libraries'] = ['session', 'database', 'encryption'];
 
 /*
 | AUTOLOAD HELPERS

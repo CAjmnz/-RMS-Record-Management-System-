@@ -79,6 +79,62 @@ window.UsersUI = (function () {
             var id = $(this).data('id');
             loadEditUser(id);
         });
+        // ── Delegated: reset button ────────────────────────────────────
+        $(document).off('click', '.btn-reset-password');
+
+$(document).on('click', '.btn-reset-password', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    console.log('RESET CLICK FIRED');
+
+    var id = $(this).data('id');
+
+    if (!id) {
+        console.log('NO ID FOUND');
+        return;
+    }
+
+    Swal.fire({
+        title: 'Reset Password?',
+        text: 'Password will be reset to rms-2026',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, reset'
+    }).then((result) => {
+
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+            url: BASE_URL + 'users/reset-password/' + id,
+            type: 'POST',
+            dataType: 'json',
+
+            success: function(res) {
+                console.log('RESPONSE:', res);
+
+                Swal.fire(
+                    res.success ? 'Success' : 'Error',
+                    res.message,
+                    res.success ? 'success' : 'error'
+                );
+
+                if (res.success) {
+                    if (typeof table !== 'undefined') {
+                        table.ajax.reload(null, false);
+                    }
+                }
+            },
+
+            error: function(xhr) {
+                console.log('AJAX ERROR:', xhr.responseText);
+
+                Swal.fire('Error', 'Server error occurred', 'error');
+            }
+        });
+
+    });
+});
 
         // ── Delegated: Delete button ──────────────────────────────────
         $(document).on('click', '.btn-delete', function () {

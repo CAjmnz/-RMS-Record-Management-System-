@@ -10,16 +10,48 @@ $(function () {
     }
 
     /* ══════════════════════════════════════════════════════════════════
-       DATATABLES — server-side
+       DATATABLES — server-side, role-aware columns
        ══════════════════════════════════════════════════════════════════ */
-    // ✅ FIX 1: assign to `table` so filters and reset can call table.ajax.reload()
-    var table = $('#usersTable').DataTable({
+
+    // RMS_ROLE is set in the view: <script>var RMS_ROLE = "<?= $role ?>";</script>
+    var isAdmin = (typeof RMS_ROLE !== "undefined" && RMS_ROLE === "admin");
+
+    // Base columns — same for all roles
+    var columns = [
+        // col 0 — User: avatar + name + email merged into one cell
+        {
+            data      : null,
+            orderable : true,
+            render    : function (row) {
+                var avatar = row.profile_picture
+                    ? row.profile_picture
+                    : '<div class="profile-initials-sm">'
+                        + (row.firstname ? row.firstname.charAt(0).toUpperCase() : "?")
+                      + "</div>";
+                return '<div style="display:flex;align-items:center;gap:10px;">'
+                     + avatar + row.user + "</div>";
+            }
+        },
+        { data: "role",       orderable: true  },
+        { data: "status",     orderable: true  },
+        { data: "contact",    orderable: false },
+        { data: "address",    orderable: false },
+        { data: "created",    orderable: true  },
+        { data: "department", orderable: true  },
+        { data: "birthday",   orderable: true  }
+    ];
+
+    // Actions column only for admins — MUST match the <th> rendered in index.php
+    if (isAdmin) {
+        columns.push({ data: "actions", orderable: false });
+    }
+
+    var table = $("#usersTable").DataTable({
         processing : true,
         serverSide : true,
         ajax: {
             url  : BASE_URL + "users/ajax_list",
             type : "POST",
-            // ✅ FIX 3: send filter values with every request
             data : function (d) {
                 d.role   = $("#filterRole").val()       || "";
                 d.status = $("#filterStatus").val()     || "";
@@ -27,51 +59,24 @@ $(function () {
                 d.dept   = $("#filterDepartment").val() || "";
             }
         },
-        columns: [
-            // ✅ FIX 2: col 0 — avatar + name/email merged into one cell
-            {
-                data      : null,
-                orderable : true,
-                render    : function (row) {
-                    var avatar = row.profile_picture
-                        ? row.profile_picture
-                        : '<div class="profile-initials-sm">'
-                            + (row.firstname ? row.firstname.charAt(0).toUpperCase() : "?")
-                          + "</div>";
-                    return '<div style="display:flex;align-items:center;gap:10px;">'
-                         + avatar + row.user + "</div>";
-                }
-            },
-            { data: "role",       orderable: true  },
-            { data: "status",     orderable: true  },
-            { data: "contact",    orderable: false },
-            { data: "address",    orderable: false },
-            { data: "created",    orderable: true  },
-            { data: "department", orderable: true  },
-            { data: "birthday",   orderable: true  },
-            // ✅ FIX 2: actions column (backend returns "" for non-admins)
-            { data: "actions",    orderable: false }
-        ],
+        columns    : columns,
         columnDefs : [{ targets: -1, orderable: false }],
         order      : [[5, "desc"]],
-        pageLength : 5,
+        pageLength : 10,
         lengthMenu : [5, 10, 25, 50],
         language: {
             processing  : '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>',
             emptyTable  : "No users found.",
             zeroRecords : "No matching users found."
         },
-        // Dropdown toggle after each draw
         drawCallback: function () {
-            // close any open menus on redraw
             $(".rms-dropdown-menu.show").removeClass("show");
         }
     });
 
     /* ══════════════════════════════════════════════════════════════════
-       CUSTOM DROPDOWN (no Bootstrap dependency — works in DataTables)
+       CUSTOM DROPDOWN (works in dynamically rendered DataTables rows)
        ══════════════════════════════════════════════════════════════════ */
-    // Toggle open/close
     $(document).on("click", ".rms-dropdown-toggle", function (e) {
         e.stopPropagation();
         var $menu = $(this).siblings(".rms-dropdown-menu");
@@ -79,7 +84,6 @@ $(function () {
         $menu.toggleClass("show");
     });
 
-    // Close when clicking anywhere else
     $(document).on("click", function () {
         $(".rms-dropdown-menu.show").removeClass("show");
     });
@@ -92,7 +96,6 @@ $(function () {
             table.ajax.reload();
         });
 
-    // ✅ FIX 4: correct IDs matching the view
     $("#resetFilters").on("click", function () {
         $("#filterRole").val("");
         $("#filterStatus").val("");
@@ -140,9 +143,7 @@ $(function () {
 
         var items = [];
         $.each(errors, function (name, msg) {
-            var label = labelFor(name);
-            var short = msg.replace(/\.$/, "");
-            items.push(label + " — " + short);
+            items.push(labelFor(name) + " — " + msg.replace(/\.$/, ""));
         });
 
         if (items.length === 0) return;
@@ -151,12 +152,10 @@ $(function () {
         var html = '<div style="font-size:.82rem;line-height:1.5;">';
         html += '<strong style="display:block;margin-bottom:4px;">&#9888; Please fix the following:</strong>';
         html += '<ul class="mb-0 pl-3" id="errList_' + uid + '">';
-
         items.forEach(function (text, idx) {
             var hidden = idx >= MAX_VISIBLE ? ' class="err-extra d-none"' : "";
             html += "<li" + hidden + ">" + $("<span>").text(text).html() + "</li>";
         });
-
         html += "</ul>";
 
         if (items.length > MAX_VISIBLE) {
@@ -164,14 +163,9 @@ $(function () {
             html += '<button type="button" class="btn-see-more" data-expanded="0">'
                   + "See More (" + remaining + " more)</button>";
         }
-
         html += "</div>";
 
-        $(alertId)
-            .html(html)
-            .removeClass()
-            .addClass("alert alert-danger p-2 mt-1 mb-2")
-            .show();
+        $(alertId).html(html).removeClass().addClass("alert alert-danger p-2 mt-1 mb-2").show();
 
         $(alertId).find(".btn-see-more").on("click", function () {
             var $btn     = $(this);
@@ -189,18 +183,12 @@ $(function () {
 
     function labelFor(name) {
         var map = {
-            firstname   : "First Name",
-            lastname    : "Last Name",
-            employee_id : "Employee ID",
-            birthday    : "Birthday",
-            contactno   : "Contact No",
-            address     : "Address",
-            email       : "Email",
-            password    : "Password",
-            role        : "Role",
-            is_active   : "Status",
-            job_title   : "Job Title",
-            department  : "Department"
+            firstname   : "First Name",   lastname    : "Last Name",
+            employee_id : "Employee ID",  birthday    : "Birthday",
+            contactno   : "Contact No",   address     : "Address",
+            email       : "Email",        password    : "Password",
+            role        : "Role",         is_active   : "Status",
+            job_title   : "Job Title",    department  : "Department"
         };
         return map[name] || (name.charAt(0).toUpperCase() + name.slice(1));
     }
@@ -235,33 +223,22 @@ $(function () {
        ══════════════════════════════════════════════════════════════════ */
     function createFieldMap() {
         return {
-            firstname   : $("#firstname"),
-            lastname    : $("#lastname"),
-            employee_id : $("#employee_id"),
-            birthday    : $("#birthday"),
-            contactno   : $("#contactno"),
-            address     : $("#address"),
-            email       : $("#email"),
-            password    : $("#password"),
-            role        : $("#create_role"),
-            is_active   : $("#is_active"),
-            job_title   : $("#job_title"),
-            department  : $("#department")
+            firstname   : $("#firstname"),    lastname    : $("#lastname"),
+            employee_id : $("#employee_id"),  birthday    : $("#birthday"),
+            contactno   : $("#contactno"),    address     : $("#address"),
+            email       : $("#email"),        password    : $("#password"),
+            role        : $("#create_role"),  is_active   : $("#is_active"),
+            job_title   : $("#job_title"),    department  : $("#department")
         };
     }
 
     function editFieldMap() {
         return {
-            firstname   : $("#edit_firstname"),
-            lastname    : $("#edit_lastname"),
-            employee_id : $("#edit_employee_id"),
-            birthday    : $("#edit_birthday"),
-            contactno   : $("#edit_contactno"),
-            address     : $("#edit_address"),
-            email       : $("#edit_email"),
-            role        : $("#edit_role"),
-            is_active   : $("#edit_is_active"),
-            job_title   : $("#edit_job_title"),
+            firstname   : $("#edit_firstname"),   lastname    : $("#edit_lastname"),
+            employee_id : $("#edit_employee_id"), birthday    : $("#edit_birthday"),
+            contactno   : $("#edit_contactno"),   address     : $("#edit_address"),
+            email       : $("#edit_email"),       role        : $("#edit_role"),
+            is_active   : $("#edit_is_active"),   job_title   : $("#edit_job_title"),
             department  : $("#edit_department")
         };
     }
@@ -271,8 +248,7 @@ $(function () {
        ══════════════════════════════════════════════════════════════════ */
     window.createUser = function () {
         clearAllErrors("#createUserModal");
-
-        var fm       = createFieldMap();
+        var fm = createFieldMap();
         var formData = new FormData();
 
         formData.append("firstname",   fm.firstname.val().trim());
@@ -293,12 +269,8 @@ $(function () {
         if (file) formData.append("profile_picture", file);
 
         $.ajax({
-            url         : BASE_URL + "users/store",
-            method      : "POST",
-            data        : formData,
-            processData : false,
-            contentType : false,
-            dataType    : "json",
+            url: BASE_URL + "users/store", method: "POST",
+            data: formData, processData: false, contentType: false, dataType: "json",
             success: function (res) {
                 if (res.success) {
                     $("#createUserModal").modal("hide");
@@ -307,41 +279,32 @@ $(function () {
                 } else {
                     applyErrors("#createUserModal", "#createAlert", res.errors || {}, fm);
                     if ($.isEmptyObject(res.errors) && res.message) {
-                        $("#createAlert")
-                            .html("<strong>&#9888; " + res.message + "</strong>")
-                            .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2")
-                            .show();
+                        $("#createAlert").html("<strong>&#9888; " + res.message + "</strong>")
+                            .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2").show();
                     }
                 }
             },
             error: function () {
-                $("#createAlert")
-                    .html("<strong>&#9888; Server error. Please try again.</strong>")
-                    .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2")
-                    .show();
+                $("#createAlert").html("<strong>&#9888; Server error. Please try again.</strong>")
+                    .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2").show();
             }
         });
     };
 
     /* ══════════════════════════════════════════════════════════════════
-       EDIT USER — load data into modal
+       EDIT USER
        ══════════════════════════════════════════════════════════════════ */
     $(document).on("click", ".btn-edit", function () {
-        var id = $(this).data("id");
+        var id = $(this).data("id");  // this is the hash
         $(".rms-dropdown-menu.show").removeClass("show");
         clearAllErrors("#editUserModal");
 
         $.ajax({
-            url      : BASE_URL + "users/get/" + id,
-            method   : "GET",
-            dataType : "json",
+            url: BASE_URL + "users/get/" + id, method: "GET", dataType: "json",
             success: function (res) {
-                if (!res.success) {
-                    showToast("danger", res.message || "Failed to load user.");
-                    return;
-                }
+                if (!res.success) { showToast("danger", res.message || "Failed to load user."); return; }
                 var u = res.data;
-                $("#edit_id").val(u.id);
+                $("#edit_id").val(id);  // store the hash, not u.id
                 $("#edit_firstname").val(u.firstname);
                 $("#edit_lastname").val(u.lastname);
                 $("#edit_employee_id").val(u.employee_id);
@@ -353,11 +316,17 @@ $(function () {
                 $("#edit_is_active").val(u.is_active);
                 $("#edit_job_title").val(u.job_title);
                 $("#edit_department").val(u.department);
+
+                // Password reset count
+                var count = parseInt(u.password_reset_count) || 0;
+                $("#edit_reset_count").text(count);
+                $("#edit_reset_count_note").text(
+                    count === 0 ? "(never reset)" : (count === 1 ? "(reset once)" : "(reset " + count + " times)")
+                );
+
                 $("#editUserModal").modal("show");
             },
-            error: function () {
-                showToast("danger", "Server error loading user.");
-            }
+            error: function () { showToast("danger", "Server error loading user."); }
         });
     });
 
@@ -366,8 +335,7 @@ $(function () {
        ══════════════════════════════════════════════════════════════════ */
     window.updateUser = function () {
         clearAllErrors("#editUserModal");
-
-        var fm       = editFieldMap();
+        var fm = editFieldMap();
         var formData = new FormData();
 
         formData.append("id",          $("#edit_id").val());
@@ -388,12 +356,8 @@ $(function () {
         if (file) formData.append("profile_picture", file);
 
         $.ajax({
-            url         : BASE_URL + "users/update",
-            method      : "POST",
-            data        : formData,
-            processData : false,
-            contentType : false,
-            dataType    : "json",
+            url: BASE_URL + "users/update", method: "POST",
+            data: formData, processData: false, contentType: false, dataType: "json",
             success: function (res) {
                 if (res.success) {
                     $("#editUserModal").modal("hide");
@@ -402,18 +366,14 @@ $(function () {
                 } else {
                     applyErrors("#editUserModal", "#editAlert", res.errors || {}, fm);
                     if ($.isEmptyObject(res.errors) && res.message) {
-                        $("#editAlert")
-                            .html("<strong>&#9888; " + res.message + "</strong>")
-                            .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2")
-                            .show();
+                        $("#editAlert").html("<strong>&#9888; " + res.message + "</strong>")
+                            .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2").show();
                     }
                 }
             },
             error: function () {
-                $("#editAlert")
-                    .html("<strong>&#9888; Server error. Please try again.</strong>")
-                    .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2")
-                    .show();
+                $("#editAlert").html("<strong>&#9888; Server error. Please try again.</strong>")
+                    .removeClass().addClass("alert alert-danger p-2 mt-1 mb-2").show();
             }
         });
     };
@@ -426,27 +386,57 @@ $(function () {
         $(".rms-dropdown-menu.show").removeClass("show");
 
         Swal.fire({
-            title              : "Are you sure?",
-            text               : "This user will be soft-deleted.",
-            icon               : "warning",
-            showCancelButton   : true,
-            confirmButtonColor : "#d33",
-            cancelButtonColor  : "#3085d6",
-            confirmButtonText  : "Yes, delete it!"
+            title: "Are you sure?", text: "This user will be soft-deleted.",
+            icon: "warning", showCancelButton: true,
+            confirmButtonColor: "#d33", cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
         }).then(function (result) {
             if (!result.isConfirmed) return;
-
             $.ajax({
-                url      : BASE_URL + "users/delete/" + id,
-                method   : "POST",
-                data     : csrfData(),
-                dataType : "json",
+                url: BASE_URL + "users/delete/" + id, method: "POST",
+                data: csrfData(), dataType: "json",
                 success: function (res) {
                     if (res.success) {
                         showToast("success", res.message || "User deleted.");
                         setTimeout(function () { table.ajax.reload(null, false); }, 800);
                     } else {
                         showToast("danger", res.message || "Delete failed.");
+                    }
+                },
+                error: function () { showToast("danger", "Server error. Please try again."); }
+            });
+        });
+    });
+
+    /* ══════════════════════════════════════════════════════════════════
+       RESET PASSWORD
+       ══════════════════════════════════════════════════════════════════ */
+    $(document).on("click", ".btn-reset-password", function () {
+        var id = $(this).data("id");
+        $(".rms-dropdown-menu.show").removeClass("show");
+
+        Swal.fire({
+            title             : "Reset password?",
+            html              : "Password will be reset to: <strong>rms-2026</strong><br>The user will be required to change it on next login.",
+            icon              : "warning",
+            showCancelButton  : true,
+            confirmButtonColor: "#f0ad4e",
+            cancelButtonColor : "#6c757d",
+            confirmButtonText : "Yes, reset it!"
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+
+            $.ajax({
+                url      : BASE_URL + "users/reset_password/" + id,
+                method   : "POST",
+                data     : csrfData(),
+                dataType : "json",
+                success: function (res) {
+                    if (res.success) {
+                        showToast("success", res.message || "Password reset successfully.");
+                        setTimeout(function () { table.ajax.reload(null, false); }, 800);
+                    } else {
+                        showToast("danger", res.message || "Reset failed.");
                     }
                 },
                 error: function () {
@@ -457,34 +447,17 @@ $(function () {
     });
 
     /* ══════════════════════════════════════════════════════════════════
-       TOAST NOTIFICATION
+       TOAST
        ══════════════════════════════════════════════════════════════════ */
     function showToast(type, message) {
-        var bg = {
-            success : "#28a745",
-            danger  : "#dc3545",
-            warning : "#ffc107",
-            info    : "#17a2b8"
-        };
-
-        var $toast = $("<div>")
-            .css({
-                position     : "fixed",
-                bottom       : "24px",
-                right        : "24px",
-                zIndex       : 99999,
-                background   : bg[type] || "#333",
-                color        : "#fff",
-                padding      : "10px 18px",
-                borderRadius : "6px",
-                fontSize     : ".875rem",
-                boxShadow    : "0 4px 12px rgba(0,0,0,.25)",
-                maxWidth     : "320px",
-                opacity      : 0,
-                transition   : "opacity .25s"
-            })
-            .text(message)
-            .appendTo("body");
+        var bg = { success: "#28a745", danger: "#dc3545", warning: "#ffc107", info: "#17a2b8" };
+        var $toast = $("<div>").css({
+            position: "fixed", bottom: "24px", right: "24px", zIndex: 99999,
+            background: bg[type] || "#333", color: "#fff", padding: "10px 18px",
+            borderRadius: "6px", fontSize: ".875rem",
+            boxShadow: "0 4px 12px rgba(0,0,0,.25)", maxWidth: "320px",
+            opacity: 0, transition: "opacity .25s"
+        }).text(message).appendTo("body");
 
         setTimeout(function () { $toast.css("opacity", 1); }, 20);
         setTimeout(function () {

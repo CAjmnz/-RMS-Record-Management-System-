@@ -192,3 +192,6 @@
 .rms-dropdown-menu .dropdown-item.text-danger {
     color: #dc3545;
 }
+.dropdown-menu {
+    z-index: 9999;
+}

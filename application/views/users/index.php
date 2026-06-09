@@ -9,8 +9,11 @@
 <input type="hidden" id="csrf_token_name"  value="<?= $csrf_token_name ?>">
 <input type="hidden" id="csrf_token_value" value="<?= $csrf_token_value ?>">
 
-<!-- BASE_URL for JS -->
-<script>var BASE_URL = "<?= base_url() ?>";</script>
+<!-- BASE_URL and role for JS -->
+<script>
+    var BASE_URL = "<?= base_url() ?>";
+    var RMS_ROLE  = "<?= $role ?>";
+</script>
 
 <div id="main-content">
 
@@ -361,6 +364,16 @@
                             <label for="edit_profile_picture">Change Profile Picture</label>
                             <input class="form-control" type="file" id="edit_profile_picture" accept="image/*">
                             <span class="field-error-icon">⚠<span class="error-tooltip"></span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-12 mb-2">
+                        <div class="p-2 rounded" style="background:#f8f9fa;border:1px solid #e9ecef;font-size:.85rem;">
+                            <span class="text-muted">Password Reset Count:</span>
+                            <strong id="edit_reset_count">0</strong>
+                            <span class="text-muted ml-2" id="edit_reset_count_note"></span>
                         </div>
                     </div>
                 </div>

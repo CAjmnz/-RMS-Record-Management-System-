@@ -8,6 +8,7 @@ class Users extends RMS_Controller
         parent::__construct();
         $this->load->model('User_model');
         $this->load->library('form_validation');
+        $this->load->library('hashids');
     }
 
     // ───────────────────────────────
@@ -32,6 +33,9 @@ class Users extends RMS_Controller
     // ───────────────────────────────
     public function get($id)
     {
+        $id = $this->hashids->decode($id);
+        if (!$id) return $this->jsonFail("Invalid ID.");
+
         $user = $this->User_model->get_by_id($id);
 
         if (!$user) {
@@ -153,7 +157,8 @@ class Users extends RMS_Controller
             return $this->jsonFail('Unauthorized.');
         }
 
-        $id          = (int) trim($this->input->post('id',          TRUE));
+        $raw_id = trim($this->input->post('id', TRUE));
+        $id     = (int) $this->hashids->decode($raw_id);
         $firstname   = trim($this->input->post('firstname',   TRUE));
         $lastname    = trim($this->input->post('lastname',    TRUE));
         $employee_id = trim($this->input->post('employee_id', TRUE));
@@ -248,35 +253,35 @@ class Users extends RMS_Controller
 
         return $this->jsonSuccess('User updated successfully.');
     }
-        // ───────────────────────────────
-    // RESET PASSWORD 
+
+    // ───────────────────────────────
+    // RESET PASSWORD (AJAX)
     // ───────────────────────────────
     public function reset_password($id)
     {
         if ($this->session->userdata('role') !== 'admin') {
             return $this->jsonFail('Unauthorized.');
         }
-    
+
+        $id = $this->hashids->decode($id);
+        if (!$id) return $this->jsonFail('Invalid ID.');
+
         $user = $this->User_model->get_by_id($id);
-    
+
         if (!$user) {
             return $this->jsonFail('User not found.');
         }
-    
-        $updated = $this->User_model->update($id, [
-            'password' => password_hash('rms-2026', PASSWORD_DEFAULT),
-            'must_change_password' => 1,
-            'password_reset_count' => ((int)$user->password_reset_count) + 1,
-            'updated_at' => date('Y-m-d H:i:s')
-        ]);
-    
+
+        $updated = $this->User_model->reset_password($id);
+
         if (!$updated) {
             return $this->jsonFail('Password reset failed.');
         }
-    
-        return $this->jsonSuccess('Password reset successfully.');
+
+        return $this->jsonSuccess('Password has been reset to the default.');
     }
-    // ───────────────────────────────
+
+        // ───────────────────────────────
     // DELETE (AJAX)
     // ───────────────────────────────
     public function delete($id)
@@ -290,6 +295,9 @@ class Users extends RMS_Controller
         if ((int) $id === (int) $logged_user_id) {
             return $this->jsonFail('You cannot delete your own account.');
         }
+
+        $id = $this->hashids->decode($id);
+        if (!$id) return $this->jsonFail('Invalid ID.');
 
         $user = $this->User_model->get_by_id($id);
         if (!$user) {
@@ -332,6 +340,8 @@ class Users extends RMS_Controller
 
         $sessionRole = $this->session->userdata('role');
 
+        // Non-admin users must never see admin accounts
+        $hideAdmins = ($sessionRole !== 'admin');
         // ── Column index → DB column mapping ──
         // <thead> column order (profile_picture is merged into the User cell in JS):
         // 0:User(avatar+name+email)  1:role  2:status  3:contact
@@ -362,7 +372,8 @@ class Users extends RMS_Controller
             $filterRole,
             $filterStatus,
             $filterDate,
-            $filterDept
+            $filterDept,
+            $hideAdmins
         );
 
         // ── Build rows ──
@@ -379,20 +390,24 @@ class Users extends RMS_Controller
                 $profile = '<div class="profile-initials-sm">' . $initial . '</div>';
             }
 
+            // Hash the real DB id — never expose raw integers in the DOM
+            $hashed_id = $this->hashids->encode($row->id);
+
             // Actions — always present in structure; empty string for non-admins
             $actions = '';
             if ($sessionRole === 'admin') {
                 $deleteBtn = '';
                 if ((int) $row->id !== (int) $this->session->userdata('user_id')) {
                     $deleteBtn = '<button class="dropdown-item text-danger btn-delete" '
-                               . 'data-id="' . $row->id . '">Delete</button>';
+                               . 'data-id="' . $hashed_id . '">Delete</button>';
                 }
 
                 $actions = '
-                    <div class="dropdown rms-dropdown">
+                    <div class="rms-dropdown">
                         <button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>
-                        <div class="dropdown-menu dropdown-menu-right rms-dropdown-menu">
-                            <button class="dropdown-item btn-edit" data-id="' . $row->id . '">Edit</button>
+                        <div class="rms-dropdown-menu">
+                            <button class="dropdown-item btn-edit" data-id="' . $hashed_id . '">Edit</button>
+                            <button class="dropdown-item btn-reset-password" data-id="' . $hashed_id . '">Reset Password</button>
                             ' . $deleteBtn . '
                         </div>
                     </div>';

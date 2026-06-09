@@ -104,7 +104,17 @@ class User_model extends CI_Model
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
     }
-
+    // ─── Reset password to default ────────────────────────────────────
+    // Add this method to User_model.php
+    public function reset_password($id)
+    {
+        $this->db->where('id', $id);
+        $this->db->set('password',             password_hash('rms-2026', PASSWORD_DEFAULT));
+        $this->db->set('must_change_password', 1);
+        $this->db->set('password_reset_count', 'password_reset_count + 1', false); // false = no quotes, raw SQL
+        $this->db->set('updated_at',           date('Y-m-d H:i:s'));
+        return $this->db->update('users');
+    }
     // ─── Stats (Dashboard) ────────────────────────────────────────────
 
     public function get_stats()

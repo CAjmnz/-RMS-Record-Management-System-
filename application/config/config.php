@@ -157,7 +157,7 @@ $config['cache_query_string'] = FALSE;
 | Used by the CI3 Encryption library and session driver.
 | Keep this secret. Never commit it to public repositories.
 */
-$config['encryption_key'] = 'rms_secure_key_2026';
+$config['encryption_key'] = 'rm$_s3cur3_k3Y_2026';
 
 /*
 |--------------------------------------------------------------------------

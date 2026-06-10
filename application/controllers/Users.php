@@ -450,6 +450,7 @@ class Users extends RMS_Controller
                             <button class="dropdown-item btn-edit" data-id="' .  $encrypted_id . '">Edit</button>
                             <button class="dropdown-item btn-reset-password" data-id="' .  $encrypted_id . '">Reset Password</button>
                             ' . $deleteBtn . '
+                            <button class="dropdown-item btn-attach-docs" data-id="' . $encrypted_id . '">Attach Docs</button>
                         </div>
                     </div>';
             }
@@ -577,4 +578,126 @@ class Users extends RMS_Controller
             'employee_id' => $id
         ]);
     }
+
+    public function uploadDocs()
+    {
+        // ─────────────────────────────
+        // GET ENCRYPTED USER ID
+        // ─────────────────────────────
+        $encrypted_id = $this->input->post('user_id', true);
+
+        $user_id = $this->encryption->decrypt(
+            base64_decode(
+                urldecode($encrypted_id)
+            )
+        );
+
+        if (!$user_id) {
+            return $this->jsonFail('Invalid user.');
+        }
+
+        // ─────────────────────────────
+        // CHECK FILES
+        // ─────────────────────────────
+        if (
+            !isset($_FILES['documents']) ||
+            empty($_FILES['documents']['name'][0])
+        ) {
+            return $this->jsonFail('No files selected.');
+        }
+
+        // ─────────────────────────────
+        // CREATE DIRECTORY
+        // ─────────────────────────────
+        $path = FCPATH . 'uploads/user_documents/' . $user_id . '/';
+
+        if (!is_dir($path)) {
+            mkdir($path, 0777, true);
+        }
+
+        // ─────────────────────────────
+        // UPLOAD CONFIG
+        // ─────────────────────────────
+        $config = [
+            'upload_path'   => $path,
+            'allowed_types' => 'jpg|jpeg|png|pdf|doc|docx|imf',
+            'max_size'      => 10240, // 10MB
+            'encrypt_name'  => true,
+        ];
+
+        $this->load->library('upload');
+
+        $uploaded = [];
+        $errors   = [];
+
+        // ─────────────────────────────
+        // LOOP MULTIPLE FILES
+        // ─────────────────────────────
+        $files = $_FILES['documents'];
+
+        for ($i = 0; $i < count($files['name']); $i++) {
+
+            if (empty($files['name'][$i])) {
+                continue;
+            }
+
+            $_FILES['single_file']['name']     = $files['name'][$i];
+            $_FILES['single_file']['type']     = $files['type'][$i];
+            $_FILES['single_file']['tmp_name'] = $files['tmp_name'][$i];
+            $_FILES['single_file']['error']    = $files['error'][$i];
+            $_FILES['single_file']['size']     = $files['size'][$i];
+
+            $this->upload->initialize($config);
+
+            if (!$this->upload->do_upload('single_file')) {
+
+                $errors[] = $files['name'][$i] . ' — ' .
+                    strip_tags($this->upload->display_errors());
+
+                continue;
+            }
+
+            $file = $this->upload->data();
+
+            // ─────────────────────────
+            // SAVE TO DATABASE
+            // ─────────────────────────
+            $this->User_model->saveDocument([
+                'user_id'   => $user_id,
+                'file_name' => $file['orig_name'],
+                'file_path' => 'uploads/user_documents/' . $user_id . '/' . $file['file_name'],
+                'file_type' => $file['file_type'],
+                'created_at'=> date('Y-m-d H:i:s')
+            ]);
+            $uploaded[] = $file['orig_name'];
+        }
+
+        // ─────────────────────────────
+        // RESPONSE
+        // ─────────────────────────────
+        if (!empty($errors)) {
+            return $this->jsonFail(implode('<br>', $errors));
+        }
+
+        return $this->jsonSuccess('Documents uploaded successfully.');
+    }
+    public function get_user_docs($id)
+{
+    $user_id = $this->encryption->decrypt(base64_decode(urldecode($id)));
+
+    if (!$user_id) {
+        return $this->jsonFail("Invalid user");
+    }
+
+    $docs = $this->db
+        ->where('user_id', $user_id)
+        ->order_by('id', 'DESC')
+        ->get('user_doucments')
+        ->result();
+
+    return $this->jsonSuccess("OK", $docs);
+}
+
+    
+
 }

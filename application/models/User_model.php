@@ -233,4 +233,16 @@ public function get_datatable($start, $length, $search, $orderColumn, $orderDir,
         'data' => $data
     ];
 }
+public function saveDocument($data)
+{
+    return $this->db->insert('user_doucments', $data);
+}
+public function getDocuments($user_id)
+{
+    return $this->db
+        ->where('user_id',$user_id)
+        ->order_by('id','DESC')
+        ->get('user_documents')
+        ->result();
+}
 }

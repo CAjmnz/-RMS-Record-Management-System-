@@ -195,3 +195,47 @@
 .dropdown-menu {
     z-index: 9999;
 }
+.drive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.drive-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 10px;
+    background: #fff;
+    position: relative;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.drive-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.drive-icon {
+    font-size: 40px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.drive-name {
+    font-size: 12px;
+    word-break: break-word;
+    text-align: center;
+}
+
+.drive-actions {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: none;
+}
+
+.drive-card:hover .drive-actions {
+    display: block;
+}

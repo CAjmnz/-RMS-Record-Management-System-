@@ -627,4 +627,94 @@ $(function () {
 			}, 300);
 		}, 3200);
 	}
+	/* ══════════════════════════════════════════════════════════════════
+       JS:OPEN MODAL + STORE ENCRYPTED ID
+       ══════════════════════════════════════════════════════════════════ */
+	$(document).on("click", ".btn-attach-docs", function () {
+		let id = $(this).data("id");
+
+		$("#attach_user_id").val(id);
+
+		$("#attachDocsModal").modal("show");
+
+		loadUserDocs(id);
+	});
+	// preview
+	$(document).on("change", "#doc_file", function () {
+		const files = this.files;
+		const preview = $("#filePreview");
+
+		preview.html("");
+
+		if (!files.length) {
+			preview.html('<small class="text-muted">No files selected.</small>');
+			return;
+		}
+
+		Array.from(files).forEach((file) => {
+			const ext = file.name.split(".").pop().toLowerCase();
+
+			// IMAGE PREVIEW
+			if (["jpg", "jpeg", "png"].includes(ext)) {
+				const reader = new FileReader();
+
+				reader.onload = function (e) {
+					preview.append(`
+						<div style="width:120px;text-align:center;margin:5px;">
+							<img src="${e.target.result}"
+								 style="width:100%;height:100px;object-fit:cover;border-radius:6px;border:1px solid #ccc;">
+							<small style="display:block;word-break:break-word;">${file.name}</small>
+						</div>
+					`);
+				};
+
+				reader.readAsDataURL(file);
+			} else {
+				// NON-IMAGE FILES
+				preview.append(`
+					<div class="p-2 border rounded bg-white mb-1">
+						📄 ${file.name}
+					</div>
+				`);
+			}
+		});
+	});
+	$(document).on;
+
+	function loadUserDocs(userId) {
+		$.get(
+			BASE_URL + "users/get_user_docs/" + encodeURIComponent(userId),
+			function (res) {
+				const box = $("#uploadedFiles");
+				box.html("");
+
+				if (!res.data || !res.data.length) {
+					box.html('<small class="text-muted">No files uploaded yet.</small>');
+					return;
+				}
+
+				res.data.forEach((doc) => {
+					const icon = getFileIcon(doc.file_type, doc.file_name);
+
+					box.append(`
+					<div class="drive-card">
+	
+						<div class="drive-actions">
+							<button class="btn btn-sm btn-light">⋮</button>
+						</div>
+	
+						<div class="drive-icon">
+							${icon}
+						</div>
+	
+						<div class="drive-name">
+							${doc.file_name}
+						</div>
+	
+					</div>
+				`);
+				});
+			},
+		);
+	}
 });

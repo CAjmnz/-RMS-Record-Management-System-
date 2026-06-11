@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 class User_model extends CI_Model
 {
@@ -124,7 +124,7 @@ class User_model extends CI_Model
             'active'   => $this->db->where('is_active', 1)->where('deleted_at IS NULL', null, false)->count_all_results('users'),
             'inactive' => $this->db->where('is_active', 0)->where('deleted_at IS NULL', null, false)->count_all_results('users'),
             'admins'   => $this->db->where('role', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users'),
-            'nonadmins'=> $this->db->where('role !=', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users'),
+            'nonadmins' => $this->db->where('role !=', 'admin')->where('deleted_at IS NULL', null, false)->count_all_results('users'),
         ];
     }
 
@@ -138,111 +138,114 @@ class User_model extends CI_Model
     }
     // ─── update (profile_picture) ────────────────────────────────────────────   
     public function update_profile_picture($id, $path)
-{
-    return $this->db->where('id', $id)->update('users', [
-        'profile_picture' => $path,
-        'updated_at'      => date('Y-m-d H:i:s')
-    ]);
-}
-public function get_birth_year_counts()
-{
-    $rows = $this->db
-        ->select('YEAR(birthday) as birth_year, COUNT(*) as total')
-        ->where('deleted_at IS NULL', null, false)
-        ->where('birthday IS NOT NULL', null, false)
-        ->where('birthday !=', '0000-00-00')
-        ->group_by('YEAR(birthday)')
-        ->order_by('birth_year', 'ASC')
-        ->get('users')
-        ->result();
+    {
+        return $this->db->where('id', $id)->update('users', [
+            'profile_picture' => $path,
+            'updated_at'      => date('Y-m-d H:i:s')
+        ]);
+    }
+    public function get_birth_year_counts()
+    {
+        $rows = $this->db
+            ->select('YEAR(birthday) as birth_year, COUNT(*) as total')
+            ->where('deleted_at IS NULL', null, false)
+            ->where('birthday IS NOT NULL', null, false)
+            ->where('birthday !=', '0000-00-00')
+            ->group_by('YEAR(birthday)')
+            ->order_by('birth_year', 'ASC')
+            ->get('users')
+            ->result();
 
-    $labels = [];
-    $counts = [];
+        $labels = [];
+        $counts = [];
 
-    foreach ($rows as $row) {
-        if (!empty($row->birth_year)) {
-            $labels[] = (string) $row->birth_year;
-            $counts[]  = (int) $row->total;
+        foreach ($rows as $row) {
+            if (!empty($row->birth_year)) {
+                $labels[] = (string) $row->birth_year;
+                $counts[]  = (int) $row->total;
+            }
         }
+
+        return ['labels' => $labels, 'counts' => $counts];
+    }
+    // ─── DATATABLE ────────────────────────────────────────────   
+    public function get_datatable($start, $length, $search, $orderColumn, $orderDir, $role = null, $status = null, $date = null, $dept = null)
+    {
+        // =========================
+        // BASE QUERY (REUSABLE BUILDER)
+        // =========================
+        $this->db->from('users');
+        $this->db->where('deleted_at IS NULL', null, false);
+
+        // =========================
+        // TOTAL (NO FILTERS)
+        // =========================
+        $total = $this->db->count_all_results('', false);
+
+        // =========================
+        // APPLY FILTERS
+        // =========================
+        if (!empty($role)) {
+            $this->db->where('role', $role);
+        }
+
+        if ($status !== null && $status !== '') {
+            $this->db->where('is_active', $status);
+        }
+
+        if (!empty($date)) {
+            $this->db->where('DATE(created_at)', $date);
+        }
+
+        if (!empty($dept)) {
+            $this->db->like('department', $dept);
+        }
+
+        // =========================
+        // SEARCH
+        // =========================
+        if (!empty($search)) {
+            $this->db->group_start();
+            $this->db->like('firstname', $search);
+            $this->db->or_like('lastname', $search);
+            $this->db->or_like('email', $search);
+            $this->db->or_like('employee_id', $search);
+            $this->db->group_end();
+        }
+
+        // =========================
+        // FILTERED COUNT (SAFE CLONE FIX)
+        // =========================
+        $filtered_db = clone $this->db;
+        $filtered = $filtered_db->count_all_results();
+
+        // =========================
+        // FINAL DATA QUERY
+        // =========================
+        $this->db->order_by($orderColumn, $orderDir);
+        $this->db->limit($length, $start);
+
+        $data = $this->db->get()->result();
+
+        return [
+            'total' => $total,
+            'filtered' => $filtered,
+            'data' => $data
+        ];
+    }
+    public function saveDocument($data)
+    {
+        return $this->db->insert('user_documents', $data);
+    }
+    public function getUserDocs($user_id)
+    {
+        return $this->db
+            ->select('id, user_id, file_name, file_path, file_type, created_at')
+            ->where('user_id', $user_id)
+            ->where('deleted_at IS NULL', null, false)
+            ->get('user_documents')
+            ->result();
     }
 
-    return ['labels' => $labels, 'counts' => $counts];
-}
-// ─── DATATABLE ────────────────────────────────────────────   
-public function get_datatable($start, $length, $search, $orderColumn, $orderDir, $role = null, $status = null, $date = null, $dept = null)
-{
-    // =========================
-    // BASE QUERY (REUSABLE BUILDER)
-    // =========================
-    $this->db->from('users');
-    $this->db->where('deleted_at IS NULL', null, false);
 
-    // =========================
-    // TOTAL (NO FILTERS)
-    // =========================
-    $total = $this->db->count_all_results('', false);
-
-    // =========================
-    // APPLY FILTERS
-    // =========================
-    if (!empty($role)) {
-        $this->db->where('role', $role);
-    }
-
-    if ($status !== null && $status !== '') {
-        $this->db->where('is_active', $status);
-    }
-
-    if (!empty($date)) {
-        $this->db->where('DATE(created_at)', $date);
-    }
-
-    if (!empty($dept)) {
-        $this->db->like('department', $dept);
-    }
-
-    // =========================
-    // SEARCH
-    // =========================
-    if (!empty($search)) {
-        $this->db->group_start();
-        $this->db->like('firstname', $search);
-        $this->db->or_like('lastname', $search);
-        $this->db->or_like('email', $search);
-        $this->db->or_like('employee_id', $search);
-        $this->db->group_end();
-    }
-
-    // =========================
-    // FILTERED COUNT (SAFE CLONE FIX)
-    // =========================
-    $filtered_db = clone $this->db;
-    $filtered = $filtered_db->count_all_results();
-
-    // =========================
-    // FINAL DATA QUERY
-    // =========================
-    $this->db->order_by($orderColumn, $orderDir);
-    $this->db->limit($length, $start);
-
-    $data = $this->db->get()->result();
-
-    return [
-        'total' => $total,
-        'filtered' => $filtered,
-        'data' => $data
-    ];
-}
-public function saveDocument($data)
-{
-    return $this->db->insert('user_doucments', $data);
-}
-public function getDocuments($user_id)
-{
-    return $this->db
-        ->where('user_id',$user_id)
-        ->order_by('id','DESC')
-        ->get('user_documents')
-        ->result();
-}
 }

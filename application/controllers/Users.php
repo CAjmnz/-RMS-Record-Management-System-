@@ -620,7 +620,7 @@ class Users extends RMS_Controller
         // ─────────────────────────────
         $config = [
             'upload_path'   => $path,
-            'allowed_types' => 'jpg|jpeg|png|pdf|doc|docx|imf',
+            'allowed_types' => 'jpg|jpeg|png|pdf|doc|docx|xls|xlsx',
             'max_size'      => 10240, // 10MB
             'encrypt_name'  => true,
         ];
@@ -667,7 +667,7 @@ class Users extends RMS_Controller
                 'file_name' => $file['orig_name'],
                 'file_path' => 'uploads/user_documents/' . $user_id . '/' . $file['file_name'],
                 'file_type' => $file['file_type'],
-                'created_at'=> date('Y-m-d H:i:s')
+                'created_at' => date('Y-m-d H:i:s')
             ]);
             $uploaded[] = $file['orig_name'];
         }
@@ -681,23 +681,52 @@ class Users extends RMS_Controller
 
         return $this->jsonSuccess('Documents uploaded successfully.');
     }
-    public function get_user_docs($id)
-{
-    $user_id = $this->encryption->decrypt(base64_decode(urldecode($id)));
+    public function get_user_docs($encrypted_id)
+    {
+        $user_id = $this->encryption->decrypt(
+            base64_decode(
+                urldecode($encrypted_id)
+            )
+        );
 
-    if (!$user_id) {
-        return $this->jsonFail("Invalid user");
+        if (!$user_id) {
+            return $this->jsonFail('Invalid user ID.');
+        }
+
+        $docs = $this->User_model->getUserDocs($user_id);
+
+        return $this->jsonSuccess('OK', $docs);
+    }
+    public function delete_doc()
+{
+    $id = $this->input->post('id', true);
+
+    if (!$id) {
+        return $this->jsonFail('Invalid document ID');
     }
 
-    $docs = $this->db
-        ->where('user_id', $user_id)
-        ->order_by('id', 'DESC')
-        ->get('user_doucments')
-        ->result();
+    // REMOVE deleted_at filter (THIS IS THE FIX)
+    $doc = $this->db
+        ->where('id', $id)
+        ->get('user_documents')
+        ->row();
 
-    return $this->jsonSuccess("OK", $docs);
+    if (!$doc) {
+        return $this->jsonFail('File not found');
+    }
+
+    // delete file from server
+    $file_path = FCPATH . $doc->file_path;
+
+    if (file_exists($file_path)) {
+        unlink($file_path);
+    }
+
+    // soft delete
+    $this->db->where('id', $id)->update('user_documents', [
+        'deleted_at' => date('Y-m-d H:i:s')
+    ]);
+
+    return $this->jsonSuccess('Deleted successfully');
 }
-
-    
-
 }

@@ -411,81 +411,75 @@
             </div>
         </div>
     </div>
-    <!-- ════════════════════════════════════════
-     ATTACH DOCS  MODAL
-     ════════════════════════════════════════ -->
-
     <!-- ═══════════════════════════════════════════════════════
      ATTACH DOCUMENTS MODAL
 ═══════════════════════════════════════════════════════ -->
-<div class="modal fade" id="attachDocsModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
+    <div class="modal fade" id="attachDocsModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
 
-            <form action="uploadDocs" method="post" enctype="multipart/form-data">
+                <form action="" method="post" enctype="multipart/form-data">
 
-                <div class="modal-header">
-                    <h5 class="modal-title">Attach Documents</h5>
+                    <div class="modal-header">
+                        <h5 class="modal-title">Attach Documents</h5>
 
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-
-                <div class="modal-body">
-
-                    <input type="hidden" id="attach_user_id" name="user_id">
-
-                    <div class="form-group">
-                        <label>Select Documents</label>
-
-                        <input
-                            type="file"
-                            id="doc_file"
-                            name="documents[]"
-                            class="form-control"
-                            multiple
-                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.imf"
-                        >
-
-                        <small class="text-muted">
-                            Allowed: JPG, PNG, PDF, DOC, DOCX, IMF • Max 10MB
-                        </small>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
                     </div>
 
-                    <!-- FILE PREVIEW -->
-                    <div class="mt-3">
-                        <h6>Selected Files Preview</h6>
+                    <div class="modal-body">
 
-                        <div id="filePreview" class="border rounded p-2 bg-light d-flex flex-wrap gap-2">
-                            <small class="text-muted">No files selected.</small>
+                        <input type="hidden" id="attach_user_id" name="user_id">
+
+                        <div class="form-group">
+                            <label>Select Documents</label>
+
+                            <input
+                                type="file"
+                                name="documents[]"
+                                class="form-control"
+                                multiple
+                                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx">
+                            <small class="text-muted">
+                                Allowed: JPG, PNG, PDF, DOC, DOCX, IMF • Max 10MB
+                            </small>
                         </div>
-                    </div>
 
-                    <hr>
+                        <!-- FILE PREVIEW -->
+                        <div class="mt-3">
+                            <h6>Selected Files Preview</h6>
 
-                    <div class="mt-3">
-                        <h6>Uploaded Files</h6>
-                        <div id="uploadedFiles" class="drive_grid">
-                            <small class="text-muted">No uploaded files yet.</small>
+                            <div id="filePreview" class="border rounded p-2 bg-light d-flex flex-wrap gap-2">
+                                <small class="text-muted">No files selected.</small>
+                            </div>
                         </div>
+
+                        <hr>
+
+                        <div class="mt-3">
+                            <h6>Uploaded Files</h6>
+
+                            <div id="uploadedFiles" class="drive-grid">
+                                <small class="text-muted">No uploaded files yet.</small>
+                            </div>
+                        </div>
+
                     </div>
 
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button id="uploaddocs" type="submit" class="btn btn-success">
+                            Upload Documents
+                        </button>
+                    </div>
 
-                    <button type="submit" class="btn btn-success">
-                        Upload Documents
-                    </button>
-                </div>
+                </form>
 
-            </form>
-
+            </div>
         </div>
     </div>
-</div>
 <?php endif; ?>
 
 <!-- Page JS -->

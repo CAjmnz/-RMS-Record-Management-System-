@@ -676,37 +676,43 @@ $(document).on("change", 'input[name="documents[]"]', function () {
         $(this).val("");
     });
 
-function renderFilePreview() {
-	if (!selectedFiles.length){
-		$("#filePreview").html('<small class="text-muted"> No files selected.</small>');
-		return;
-	}
-
-	var html = "";
-	$.each(selectedFiles,function(i,file){
-        var isImage = file.type.startsWith("image/");
-		var thumb = "";
-
-		if (isImage){
-			var url  = URL.createObjectURL(file);
-			thumb = '<img src="' + url + '" style="width:50px;height:50px;opject-fit:cover;order-radius:4px;margin-right:6px;">';
-		} else {
-			var ext = file.name.split(".").pop().toLowerCase();
-			var icon = "📄";
-            if (ext === "pdf")                        icon = "📕";
-            if (ext === "doc"  || ext === "docx")     icon = "📘";
-            if (ext === "xls"  || ext === "xlsx")     icon = "📗";
-            thumb = '<span style="font-size:1.6rem;margin-right:6px;">' + icon + '</span>';
+	function renderFilePreview() {
+		if (!selectedFiles.length) {
+			$("#filePreview").html('<small class="text-muted">No files selected.</small>');
+			return;
 		}
-
-		html += '<span class="badge badge-secondary mr-1 mb-1">'
-		    + thumb
-		    + file.name
-			+ '<a href="javascript:void(0)" class="text-white ml-1 btn-remove-file" data-index="' + i + '">&times;</a>'
-            + '</span>';
-	});
-	$("#filePreview").html(html);
-}	
+	
+		var html = "";
+		$.each(selectedFiles, function (i, file) {
+			var ext  = file.name.split(".").pop().toLowerCase();
+			var isImage = file.type.startsWith("image/");
+			var thumb = "";
+	
+			if (isImage) {
+				var url = URL.createObjectURL(file);
+				thumb = '<img src="' + url + '" alt="preview">';
+			} else {
+				var icon = "📄";
+				if (ext === "pdf")                     icon = "📕";
+				if (ext === "doc" || ext === "docx")   icon = "📘";
+				if (ext === "xls" || ext === "xlsx")   icon = "📗";
+				thumb = icon;
+			}
+	
+			html += '<div class="drive-card">'
+				+ '<a href="javascript:void(0)" class="drive-card-remove btn-remove-file" data-index="' + i + '">&times;</a>'
+				+ '<div class="drive-card-thumb">' + thumb + '</div>'
+				+ '<div class="drive-card-info">'
+				+ '<div class="drive-card-name" title="' + file.name + '">' + file.name + '</div>'
+				+ '<div class="drive-card-type">' + (file.size > 1024*1024
+					? (file.size/1024/1024).toFixed(1) + ' MB'
+					: Math.round(file.size/1024) + ' KB') + '</div>'
+				+ '</div>'
+				+ '</div>';
+		});
+	
+		$("#filePreview").html(html);
+	}
 // ─────────────────────────────────────────────
 // REMOVE INDIVIDUAL FILE FROM PREVIEW
 // ─────────────────────────────────────────────
@@ -785,26 +791,26 @@ function loadUserDocs(encodedId) {
                 var fileUrl = BASE_URL + file.file_path;
                 var ext = file.file_name.split(".").pop().toLowerCase();
 				var isImage = ["jpg","jpeg","png","gif"].indexOf(ext) !== -1;
-
 				var thumb = "";
+
 				if (isImage) {
-					thumb = '<img src="' + fileUrl + '" '
-						+ 'style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:8px;">';
+					thumb = '<img src="' + fileUrl + '" alt="' + file.file_name +'">';
 				} else {
 					var icon = "📄";
 					if (ext === "pdf")                        icon = "📕";
 					if (ext === "doc"  || ext === "docx")     icon = "📘";
 					if (ext === "xls"  || ext === "xlsx")     icon = "📗";
-					thumb = '<span style="font-size:1.6rem;margin-right:8px;">' + icon + '</span>';
+					thumb = icon ;
 				}
 
 
-                html += '<div class="border rounded p-2 mb-2 d-flex align-items-center">'
-				    + thumb
-					+ '<div class="flex-grow-1" style="min-width:0;">'
-					+ '<strong class="d-block text-muted">' + file.file_type + '</small>'
+                html += '<div class="drive-card">'
+				    + '<div class="drive-card-thumb">' + thumb + '</div>'
+					+ '<div class="drive-card-info">'
+					+ '<div class="drive-card-name"title="'+ file.file_name +'">' + file.file_name +'</div>'
+					+ '<div class="drive-card-type">'+ ext. toUpperCase() + '</div>'
 					+ '</div>'
-					+ '<div class="ml-2 d-flex">'
+					+ '<div class="drive-card-action">'
 					+ '<a href="' + fileUrl + '" target="_blank" class="btn btn-sm btn-primary mr-1"><i class="fa-solid fa-eye"></i></a>'
                     + '<button class="btn btn-sm btn-danger btn-delete-doc" data-id="' + file.id + '"><i class="fa-solid fa-trash"></i></button>'
                     + '</div>'

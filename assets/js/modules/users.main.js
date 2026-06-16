@@ -627,63 +627,132 @@ $(function () {
 			}, 300);
 		}, 3200);
 	}
+
 // ─────────────────────────────────────────────
-// ATTACH DOCS MODAL — open handler
+// FILE ACCUMULATOR — global scope, outside $(function)
+// ─────────────────────────────────────────────
+var selectedFiles = [];
+
+// ─────────────────────────────────────────────
+// OPEN ATTACH DOCS MODAL
 // ─────────────────────────────────────────────
 $(document).on("click", ".btn-attach-docs", function () {
-    var encodedId = $(this).data("id"); // must be Hashids-encoded
+    var encodedId = $(this).data("id");
     $("#attach_user_id").val(encodedId);
-    $("#uploadedFiles").html('<small class="text-muted">No uploaded files yet.</small>');
     loadUserDocs(encodedId);
     $("#attachDocsModal").modal("show");
 });
 
+
+
+// Reset when modal Closes
+$(document).on("hidden.bs.modal", "#attachDocsModal", function(){
+    selectedFiles = [];
+	$("#filePreview").html('<small class="text-muted">No files selected.</small>');
+	$('input[name="documents[]"]').val("");
+}); 
+
 // ─────────────────────────────────────────────
-// UPLOAD SUBMIT
+// FILE PREVIEW
 // ─────────────────────────────────────────────
-$(document).on("click", "#uploaddocs", function (e) {
+$(document).on("change", 'input[name="documents[]"]', function () {
+    var newFiles = this.files;
+
+    if (!newFiles.length) return;
+
+		// Add new files to accumulator, skip duplicates by name+size
+		$.each(newFiles, function(i, newFile){
+			var isDupe = selectedFiles.some(function (f){
+                return f.name === newFile.name && f.size === newFile.size;
+			});
+			if (!isDupe){
+				selectedFiles.push(newFile);
+			}
+		});
+
+		renderFilePreview();
+		 
+		// Reset input so same file can be re-added after removal
+        $(this).val("");
+    });
+
+function renderFilePreview() {
+	if (!selectedFiles.length){
+		$("#filePreview").html('<small class="text-muted"> No files selected.</small>');
+		return;
+	}
+
+	var html = "";
+	$.each(selectedFiles,function(i,file){
+        var isImage = file.type.startsWith("image/");
+		var thumb = "";
+
+		if (isImage){
+			var url  = URL.createObjectURL(file);
+			thumb = '<img src="' + url + '" style="width:50px;height:50px;opject-fit:cover;order-radius:4px;margin-right:6px;">';
+		} else {
+			var ext = file.name.split(".").pop().toLowerCase();
+			var icon = "📄";
+            if (ext === "pdf")                        icon = "📕";
+            if (ext === "doc"  || ext === "docx")     icon = "📘";
+            if (ext === "xls"  || ext === "xlsx")     icon = "📗";
+            thumb = '<span style="font-size:1.6rem;margin-right:6px;">' + icon + '</span>';
+		}
+
+		html += '<span class="badge badge-secondary mr-1 mb-1">'
+		    + thumb
+		    + file.name
+			+ '<a href="javascript:void(0)" class="text-white ml-1 btn-remove-file" data-index="' + i + '">&times;</a>'
+            + '</span>';
+	});
+	$("#filePreview").html(html);
+}	
+// ─────────────────────────────────────────────
+// REMOVE INDIVIDUAL FILE FROM PREVIEW
+// ─────────────────────────────────────────────
+$(document).on("click",".btn-remove-file", function (){
+	var index = parseInt($(this).data("index"));
+	selectedFiles.splice(index,1);
+	renderFilePreview();
+})
+// ─────────────────────────────────────────────
+// UPLOAD - use accumulator array
+// ─────────────────────────────────────────────
+$(document).on("click", "#uploadDocs", function (e) {
     e.preventDefault();
 
-    var fileInput = $('input[name="documents[]"]')[0];
+    var encodedId = $("#attach_user_id").val();
 
-    if (!fileInput.files.length) {
+    if (!selectedFiles.length) {
         Swal.fire("No Files", "Please select at least one file.", "warning");
         return;
     }
 
     var formData = new FormData();
-    var encodedId = $("#attach_user_id").val();
+    formData.append("user_id", encodedId);
 
-    $.each(fileInput.files, function (i, file) {
+    $.each(selectedFiles, function (i, file) {
         formData.append("documents[]", file);
     });
 
-    formData.append("user_id", encodedId);
-
-    var $btn = $("#uploaddocs");
+    var $btn = $(this);
     $btn.prop("disabled", true).text("Uploading...");
 
     $.ajax({
         url: BASE_URL + "users/uploadDocs",
         type: "POST",
         data: formData,
-        processData: false,   // REQUIRED
-        contentType: false,   // REQUIRED
+        processData: false,
+        contentType: false,
         dataType: "json",
         success: function (res) {
             if (res.success) {
                 $('input[name="documents[]"]').val("");
                 $("#filePreview").html('<small class="text-muted">No files selected.</small>');
                 loadUserDocs(encodedId);
-
-                if (res.errors && res.errors.length) {
-                    // partial success
-                    Swal.fire("Partial Upload", res.message + "<br>" + res.errors.join("<br>"), "warning");
-                } else {
-                    Swal.fire("Success", res.message, "success");
-                }
+                Swal.fire("Success", res.message, "success");
             } else {
-                Swal.fire("Upload Failed", res.message, "error");
+                Swal.fire("Failed", res.message, "error");
             }
         },
         error: function () {
@@ -696,10 +765,64 @@ $(document).on("click", "#uploaddocs", function (e) {
 });
 
 // ─────────────────────────────────────────────
-// DELETE DOC — send encoded ID
+// LOAD UPLOADED FILES
+// ─────────────────────────────────────────────
+function loadUserDocs(encodedId) {
+    $("#uploadedFiles").html('<div class="text-center p-3">Loading...</div>');
+
+    $.ajax({
+        url: BASE_URL + "users/get_user_docs/" + encodedId,
+        type: "GET",
+        dataType: "json",
+        success: function (res) {
+            if (!res.success || !res.data.length) {
+                $("#uploadedFiles").html('<small class="text-muted">No uploaded files yet.</small>');
+                return;
+            }
+
+            var html = "";
+            $.each(res.data, function (i, file) {
+                var fileUrl = BASE_URL + file.file_path;
+                var ext = file.file_name.split(".").pop().toLowerCase();
+				var isImage = ["jpg","jpeg","png","gif"].indexOf(ext) !== -1;
+
+				var thumb = "";
+				if (isImage) {
+					thumb = '<img src="' + fileUrl + '" '
+						+ 'style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:8px;">';
+				} else {
+					var icon = "📄";
+					if (ext === "pdf")                        icon = "📕";
+					if (ext === "doc"  || ext === "docx")     icon = "📘";
+					if (ext === "xls"  || ext === "xlsx")     icon = "📗";
+					thumb = '<span style="font-size:1.6rem;margin-right:8px;">' + icon + '</span>';
+				}
+
+
+                html += '<div class="border rounded p-2 mb-2 d-flex align-items-center">'
+				    + thumb
+					+ '<div class="flex-grow-1" style="min-width:0;">'
+					+ '<strong class="d-block text-muted">' + file.file_type + '</small>'
+					+ '</div>'
+					+ '<div class="ml-2 d-flex">'
+					+ '<a href="' + fileUrl + '" target="_blank" class="btn btn-sm btn-primary mr-1"><i class="fa-solid fa-eye"></i></a>'
+                    + '<button class="btn btn-sm btn-danger btn-delete-doc" data-id="' + file.id + '"><i class="fa-solid fa-trash"></i></button>'
+                    + '</div>'
+                    + '</div>';
+            });
+            $("#uploadedFiles").html(html);
+        },
+        error: function () {
+            $("#uploadedFiles").html('<div class="text-danger">Failed to load documents.</div>');
+        }
+    });
+}
+
+// ─────────────────────────────────────────────
+// DELETE DOC
 // ─────────────────────────────────────────────
 $(document).on("click", ".btn-delete-doc", function () {
-    var encodedDocId = $(this).data("id"); // must be encoded in HTML
+    var encodedDocId = $(this).data("id");
     var encodedUserId = $("#attach_user_id").val();
 
     Swal.fire({
@@ -716,9 +839,7 @@ $(document).on("click", ".btn-delete-doc", function () {
             url: BASE_URL + "users/delete_doc",
             type: "POST",
             dataType: "json",
-            data: {
-                id: encodedDocId,
-            },
+            data: { id: encodedDocId },
             success: function (res) {
                 if (res.success) {
                     loadUserDocs(encodedUserId);
@@ -728,190 +849,8 @@ $(document).on("click", ".btn-delete-doc", function () {
             },
             error: function () {
                 Swal.fire("Error", "Server error during delete.", "error");
-            },
+            }
         });
     });
 });
-
-// ─────────────────────────────────────────────
-// FILE PREVIEW
-// ─────────────────────────────────────────────
-$(document).on("change", 'input[name="documents[]"]', function () {
-    var files = this.files;
-    if (!files.length) {
-        $("#filePreview").html('<small class="text-muted">No files selected.</small>');
-        return;
-    }
-
-    var html = "";
-    $.each(files, function (i, file) {
-        html += '<span class="badge badge-secondary mr-1 mb-1">' + file.name + "</span>";
-    });
-    $("#filePreview").html(html);
-});
-
-	function loadUserDocs(id) {
-		$("#uploadedFiles").html(`
-        <div class="text-center p-3">
-            Loading documents...
-        </div>
-    `);
-
-		$.ajax({
-			url: BASE_URL + "users/get_user_docs/" + id,
-			type: "GET",
-			dataType: "json",
-
-			success: function (res) {
-				if (!res.success) {
-					$("#uploadedFiles").html(`
-                    <div class="text-danger">
-                        Failed to load documents.
-                    </div>
-                `);
-
-					return;
-				}
-
-				let html = "";
-
-				if (res.data.length === 0) {
-					html = `
-                    <small class="text-muted">
-                        No uploaded files yet.
-                    </small>
-                `;
-				} else {
-					res.data.forEach(function (file) {
-						console.log(file);
-
-						let fileUrl = BASE_URL + file.file_path;
-
-						html += `
-					<div class="border rounded p-2 mb-2 d-flex justify-content-between align-items-center">
-				
-						<div>
-							<strong>${file.file_name}</strong><br>
-							<small>${file.file_type}</small>
-						</div>
-				
-						<a href="${fileUrl}"
-						   target="_blank"
-						   class="btn btn-sm btn-primary">
-						   <i class="fa-solid fa-eye"></i>
-						</a>
-				
-						<a href="javascript:void(0)"
-						   class="btn btn-sm btn-danger btn-delete-doc"
-						   data-id="${file.id}">
-						   <i class="fa-solid fa-trash"></i>
-						</a>
-				
-					</div>
-				`;
-					});
-				}
-
-				$("#uploadedFiles").html(html);
-			},
-
-			error: function () {
-				$("#uploadedFiles").html(`
-                <div class="text-danger">
-                    Server error loading documents.
-                </div>
-            `);
-			},
-		});
-	}
-
-	function getFileIcon(type, name) {
-		const ext = name.split(".").pop().toLowerCase();
-
-		if (["jpg", "jpeg", "png", "gif"].includes(ext)) return "🖼️";
-		if (ext === "pdf") return "📕";
-		if (["doc", "docx"].includes(ext)) return "📘";
-		if (["xls", "xlsx"].includes(ext)) return "📗";
-
-		return "📄";
-	}
-	$(document).on("click", ".btn-delete-doc", function () {
-		let id = $(this).data("id");
-
-		console.log("DELETE BUTTON ID:", id);
-
-		if (!id) {
-			showToast("danger", "Invalid document ID");
-
-			return;
-		}
-
-		$.ajax({
-			url: BASE_URL + "users/delete_doc",
-			type: "POST",
-			data: {
-				id: id,
-			},
-			dataType: "json",
-
-			success: function (res) {
-				console.log(res);
-
-				if (res.success) {
-					showToast("success", "File deleted");
-
-					loadUserDocs($("#attach_user_id").val());
-				} else {
-					showToast("danger", res.message);
-				}
-			},
-
-			error: function (xhr) {
-				console.log(xhr.responseText);
-
-				showToast("danger", "Server error");
-			},
-		});
-	});
-	$(document).on("submit", "#uploadForm", function (e) {
-		e.preventDefault();
-	
-		let formData = new FormData(this);
-	
-		// 🔥 IMPORTANT FIX
-		formData.append("user_id", $("#attach_user_id").val());
-	
-		$.ajax({
-			url: BASE_URL + "users/uploadDocs",
-			type: "POST",
-			data: formData,
-			processData: false,
-			contentType: false,
-			dataType: "json",
-	
-			success: function (res) {
-	
-				if (res.success) {
-	
-					showToast("success", res.message);
-	
-					$("#doc_file").val("");
-					$("#filePreview").html("");
-	
-					loadUserDocs($("#attach_user_id").val());
-	
-					// KEEP MODAL OPEN
-					$("#attachDocsModal").modal("show");
-	
-				} else {
-					showToast("danger", res.message);
-				}
-			},
-	
-			error: function (xhr) {
-				console.log(xhr.responseText);
-				showToast("danger", "Upload failed");
-			}
-		});
-	});
 });

@@ -64,7 +64,7 @@ $route['employees'] = 'employees/index';
 | Dashboard Route
 |--------------------------------------------------------------------------
 */
-$route['uploadDocs'] = 'users/uploadDocs';
+$route['users/uploadDocs'] = 'users/uploadDocs';
 
 
 /*

@@ -169,41 +169,34 @@ class User_model extends CI_Model
         return ['labels' => $labels, 'counts' => $counts];
     }
     // ─── DATATABLE ────────────────────────────────────────────   
-    public function get_datatable($start, $length, $search, $orderColumn, $orderDir, $role = null, $status = null, $date = null, $dept = null)
+    public function get_datatable($start, $length, $search, $orderColumn, $orderDir, $role = null, $status = null, $date = null, $dept = null, $hideAdmins = false)
     {
-        // =========================
-        // BASE QUERY (REUSABLE BUILDER)
-        // =========================
         $this->db->from('users');
         $this->db->where('deleted_at IS NULL', null, false);
-
-        // =========================
-        // TOTAL (NO FILTERS)
-        // =========================
+    
+        // ── Hide admins from non-admin users ──
+        if ($hideAdmins) {
+            $this->db->where('role !=', 'admin');
+        }
+    
         $total = $this->db->count_all_results('', false);
-
-        // =========================
-        // APPLY FILTERS
-        // =========================
+    
         if (!empty($role)) {
             $this->db->where('role', $role);
         }
-
+    
         if ($status !== null && $status !== '') {
             $this->db->where('is_active', $status);
         }
-
+    
         if (!empty($date)) {
             $this->db->where('DATE(created_at)', $date);
         }
-
+    
         if (!empty($dept)) {
             $this->db->like('department', $dept);
         }
-
-        // =========================
-        // SEARCH
-        // =========================
+    
         if (!empty($search)) {
             $this->db->group_start();
             $this->db->like('firstname', $search);
@@ -212,25 +205,19 @@ class User_model extends CI_Model
             $this->db->or_like('employee_id', $search);
             $this->db->group_end();
         }
-
-        // =========================
-        // FILTERED COUNT (SAFE CLONE FIX)
-        // =========================
+    
         $filtered_db = clone $this->db;
         $filtered = $filtered_db->count_all_results();
-
-        // =========================
-        // FINAL DATA QUERY
-        // =========================
+    
         $this->db->order_by($orderColumn, $orderDir);
         $this->db->limit($length, $start);
-
+    
         $data = $this->db->get()->result();
-
+    
         return [
-            'total' => $total,
+            'total'    => $total,
             'filtered' => $filtered,
-            'data' => $data
+            'data'     => $data,
         ];
     }
     public function saveDocument($data)

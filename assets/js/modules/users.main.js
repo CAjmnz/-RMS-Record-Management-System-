@@ -760,8 +760,9 @@ $(document).on("click", "#uploadDocs", function (e) {
         dataType: "json",
         success: function (res) {
             if (res.success) {
+                selectedFiles = [];
                 $('input[name="documents[]"]').val("");
-                $("#filePreview").html('<small class="text-muted">No files selected.</small>');
+				renderFilePreview();
                 loadUserDocs(encodedId);
                 Swal.fire("Success", res.message, "success");
             } else {
@@ -816,8 +817,11 @@ function loadUserDocs(encodedId) {
         + '<div class="rms-dropdown">'
             + '<button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>'
             + '<div class="rms-dropdown-menu">'
-                + '<a href="' + fileUrl + '" target="_blank" class="dropdown-item">View</a>'
-                + '<button class="dropdown-item text-danger btn-remove-file" data-index="' + i + '">Delete</button>'
+                + '<a href="javascript:void(0)" class="dropdown-item btn-view-doc" '
+				+ 'data-url="'+ fileUrl +'" '
+				+ 'data-name="'+ file.file_name +'" '
+				+ 'data-ext="'+ ext +'" >View</a>'
+                + '<button class="dropdown-item text-danger btn-delete-doc" data-id="' + file.id + '">Delete</button>'
             + '</div>'
         + '</div>'
     + '</div>'
@@ -835,7 +839,38 @@ function loadUserDocs(encodedId) {
         }
     });
 }
+// ─────────────────────────────────────────────
+// VIEW DOC
+// ─────────────────────────────────────────────
+$(document).on("click",".btn-view-doc", function (){
+	var url = $(this).data("url");
+	var name = $(this).data("name");
+	var ext = $(this).data("ext").toLowerCase();
 
+	// Set the title
+	$("#docViewerTitle").text(name);
+
+	// Clear previous content
+	$("#docViewerBody").html('<div class="text-muted p-4"> Loading </div>');
+
+	// Decide how to render based on extension
+    var content = "";
+
+	if (["jpg", "jpeg", "png", "gif"].indexOf(ext) !== -1) {
+        // Image — render directly
+        content = '<img src="' + url + '" class="img-fluid" style="max-height:600px;">';
+
+	}else{
+		//DOC, DOCX, XLS, XLSX - use Google Docs viewer
+		content = '<iframe src="https://docs.google.com/viewer?url=' + encodeURIComponent(url) + '&embedded=true" '
+            + 'width="100%" height="500px" style="border:none;"></iframe>';
+	}
+
+	$("#docViewerBody").html(content);
+	
+	//Open viewer modal on top of attach docs modal
+    $("#docViewerModal").modal("show");
+});
 // ─────────────────────────────────────────────
 // DELETE DOC
 // ─────────────────────────────────────────────
@@ -860,7 +895,11 @@ $(document).on("click", ".btn-delete-doc", function () {
             data: { id: encodedDocId },
             success: function (res) {
                 if (res.success) {
+					selectedFiles = [];
+					renderFilePreview();
+					$('input[name="documents[]"]').val("")
                     loadUserDocs(encodedUserId);
+					Swal.fire("Success", res.message,"success");
                 } else {
                     Swal.fire("Error", res.message, "error");
                 }

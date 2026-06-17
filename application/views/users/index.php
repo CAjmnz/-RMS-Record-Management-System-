@@ -411,65 +411,87 @@
             </div>
         </div>
     </div>
-<!-- ═══════════════════════════════════════════════════════
-<!-- ATTACH DOCUMENTS MODAL
+    <!-- ═══════════════════════════════════════════════════════
+  ATTACH DOCUMENTS MODAL
 ═══════════════════════════════════════════════════════ -->
-<div class="modal fade" id="attachDocsModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
+    <div class="modal fade" id="attachDocsModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">Attach Documents</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-
-            <div class="modal-body">
-
-                <input type="hidden" id="attach_user_id">
-
-                <!-- FILE INPUT -->
-                <div class="form-group mb-2">
-                    <label>Select Documents</label>
-                    <input type="file"
-                           name="documents[]"
-                           class="form-control"
-                           multiple
-                           accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx">
-                    <small class="text-muted">Allowed: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX • Max 10MB</small>
+                <div class="modal-header">
+                    <h5 class="modal-title">Attach Documents</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
                 </div>
 
-                <!-- SELECTED FILES PREVIEW GRID -->
-                <div class="mb-3">
-                    <h6 class="mb-2">Selected Files</h6>
-                    <div id="filePreview" class="drive-grid">
-                        <small class="text-muted">No files selected.</small>
+                <div class="modal-body">
+
+                    <input type="hidden" id="attach_user_id">
+
+                    <!-- SELECTED FILES PREVIEW GRID -->
+                    <div class="mb-3">
+                        <h6 class="mb-2">Selected Files</h6>
+                        <div id="filePreview" class="drive-grid">
+                            <small class="text-muted">No files selected.</small>
+                        </div>
                     </div>
-                </div>
-
-                <hr>
-
-                <!-- UPLOADED FILES GRID -->
-                <div>
-                    <h6 class="mb-2">Uploaded Files</h6>
-                    <div id="uploadedFiles" class="drive-grid">
-                        <small class="text-muted">No uploaded files yet.</small>
+                    <!-- FILE INPUT -->
+                    <div class="form-group mb-2">
+                        <label>Select Documents</label>
+                        <input type="file"
+                            name="documents[]"
+                            class="form-control"
+                            multiple
+                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx">
+                        <small class="text-muted">Allowed: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX • Max 10MB</small>
                     </div>
+
+
+                    <hr>
+
+                    <!-- UPLOADED FILES GRID -->
+                    <div>
+                        <h6 class="mb-2">Uploaded Files</h6>
+                        <div id="uploadedFiles" class="drive-grid">
+                            <small class="text-muted">No uploaded files yet.</small>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button id="uploadDocs" type="button" class="btn btn-success">
+                        <i class="fa-solid fa-upload mr-1"></i> Upload Documents
+                    </button>
                 </div>
 
             </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button id="uploadDocs" type="button" class="btn btn-success">
-                    <i class="fa-solid fa-upload mr-1"></i> Upload Documents
-                </button>
-            </div>
-
         </div>
     </div>
-</div>
+    <!-- ═══════════════════════════════════════════════════════
+  VIEW DOCUMENTS MODAL
+═══════════════════════════════════════════════════════ -->
+    <!-- DOCUMENT VIEWER MODAL -->
+    <div class="modal fade" id="docViewerModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="false">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="docViewerTitle">Document</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body text-center" id="docViewerBody" style="min-height:400px;">
+                    <div class="text-muted">Loading...</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 <?php endif; ?>
 
 <!-- Page JS -->

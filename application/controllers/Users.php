@@ -581,141 +581,138 @@ class Users extends RMS_Controller
     public function get_user_docs($encoded_id)
     {
         $user_id = $this->hashids->decode($encoded_id);
-    
+
         if (!$user_id) {
             return $this->jsonFail('Invalid user ID.');
         }
-    
+
         $docs = $this->User_model->getUserDocs($user_id);
-    
+
         foreach ($docs as &$doc) {
             $doc->id = $this->hashids->encode($doc->id);
         }
-    
+
         return $this->jsonSuccess('OK', $docs);
     }
     public function uploadDocs()
-{
-    $encoded_id = $this->input->post('user_id', true);
-    $user_id    = $this->hashids->decode($encoded_id);
+    {
+        $encoded_id = $this->input->post('user_id', true);
+        $user_id    = $this->hashids->decode($encoded_id);
 
-    if (!$user_id) {
-        return $this->jsonFail('Invalid user.');
-    }
-
-    if (!isset($_FILES['documents']) || empty($_FILES['documents']['name'][0])) {
-        return $this->jsonFail('No files selected.');
-    }
-
-    $path = FCPATH . 'uploads/user_documents/' . $user_id . '/';
-
-    if (!is_dir($path)) {
-        mkdir($path, 0755, true);
-    }
-
-    $config = [
-        'upload_path'   => $path,
-        'allowed_types' => 'jpg|jpeg|png|pdf|doc|docx|xls|xlsx',
-        'max_size'      => 10240,
-        'encrypt_name'  => true,
-    ];
-
-    $this->load->library('upload');
-
-    $uploaded = 0;
-    $errors   = [];
-    $files    = $_FILES['documents'];
-
-    for ($i = 0; $i < count($files['name']); $i++) {
-
-        if (empty($files['name'][$i])) {
-            continue;
+        if (!$user_id) {
+            return $this->jsonFail('Invalid user.');
         }
 
-        if ($files['error'][$i] !== UPLOAD_ERR_OK) {
-            $errors[] = $files['name'][$i] . ' — upload error code ' . $files['error'][$i];
-            continue;
+        if (!isset($_FILES['documents']) || empty($_FILES['documents']['name'][0])) {
+            return $this->jsonFail('No files selected.');
         }
 
-        $_FILES['single_file'] = [
-            'name'     => $files['name'][$i],
-            'type'     => $files['type'][$i],
-            'tmp_name' => $files['tmp_name'][$i],
-            'error'    => $files['error'][$i],
-            'size'     => $files['size'][$i],
+        $path = FCPATH . 'uploads/user_documents/' . $user_id . '/';
+
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
+
+        $config = [
+            'upload_path'   => $path,
+            'allowed_types' => 'jpg|jpeg|png|pdf|doc|docx|xls|xlsx',
+            'max_size'      => 10240,
+            'encrypt_name'  => true,
         ];
 
-        $this->upload->initialize($config);
+        $this->load->library('upload');
 
-        if (!$this->upload->do_upload('single_file')) {
-            $errors[] = $files['name'][$i] . ' — ' . strip_tags($this->upload->display_errors());
-            continue;
+        $uploaded = 0;
+        $errors   = [];
+        $files    = $_FILES['documents'];
+
+        for ($i = 0; $i < count($files['name']); $i++) {
+
+            if (empty($files['name'][$i])) {
+                continue;
+            }
+
+            if ($files['error'][$i] !== UPLOAD_ERR_OK) {
+                $errors[] = $files['name'][$i] . ' — upload error code ' . $files['error'][$i];
+                continue;
+            }
+
+            $_FILES['single_file'] = [
+                'name'     => $files['name'][$i],
+                'type'     => $files['type'][$i],
+                'tmp_name' => $files['tmp_name'][$i],
+                'error'    => $files['error'][$i],
+                'size'     => $files['size'][$i],
+            ];
+
+            $this->upload->initialize($config);
+
+            if (!$this->upload->do_upload('single_file')) {
+                $errors[] = $files['name'][$i] . ' — ' . strip_tags($this->upload->display_errors());
+                continue;
+            }
+
+            $file = $this->upload->data();
+
+            $saved = $this->User_model->saveDocument([
+                'user_id'    => $user_id,
+                'file_name'  => $file['orig_name'],
+                'file_path'  => 'uploads/user_documents/' . $user_id . '/' . $file['file_name'],
+                'file_type'  => $file['file_type'],
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+
+            if ($saved) {
+                $uploaded++;
+            } else {
+                @unlink($path . $file['file_name']);
+                $errors[] = $files['name'][$i] . ' — database insert failed.';
+            }
         }
 
-        $file = $this->upload->data();
-
-        $saved = $this->User_model->saveDocument([
-            'user_id'    => $user_id,
-            'file_name'  => $file['orig_name'],
-            'file_path'  => 'uploads/user_documents/' . $user_id . '/' . $file['file_name'],
-            'file_type'  => $file['file_type'],
-            'created_at' => date('Y-m-d H:i:s'),
-        ]);
-
-        if ($saved) {
-            $uploaded++;
-        } else {
-            @unlink($path . $file['file_name']);
-            $errors[] = $files['name'][$i] . ' — database insert failed.';
+        if ($uploaded > 0) {
+            return $this->jsonSuccess(
+                $uploaded . ' file(s) uploaded successfully.',
+                ['errors' => $errors]
+            );
         }
-    }
 
-    if ($uploaded > 0) {
-        return $this->jsonSuccess(
-            $uploaded . ' file(s) uploaded successfully.',
-            ['errors' => $errors]
+        return $this->jsonFail(
+            !empty($errors) ? implode('<br>', $errors) : 'No files were uploaded.'
         );
     }
-
-    return $this->jsonFail(
-        !empty($errors) ? implode('<br>', $errors) : 'No files were uploaded.'
-    );
-}
     public function delete_doc()
     {
         $encoded_id = $this->input->post('id', true);
-    
+
         if (!$encoded_id) {
             return $this->jsonFail('Invalid document ID.');
         }
-    
+
         $id = $this->hashids->decode($encoded_id);
-    
+
         if (!$id) {
             return $this->jsonFail('Invalid document ID.');
         }
-    
-    
+
         $doc = $this->db
             ->where('id', $id)
-            ->where('deleted_at IS NULL', null, false)
             ->get('user_documents')
             ->row();
-    
+
         if (!$doc) {
             return $this->jsonFail('File not found.');
         }
-    
+
+        // Delete file from disk
         $file_path = FCPATH . $doc->file_path;
-    
         if (file_exists($file_path)) {
             unlink($file_path);
         }
-    
-        $this->db->where('id', $id)->update('user_documents', [
-            'deleted_at' => date('Y-m-d H:i:s'),
-        ]);
-    
+
+        // Hard delete from DB
+        $this->db->where('id', $id)->delete('user_documents');
+
         return $this->jsonSuccess('File deleted successfully.');
     }
 }

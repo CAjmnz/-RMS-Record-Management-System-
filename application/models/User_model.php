@@ -229,7 +229,6 @@ class User_model extends CI_Model
         return $this->db
             ->select('id, user_id, file_name, file_path, file_type, created_at')
             ->where('user_id', $user_id)
-            ->where('deleted_at IS NULL', null, false)
             ->get('user_documents')
             ->result();
     }

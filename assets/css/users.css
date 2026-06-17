@@ -160,6 +160,10 @@
     position: relative;
     display: inline-block;
 }
+.rms-dropdown-menu.show{
+    display: block;
+
+}
 .rms-dropdown-menu {
     display: none;
     position: absolute;
@@ -179,18 +183,25 @@
     display: block;
     width: 100%;
     padding: 6px 16px;
-    background: none;
+    font-size: .875rem;
+    color: #343a40;
+    background: transparent;
     border: none;
     text-align: left;
     cursor: pointer;
-    font-size: 14px;
-    color: #212529;
+    white-space: nowrap;
+    text-decoration:none;
+   
 }
 .rms-dropdown-menu .dropdown-item:hover {
     background: #f8f9fa;
+    color: #343a40;
 }
 .rms-dropdown-menu .dropdown-item.text-danger {
-    color: #dc3545;
+    color: #dc3545 !important;
+}
+.rms-dropdown-menu .dropdown-item.text-danger:hover{
+    background-color: #fff5f5
 }
 .dropdown-menu {
     z-index: 9999;
@@ -206,11 +217,10 @@
     width: 120px;
     border: 1px solid #c9ddf0;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible;
     background: #fff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    transition: box-shadow .15s;
-    cursor: pointer;
+    position: relative;
 }
 
 .drive-card:hover {
@@ -253,11 +263,13 @@
     color: #6c757d;
 }
 
-.drive-card-action {
-    display: flex;
-    justify-content: space-between;
-    padding: 4px 5px;
-    border-top: 1px solid #f0f0f0;
+.drive-card-actions {
+   position: absolute;
+   top:4px;
+   right: 4px;
+   z-index: 10;
+
+
 }
 
 /* Remove  button on preview cards */
@@ -279,4 +291,30 @@
 
 .drive-card:hover .drive-card-remove {
     display: block
+}
+
+.drive-card-action{
+    padding: 4px 5px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.drive-card .rms-dropdown-menu {
+    right: 0;
+    left: auto;
+    min-width: 100px;
+}
+
+.drive-card .rms-dropdown-menu .dropdown-item.text-danger{
+    color: #dc3545 !important;
+}
+
+.drive-card .rms-dropdown-menu .dropdown-item:hover{
+    background-color: #f8f9fa;
+    color: #343a40;
+}
+.drive-card .rms-dropdown-menu .dropdown-item.text-danger:hover {
+    background-color: #fff5f5;
+    color: #dc3545 !important;
 }

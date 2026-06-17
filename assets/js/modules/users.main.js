@@ -700,7 +700,14 @@ $(document).on("change", 'input[name="documents[]"]', function () {
 			}
 	
 			html += '<div class="drive-card">'
-				+ '<a href="javascript:void(0)" class="drive-card-remove btn-remove-file" data-index="' + i + '">&times;</a>'
+				+ '<div class="drive-card-action">'
+				+ '<div class="rms-dropdown">'
+				+ '<button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>'
+				+ '<div class="rms-dropdown-menu">'
+				+ '<button class="dropdown-item text-danger btn-remove-file" data-index="' + i + '"><i class="fa-solid fa-trash-can"></i></button>'
+				+ '</div>'
+				+ '</div>'
+				+ '</div>'
 				+ '<div class="drive-card-thumb">' + thumb + '</div>'
 				+ '<div class="drive-card-info">'
 				+ '<div class="drive-card-name" title="' + file.name + '">' + file.name + '</div>'
@@ -805,16 +812,21 @@ function loadUserDocs(encodedId) {
 
 
                 html += '<div class="drive-card">'
-				    + '<div class="drive-card-thumb">' + thumb + '</div>'
-					+ '<div class="drive-card-info">'
-					+ '<div class="drive-card-name"title="'+ file.file_name +'">' + file.file_name +'</div>'
-					+ '<div class="drive-card-type">'+ ext. toUpperCase() + '</div>'
-					+ '</div>'
-					+ '<div class="drive-card-action">'
-					+ '<a href="' + fileUrl + '" target="_blank" class="btn btn-sm btn-primary mr-1"><i class="fa-solid fa-eye"></i></a>'
-                    + '<button class="btn btn-sm btn-danger btn-delete-doc" data-id="' + file.id + '"><i class="fa-solid fa-trash"></i></button>'
-                    + '</div>'
-                    + '</div>';
+    + '<div class="drive-card-actions">'
+        + '<div class="rms-dropdown">'
+            + '<button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>'
+            + '<div class="rms-dropdown-menu">'
+                + '<a href="' + fileUrl + '" target="_blank" class="dropdown-item">View</a>'
+                + '<button class="dropdown-item text-danger btn-remove-file" data-index="' + i + '">Delete</button>'
+            + '</div>'
+        + '</div>'
+    + '</div>'
+    + '<div class="drive-card-thumb">' + thumb + '</div>'
+    + '<div class="drive-card-info">'
+        + '<div class="drive-card-name" title="' + file.file_name + '">' + file.file_name + '</div>'
+        + '<div class="drive-card-type">' + ext.toUpperCase() + '</div>'
+    + '</div>'
++ '</div>';
             });
             $("#uploadedFiles").html(html);
         },

@@ -653,6 +653,18 @@ $(document).on("hidden.bs.modal", "#attachDocsModal", function(){
 }); 
 
 // ─────────────────────────────────────────────
+// REVOKE OBJECT URL WHEN VIEWER CLOSES
+// ─────────────────────────────────────────────
+$(document).on("hidden.bs.modal", "#docViewerModal", function () {
+    var url = $(this).data("objectUrl");
+    if (url) {
+        URL.revokeObjectURL(url);
+        $(this).data("objectUrl", null);
+    }
+    $("#docViewerBody").html('<div class="text-muted">Loading...</div>');
+    $("#docViewerTitle").text("Document");
+});
+// ─────────────────────────────────────────────
 // FILE PREVIEW
 // ─────────────────────────────────────────────
 $(document).on("change", 'input[name="documents[]"]', function () {
@@ -708,7 +720,7 @@ $(document).on("change", 'input[name="documents[]"]', function () {
 				+ '</div>'
 				+ '</div>'
 				+ '</div>'
-				+ '<div class="drive-card-thumb">' + thumb + '</div>'
+				+ '<div class="drive-card-thumb preview-thumb"data-index="' + i +'" style="cursor:pointer;"title="CLick to preview">' + thumb + '</div>'
 				+ '<div class="drive-card-info">'
 				+ '<div class="drive-card-name" title="' + file.name + '">' + file.name + '</div>'
 				+ '<div class="drive-card-type">' + (file.size > 1024*1024
@@ -728,6 +740,41 @@ $(document).on("click",".btn-remove-file", function (){
 	selectedFiles.splice(index,1);
 	renderFilePreview();
 })
+
+
+// ─────────────────────────────────────────────
+// PREVIEW SELECTED FILE (before upload)
+// ─────────────────────────────────────────────
+$(document).on("click", "#filePreview .preview-thumb", function () {
+    var index = parseInt($(this).data("index"));
+    var file  = selectedFiles[index];
+
+    if (!file) return;
+
+    var name = file.name;
+    var ext  = name.split(".").pop().toLowerCase();
+    var url  = URL.createObjectURL(file);
+
+    $("#docViewerTitle").text(name);
+    $("#docViewerBody").html('<div class="text-muted p-3">Loading...</div>');
+
+    var content = "";
+
+    if (["jpg", "jpeg", "png", "gif"].indexOf(ext) !== -1) {
+        content = '<img src="' + url + '" class="img-fluid" style="max-height:500px;">';
+    } else if (ext === "pdf") {
+        content = '<iframe src="' + url + '" width="100%" height="500px" style="border:none;"></iframe>';
+    } else {
+        content = '<p class="text-muted mt-4">Preview not available for this file type.<br>'
+            + '<strong>' + name + '</strong></p>';
+    }
+
+    $("#docViewerBody").html(content);
+
+    // Store url so we can revoke it on modal close
+    $("#docViewerModal").data("objectUrl", url);
+    $("#docViewerModal").modal("show");
+});
 // ─────────────────────────────────────────────
 // UPLOAD - use accumulator array
 // ─────────────────────────────────────────────
@@ -825,7 +872,13 @@ function loadUserDocs(encodedId) {
             + '</div>'
         + '</div>'
     + '</div>'
-    + '<div class="drive-card-thumb">' + thumb + '</div>'
+   + '<div class="drive-card-thumb uploaded-thumb"'
+   + 'data-url="'+ fileUrl + '"'
+   + 'data-name="'+ file.file_name + '"'
+   + 'data-ext="'+ ext + '"'
+   + 'style="cursor:pointer;" title="Click to Preview">'
+   + thumb
+   + '</div>'
     + '<div class="drive-card-info">'
         + '<div class="drive-card-name" title="' + file.file_name + '">' + file.file_name + '</div>'
         + '<div class="drive-card-type">' + ext.toUpperCase() + '</div>'
@@ -842,33 +895,34 @@ function loadUserDocs(encodedId) {
 // ─────────────────────────────────────────────
 // VIEW DOC
 // ─────────────────────────────────────────────
-$(document).on("click",".btn-view-doc", function (){
-	var url = $(this).data("url");
-	var name = $(this).data("name");
-	var ext = $(this).data("ext").toLowerCase();
+$(document).on("click", "#filePreview .preview-thumb", function () {
+    var index = parseInt($(this).data("index"));
+    var file  = selectedFiles[index];
 
-	// Set the title
-	$("#docViewerTitle").text(name);
+    if (!file) return;
 
-	// Clear previous content
-	$("#docViewerBody").html('<div class="text-muted p-4"> Loading </div>');
+    var name = file.name;
+    var ext  = name.split(".").pop().toLowerCase();
+    var url  = URL.createObjectURL(file);
 
-	// Decide how to render based on extension
+    $("#docViewerTitle").text(name);
+    $("#docViewerBody").html('<div class="text-muted p-3">Loading...</div>');
+
     var content = "";
 
-	if (["jpg", "jpeg", "png", "gif"].indexOf(ext) !== -1) {
-        // Image — render directly
-        content = '<img src="' + url + '" class="img-fluid" style="max-height:600px;">';
+    if (["jpg", "jpeg", "png", "gif"].indexOf(ext) !== -1) {
+        content = '<img src="' + url + '" class="img-fluid" style="max-height:500px;">';
+    } else if (ext === "pdf") {
+        content = '<iframe src="' + url + '" width="100%" height="500px" style="border:none;"></iframe>';
+    } else {
+        content = '<p class="text-muted mt-4">Preview not available for this file type.<br>'
+            + '<strong>' + name + '</strong></p>';
+    }
 
-	}else{
-		//DOC, DOCX, XLS, XLSX - use Google Docs viewer
-		content = '<iframe src="https://docs.google.com/viewer?url=' + encodeURIComponent(url) + '&embedded=true" '
-            + 'width="100%" height="500px" style="border:none;"></iframe>';
-	}
+    $("#docViewerBody").html(content);
 
-	$("#docViewerBody").html(content);
-	
-	//Open viewer modal on top of attach docs modal
+    // Store url so we can revoke it on modal close
+    $("#docViewerModal").data("objectUrl", url);
     $("#docViewerModal").modal("show");
 });
 // ─────────────────────────────────────────────
@@ -910,4 +964,6 @@ $(document).on("click", ".btn-delete-doc", function () {
         });
     });
 });
+
 });
+

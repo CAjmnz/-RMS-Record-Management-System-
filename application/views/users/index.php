@@ -470,6 +470,8 @@
             </div>
         </div>
     </div>
+
+    
     <!-- ═══════════════════════════════════════════════════════
   VIEW DOCUMENTS MODAL
 ═══════════════════════════════════════════════════════ -->
@@ -485,7 +487,7 @@
                     </button>
                 </div>
 
-                <div class="modal-body text-center" id="docViewerBody" style="min-height:400px;">
+                <div class="modal-body text-center" id="docViewerBody" style="min-height:300px;">
                     <div class="text-muted">Loading...</div>
                 </div>
 

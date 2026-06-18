@@ -713,6 +713,10 @@ $(document).on("change", 'input[name="documents[]"]', function () {
 	
 			html += '<div class="drive-card">'
 				+ '<div class="drive-card-action">'
+				+ '<div class="form-check">'
+                + '<input class="form-check-input" type="checkbox" value="" id="defaultCheck1">'
+                + '<label class="form-check-label" for="defaultCheck1"></label>'
+                + '</div>'
 				+ '<div class="rms-dropdown">'
 				+ '<button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>'
 				+ '<div class="rms-dropdown-menu">'
@@ -862,15 +866,14 @@ function loadUserDocs(encodedId) {
                 html += '<div class="drive-card">'
     + '<div class="drive-card-actions">'
         + '<div class="rms-dropdown">'
+		+ '<div class="d-flex justify-content-end">'
+        + '<input class="form-check-input position-static" type="checkbox" id="blankCheckbox" value="option1" aria-label="...">'
             + '<button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>'
             + '<div class="rms-dropdown-menu">'
-                + '<a href="javascript:void(0)" class="dropdown-item btn-view-doc" '
-				+ 'data-url="'+ fileUrl +'" '
-				+ 'data-name="'+ file.file_name +'" '
-				+ 'data-ext="'+ ext +'" >View</a>'
                 + '<button class="dropdown-item text-danger btn-delete-doc" data-id="' + file.id + '">Delete</button>'
             + '</div>'
         + '</div>'
+		+ '</div>'
     + '</div>'
    + '<div class="drive-card-thumb uploaded-thumb"'
    + 'data-url="'+ fileUrl + '"'
@@ -895,15 +898,10 @@ function loadUserDocs(encodedId) {
 // ─────────────────────────────────────────────
 // VIEW DOC
 // ─────────────────────────────────────────────
-$(document).on("click", "#filePreview .preview-thumb", function () {
-    var index = parseInt($(this).data("index"));
-    var file  = selectedFiles[index];
-
-    if (!file) return;
-
-    var name = file.name;
-    var ext  = name.split(".").pop().toLowerCase();
-    var url  = URL.createObjectURL(file);
+$(document).on("click", "#uploadedFiles .uploaded-thumb", function () {
+    var url  = $(this).data("url");
+    var name = $(this).data("name");
+    var ext  = $(this).data("ext").toLowerCase();
 
     $("#docViewerTitle").text(name);
     $("#docViewerBody").html('<div class="text-muted p-3">Loading...</div>');
@@ -922,7 +920,7 @@ $(document).on("click", "#filePreview .preview-thumb", function () {
     $("#docViewerBody").html(content);
 
     // Store url so we can revoke it on modal close
-    $("#docViewerModal").data("objectUrl", url);
+    $("#docViewerBody").html(content);
     $("#docViewerModal").modal("show");
 });
 // ─────────────────────────────────────────────

@@ -438,12 +438,12 @@
                     </div>
                     <!-- FILE INPUT -->
                     <div class="form-group mb-2">
-                        <label>Select Documents</label>
                         <input type="file"
                             name="documents[]"
                             class="form-control"
                             multiple
                             accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx">
+                            
                         <small class="text-muted">Allowed: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX • Max 10MB</small>
                     </div>
 
@@ -452,8 +452,13 @@
 
                     <!-- UPLOADED FILES GRID -->
                     <div>
-                        <h6 class="mb-2">Uploaded Files</h6>
-                        <div id="uploadedFiles" class="drive-grid">
+                        <div class="d-flex justify-content-between align-items-center md-2">
+                        <h6 class="mb-0">Uploaded Files</h6>
+                        <button id="btnDeleteSelected" class="btn btn-sm btn-danger" style="display:none;">
+                            <i class="fa-solid fa-trash mr-1"></i> Delete Selected (<span id="selectedCount">0</span>)
+                        </button>
+                        </div>
+                    <div id="uploadedFiles" class="drive-grid">
                             <small class="text-muted">No uploaded files yet.</small>
                         </div>
                     </div>
@@ -472,7 +477,7 @@
     </div>
 
     
-    <!-- ═══════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════
   VIEW DOCUMENTS MODAL
 ═══════════════════════════════════════════════════════ -->
     <!-- DOCUMENT VIEWER MODAL -->

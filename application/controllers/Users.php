@@ -644,6 +644,7 @@ class Users extends RMS_Controller
                 'error'    => $files['error'][$i],
                 'size'     => $files['size'][$i],
             ];
+//upload attach file to the folder 
 
             $this->upload->initialize($config);
 

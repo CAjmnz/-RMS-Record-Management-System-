@@ -319,3 +319,22 @@
     color: #dc3545 !important;
 }
 
+.drive-card-checkbox{
+    position: absolute;
+    top:8px;
+    left:6px;
+    z-index: 10;
+}
+
+.drive-card-checkbox
+input[type="checkbox"]{
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.drive-card.selected{
+    border-color: #007bff;
+    box-shadow:0 0 0 2px
+rgba(0.,123,255,.35);
+}

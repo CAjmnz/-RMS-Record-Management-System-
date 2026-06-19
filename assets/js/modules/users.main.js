@@ -628,340 +628,440 @@ $(function () {
 		}, 3200);
 	}
 
-// ─────────────────────────────────────────────
-// FILE ACCUMULATOR — global scope, outside $(function)
-// ─────────────────────────────────────────────
-var selectedFiles = [];
+	// ─────────────────────────────────────────────
+	// FILE ACCUMULATOR — global scope, outside $(function)
+	// ─────────────────────────────────────────────
+	var selectedFiles = [];
 
-// ─────────────────────────────────────────────
-// OPEN ATTACH DOCS MODAL
-// ─────────────────────────────────────────────
-$(document).on("click", ".btn-attach-docs", function () {
-    var encodedId = $(this).data("id");
-    $("#attach_user_id").val(encodedId);
-    loadUserDocs(encodedId);
-    $("#attachDocsModal").modal("show");
-});
+	// ─────────────────────────────────────────────
+	// OPEN ATTACH DOCS MODAL
+	// ─────────────────────────────────────────────
+	$(document).on("click", ".btn-attach-docs", function () {
+		var encodedId = $(this).data("id");
+		$("#attach_user_id").val(encodedId);
+		loadUserDocs(encodedId);
+		$("#attachDocsModal").modal("show");
+	});
 
+	// Reset when modal Closes
+	$(document).on("hidden.bs.modal", "#attachDocsModal", function () {
+		selectedFiles = [];
+		$("#filePreview").html(
+			'<small class="text-muted">No files selected.</small>',
+		);
+		$('input[name="documents[]"]').val("");
+		$("#btnDeleteSelected").hide();
+		$("#selectedCount").text(0);
+	});
 
+	// ─────────────────────────────────────────────
+	// REVOKE OBJECT URL WHEN VIEWER CLOSES
+	// ─────────────────────────────────────────────
+	$(document).on("hidden.bs.modal", "#docViewerModal", function () {
+		var url = $(this).data("objectUrl");
+		if (url) {
+			URL.revokeObjectURL(url);
+			$(this).data("objectUrl", null);
+		}
+		$("#docViewerBody").html('<div class="text-muted">Loading...</div>');
+		$("#docViewerTitle").text("Document");
+	});
+	// ─────────────────────────────────────────────
+	// FILE PREVIEW
+	// ─────────────────────────────────────────────
+	$(document).on("change", 'input[name="documents[]"]', function () {
+		var newFiles = this.files;
 
-// Reset when modal Closes
-$(document).on("hidden.bs.modal", "#attachDocsModal", function(){
-    selectedFiles = [];
-	$("#filePreview").html('<small class="text-muted">No files selected.</small>');
-	$('input[name="documents[]"]').val("");
-}); 
-
-// ─────────────────────────────────────────────
-// REVOKE OBJECT URL WHEN VIEWER CLOSES
-// ─────────────────────────────────────────────
-$(document).on("hidden.bs.modal", "#docViewerModal", function () {
-    var url = $(this).data("objectUrl");
-    if (url) {
-        URL.revokeObjectURL(url);
-        $(this).data("objectUrl", null);
-    }
-    $("#docViewerBody").html('<div class="text-muted">Loading...</div>');
-    $("#docViewerTitle").text("Document");
-});
-// ─────────────────────────────────────────────
-// FILE PREVIEW
-// ─────────────────────────────────────────────
-$(document).on("change", 'input[name="documents[]"]', function () {
-    var newFiles = this.files;
-
-    if (!newFiles.length) return;
+		if (!newFiles.length) return;
 
 		// Add new files to accumulator, skip duplicates by name+size
-		$.each(newFiles, function(i, newFile){
-			var isDupe = selectedFiles.some(function (f){
-                return f.name === newFile.name && f.size === newFile.size;
+		$.each(newFiles, function (i, newFile) {
+			var isDupe = selectedFiles.some(function (f) {
+				return f.name === newFile.name && f.size === newFile.size;
 			});
-			if (!isDupe){
+			if (!isDupe) {
 				selectedFiles.push(newFile);
 			}
 		});
 
 		renderFilePreview();
-		 
+
 		// Reset input so same file can be re-added after removal
-        $(this).val("");
-    });
+		$(this).val("");
+	});
 
 	function renderFilePreview() {
 		if (!selectedFiles.length) {
-			$("#filePreview").html('<small class="text-muted">No files selected.</small>');
+			$("#filePreview").html(
+				'<small class="text-muted">No files selected.</small>',
+			);
 			return;
 		}
-	
+
 		var html = "";
 		$.each(selectedFiles, function (i, file) {
-			var ext  = file.name.split(".").pop().toLowerCase();
+			var ext = file.name.split(".").pop().toLowerCase();
 			var isImage = file.type.startsWith("image/");
 			var thumb = "";
-	
+
 			if (isImage) {
 				var url = URL.createObjectURL(file);
 				thumb = '<img src="' + url + '" alt="preview">';
 			} else {
 				var icon = "📄";
-				if (ext === "pdf")                     icon = "📕";
-				if (ext === "doc" || ext === "docx")   icon = "📘";
-				if (ext === "xls" || ext === "xlsx")   icon = "📗";
+				if (ext === "pdf") icon = "📕";
+				if (ext === "doc" || ext === "docx") icon = "📘";
+				if (ext === "xls" || ext === "xlsx") icon = "📗";
 				thumb = icon;
 			}
-	
-			html += '<div class="drive-card">'
-				+ '<div class="drive-card-action">'
-				+ '<div class="form-check">'
-                + '<input class="form-check-input" type="checkbox" value="" id="defaultCheck1">'
-                + '<label class="form-check-label" for="defaultCheck1"></label>'
-                + '</div>'
-				+ '<div class="rms-dropdown">'
-				+ '<button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>'
-				+ '<div class="rms-dropdown-menu">'
-				+ '<button class="dropdown-item text-danger btn-remove-file" data-index="' + i + '"><i class="fa-solid fa-trash-can"></i></button>'
-				+ '</div>'
-				+ '</div>'
-				+ '</div>'
-				+ '<div class="drive-card-thumb preview-thumb"data-index="' + i +'" style="cursor:pointer;"title="CLick to preview">' + thumb + '</div>'
-				+ '<div class="drive-card-info">'
-				+ '<div class="drive-card-name" title="' + file.name + '">' + file.name + '</div>'
-				+ '<div class="drive-card-type">' + (file.size > 1024*1024
-					? (file.size/1024/1024).toFixed(1) + ' MB'
-					: Math.round(file.size/1024) + ' KB') + '</div>'
-				+ '</div>'
-				+ '</div>';
+
+			html +=
+				'<div class="drive-card">' +
+				'<div class="drive-card-action">' +
+				'<div class="rms-dropdown">' +
+				'<button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>' +
+				'<div class="rms-dropdown-menu">' +
+				'<button class="dropdown-item text-danger btn-remove-file" data-index="' +
+				i +
+				'"><i class="fa-solid fa-trash-can"></i></button>' +
+				"</div>" +
+				"</div>" +
+				"</div>" +
+				'<div class="drive-card-thumb preview-thumb"data-index="' +
+				i +
+				'" style="cursor:pointer;"title="CLick to preview">' +
+				thumb +
+				"</div>" +
+				'<div class="drive-card-info">' +
+				'<div class="drive-card-name" title="' +
+				file.name +
+				'">' +
+				file.name +
+				"</div>" +
+				'<div class="drive-card-type">' +
+				(file.size > 1024 * 1024
+					? (file.size / 1024 / 1024).toFixed(1) + " MB"
+					: Math.round(file.size / 1024) + " KB") +
+				"</div>" +
+				"</div>" +
+				"</div>";
 		});
-	
+
 		$("#filePreview").html(html);
 	}
-// ─────────────────────────────────────────────
-// REMOVE INDIVIDUAL FILE FROM PREVIEW
-// ─────────────────────────────────────────────
-$(document).on("click",".btn-remove-file", function (){
-	var index = parseInt($(this).data("index"));
-	selectedFiles.splice(index,1);
-	renderFilePreview();
-})
+	// ─────────────────────────────────────────────
+	// REMOVE INDIVIDUAL FILE FROM PREVIEW
+	// ─────────────────────────────────────────────
+	$(document).on("click", ".btn-remove-file", function () {
+		var index = parseInt($(this).data("index"));
+		selectedFiles.splice(index, 1);
+		renderFilePreview();
+	});
 
+	// ─────────────────────────────────────────────
+	// PREVIEW SELECTED FILE (before upload)
+	// ─────────────────────────────────────────────
+	$(document).on("click", "#filePreview .preview-thumb", function () {
+		var index = parseInt($(this).data("index"));
+		var file = selectedFiles[index];
 
-// ─────────────────────────────────────────────
-// PREVIEW SELECTED FILE (before upload)
-// ─────────────────────────────────────────────
-$(document).on("click", "#filePreview .preview-thumb", function () {
-    var index = parseInt($(this).data("index"));
-    var file  = selectedFiles[index];
+		if (!file) return;
 
-    if (!file) return;
+		var name = file.name;
+		var ext = name.split(".").pop().toLowerCase();
+		var url = URL.createObjectURL(file);
 
-    var name = file.name;
-    var ext  = name.split(".").pop().toLowerCase();
-    var url  = URL.createObjectURL(file);
+		$("#docViewerTitle").text(name);
+		$("#docViewerBody").html('<div class="text-muted p-3">Loading...</div>');
 
-    $("#docViewerTitle").text(name);
-    $("#docViewerBody").html('<div class="text-muted p-3">Loading...</div>');
+		var content = "";
 
-    var content = "";
+		if (["jpg", "jpeg", "png", "gif"].indexOf(ext) !== -1) {
+			content =
+				'<img src="' + url + '" class="img-fluid" style="max-height:500px;">';
+		} else if (ext === "pdf") {
+			content =
+				'<iframe src="' +
+				url +
+				'" width="100%" height="500px" style="border:none;"></iframe>';
+		} else {
+			content =
+				'<p class="text-muted mt-4">Preview not available for this file type.<br>' +
+				"<strong>" +
+				name +
+				"</strong></p>";
+		}
 
-    if (["jpg", "jpeg", "png", "gif"].indexOf(ext) !== -1) {
-        content = '<img src="' + url + '" class="img-fluid" style="max-height:500px;">';
-    } else if (ext === "pdf") {
-        content = '<iframe src="' + url + '" width="100%" height="500px" style="border:none;"></iframe>';
-    } else {
-        content = '<p class="text-muted mt-4">Preview not available for this file type.<br>'
-            + '<strong>' + name + '</strong></p>';
-    }
+		$("#docViewerBody").html(content);
 
-    $("#docViewerBody").html(content);
+		// Store url so we can revoke it on modal close
+		$("#docViewerModal").data("objectUrl", url);
+		$("#docViewerModal").modal("show");
+	});
+	// ─────────────────────────────────────────────
+	// UPLOAD - use accumulator array
+	// ─────────────────────────────────────────────
+	$(document).on("click", "#uploadDocs", function (e) {
+		e.preventDefault();
 
-    // Store url so we can revoke it on modal close
-    $("#docViewerModal").data("objectUrl", url);
-    $("#docViewerModal").modal("show");
-});
-// ─────────────────────────────────────────────
-// UPLOAD - use accumulator array
-// ─────────────────────────────────────────────
-$(document).on("click", "#uploadDocs", function (e) {
-    e.preventDefault();
+		var encodedId = $("#attach_user_id").val();
 
-    var encodedId = $("#attach_user_id").val();
+		if (!selectedFiles.length) {
+			Swal.fire("No Files", "Please select at least one file.", "warning");
+			return;
+		}
 
-    if (!selectedFiles.length) {
-        Swal.fire("No Files", "Please select at least one file.", "warning");
-        return;
-    }
+		var formData = new FormData();
+		formData.append("user_id", encodedId);
 
-    var formData = new FormData();
-    formData.append("user_id", encodedId);
+		$.each(selectedFiles, function (i, file) {
+			formData.append("documents[]", file);
+		});
 
-    $.each(selectedFiles, function (i, file) {
-        formData.append("documents[]", file);
-    });
+		var $btn = $(this);
+		$btn.prop("disabled", true).text("Uploading...");
 
-    var $btn = $(this);
-    $btn.prop("disabled", true).text("Uploading...");
-
-    $.ajax({
-        url: BASE_URL + "users/uploadDocs",
-        type: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        dataType: "json",
-        success: function (res) {
-            if (res.success) {
-                selectedFiles = [];
-                $('input[name="documents[]"]').val("");
-				renderFilePreview();
-                loadUserDocs(encodedId);
-                Swal.fire("Success", res.message, "success");
-            } else {
-                Swal.fire("Failed", res.message, "error");
-            }
-        },
-        error: function () {
-            Swal.fire("Error", "Server error during upload.", "error");
-        },
-        complete: function () {
-            $btn.prop("disabled", false).text("Upload Documents");
-        }
-    });
-});
-
-// ─────────────────────────────────────────────
-// LOAD UPLOADED FILES
-// ─────────────────────────────────────────────
-function loadUserDocs(encodedId) {
-    $("#uploadedFiles").html('<div class="text-center p-3">Loading...</div>');
-
-    $.ajax({
-        url: BASE_URL + "users/get_user_docs/" + encodedId,
-        type: "GET",
-        dataType: "json",
-        success: function (res) {
-            if (!res.success || !res.data.length) {
-                $("#uploadedFiles").html('<small class="text-muted">No uploaded files yet.</small>');
-                return;
-            }
-
-            var html = "";
-            $.each(res.data, function (i, file) {
-                var fileUrl = BASE_URL + file.file_path;
-                var ext = file.file_name.split(".").pop().toLowerCase();
-				var isImage = ["jpg","jpeg","png","gif"].indexOf(ext) !== -1;
-				var thumb = "";
-
-				if (isImage) {
-					thumb = '<img src="' + fileUrl + '" alt="' + file.file_name +'">';
+		$.ajax({
+			url: BASE_URL + "users/uploadDocs",
+			type: "POST",
+			data: formData,
+			processData: false,
+			contentType: false,
+			dataType: "json",
+			success: function (res) {
+				if (res.success) {
+					selectedFiles = [];
+					$('input[name="documents[]"]').val("");
+					renderFilePreview();
+					loadUserDocs(encodedId);
+					Swal.fire("Success", res.message, "success");
 				} else {
-					var icon = "📄";
-					if (ext === "pdf")                        icon = "📕";
-					if (ext === "doc"  || ext === "docx")     icon = "📘";
-					if (ext === "xls"  || ext === "xlsx")     icon = "📗";
-					thumb = icon ;
+					Swal.fire("Failed", res.message, "error");
+				}
+			},
+			error: function () {
+				Swal.fire("Error", "Server error during upload.", "error");
+			},
+			complete: function () {
+				$btn.prop("disabled", false).text("Upload Documents");
+			},
+		});
+	});
+
+	// ─────────────────────────────────────────────
+	// LOAD UPLOADED FILES
+	// ─────────────────────────────────────────────
+	function loadUserDocs(encodedId) {
+		$("#uploadedFiles").html('<div class="text-center p-3">Loading...</div>');
+
+		$.ajax({
+			url: BASE_URL + "users/get_user_docs/" + encodedId,
+			type: "GET",
+			dataType: "json",
+			success: function (res) {
+				if (!res.success || !res.data.length) {
+					$("#uploadedFiles").html(
+						'<small class="text-muted">No uploaded files yet.</small>',
+					);
+					return;
 				}
 
+				var html = "";
+				$.each(res.data, function (i, file) {
+					var fileUrl = BASE_URL + file.file_path;
+					var ext = file.file_name.split(".").pop().toLowerCase();
+					var isImage = ["jpg", "jpeg", "png", "gif"].indexOf(ext) !== -1;
+					var thumb = "";
 
-                html += '<div class="drive-card">'
-    + '<div class="drive-card-actions">'
-        + '<div class="rms-dropdown">'
-		+ '<div class="d-flex justify-content-end">'
-        + '<input class="form-check-input position-static" type="checkbox" id="blankCheckbox" value="option1" aria-label="...">'
-            + '<button class="btn btn-light btn-sm rms-dropdown-toggle" type="button">&#8942;</button>'
-            + '<div class="rms-dropdown-menu">'
-                + '<button class="dropdown-item text-danger btn-delete-doc" data-id="' + file.id + '">Delete</button>'
-            + '</div>'
-        + '</div>'
-		+ '</div>'
-    + '</div>'
-   + '<div class="drive-card-thumb uploaded-thumb"'
-   + 'data-url="'+ fileUrl + '"'
-   + 'data-name="'+ file.file_name + '"'
-   + 'data-ext="'+ ext + '"'
-   + 'style="cursor:pointer;" title="Click to Preview">'
-   + thumb
-   + '</div>'
-    + '<div class="drive-card-info">'
-        + '<div class="drive-card-name" title="' + file.file_name + '">' + file.file_name + '</div>'
-        + '<div class="drive-card-type">' + ext.toUpperCase() + '</div>'
-    + '</div>'
-+ '</div>';
-            });
-            $("#uploadedFiles").html(html);
-        },
-        error: function () {
-            $("#uploadedFiles").html('<div class="text-danger">Failed to load documents.</div>');
-        }
-    });
-}
+					if (isImage) {
+						thumb = '<img src="' + fileUrl + '" alt="' + file.file_name + '">';
+					} else {
+						var icon = "📄";
+						if (ext === "pdf") icon = "📕";
+						if (ext === "doc" || ext === "docx") icon = "📘";
+						if (ext === "xls" || ext === "xlsx") icon = "📗";
+						thumb = icon;
+					}
+					html +=
+						'<div class="drive-card">' +
+						'<div class="drive-card-checkbox">' +
+						'<input type="checkbox" class="doc-checkbox" data-id="' +
+						file.id +
+						'">' +
+						"</div>" +
+
+						'<div class="drive-card-thumb uploaded-thumb"' +
+						'data-url="' +
+						fileUrl +
+						'"' +
+						'data-name="' +
+						file.file_name +
+						'"' +
+						'data-ext="' +
+						ext +
+						'"' +
+						'style="cursor:pointer;" title="Click to Preview">' +
+						thumb +
+						"</div>" +
+						'<div class="drive-card-info">' +
+						'<div class="drive-card-name" title="' +
+						file.file_name +
+						'">' +
+						file.file_name +
+						"</div>" +
+						'<div class="drive-card-type">' +
+						ext.toUpperCase() +
+						"</div>" +
+						"</div>" +
+						"</div>";
+				});
+				$("#uploadedFiles").html(html);
+			},
+			error: function () {
+				$("#uploadedFiles").html(
+					'<div class="text-danger">Failed to load documents.</div>',
+				);
+			},
+		});
+	}
+	// ─────────────────────────────────────────────
+	// VIEW DOC
+	// ─────────────────────────────────────────────
+	$(document).on("click", "#uploadedFiles .uploaded-thumb", function () {
+		var url = $(this).data("url");
+		var name = $(this).data("name");
+		var ext = $(this).data("ext").toLowerCase();
+
+		$("#docViewerTitle").text(name);
+		$("#docViewerBody").html('<div class="text-muted p-3">Loading...</div>');
+
+		var content = "";
+
+		if (["jpg", "jpeg", "png", "gif"].indexOf(ext) !== -1) {
+			content =
+				'<img src="' + url + '" class="img-fluid" style="max-height:500px;">';
+		} else if (ext === "pdf") {
+			content =
+				'<iframe src="' +
+				url +
+				'" width="100%" height="500px" style="border:none;"></iframe>';
+		} else {
+			content =
+				'<p class="text-muted mt-4">Preview not available for this file type.<br>' +
+				"<strong>" +
+				name +
+				"</strong></p>";
+		}
+
+		$("#docViewerBody").html(content);
+
+		// Store url so we can revoke it on modal close
+		$("#docViewerBody").html(content);
+		$("#docViewerModal").modal("show");
+	});
+	
+   // ─────────────────────────────────────────────
+// CHECKBOX — show/hide Delete Selected button
 // ─────────────────────────────────────────────
-// VIEW DOC
-// ─────────────────────────────────────────────
-$(document).on("click", "#uploadedFiles .uploaded-thumb", function () {
-    var url  = $(this).data("url");
-    var name = $(this).data("name");
-    var ext  = $(this).data("ext").toLowerCase();
+$(document).on("change", ".doc-checkbox", function () {
+    // Highlight selected card
+    $(this).closest(".drive-card").toggleClass("selected", this.checked);
 
-    $("#docViewerTitle").text(name);
-    $("#docViewerBody").html('<div class="text-muted p-3">Loading...</div>');
+    // Count checked
+    var count = $(".doc-checkbox:checked").length;
 
-    var content = "";
-
-    if (["jpg", "jpeg", "png", "gif"].indexOf(ext) !== -1) {
-        content = '<img src="' + url + '" class="img-fluid" style="max-height:500px;">';
-    } else if (ext === "pdf") {
-        content = '<iframe src="' + url + '" width="100%" height="500px" style="border:none;"></iframe>';
+    if (count > 0) {
+        $("#selectedCount").text(count);
+        $("#btnDeleteSelected").show();
     } else {
-        content = '<p class="text-muted mt-4">Preview not available for this file type.<br>'
-            + '<strong>' + name + '</strong></p>';
+        $("#btnDeleteSelected").hide();
     }
-
-    $("#docViewerBody").html(content);
-
-    // Store url so we can revoke it on modal close
-    $("#docViewerBody").html(content);
-    $("#docViewerModal").modal("show");
 });
 // ─────────────────────────────────────────────
-// DELETE DOC
+// DELETE SELECTED
 // ─────────────────────────────────────────────
-$(document).on("click", ".btn-delete-doc", function () {
-    var encodedDocId = $(this).data("id");
+$(document).on("click", "#btnDeleteSelected", function () {
     var encodedUserId = $("#attach_user_id").val();
 
+    // Collect all checked IDs
+    var ids = [];
+    $(".doc-checkbox:checked").each(function () {
+        ids.push($(this).data("id"));
+    });
+
+    if (!ids.length) return;
+
     Swal.fire({
-        title: "Delete this file?",
+        title: "Delete " + ids.length + " file(s)?",
         text: "This cannot be undone.",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Yes, delete it",
+        confirmButtonText: "Yes, delete all",
         confirmButtonColor: "#d33",
     }).then(function (result) {
         if (!result.isConfirmed) return;
 
-        $.ajax({
-            url: BASE_URL + "users/delete_doc",
-            type: "POST",
-            dataType: "json",
-            data: { id: encodedDocId },
-            success: function (res) {
-                if (res.success) {
-					selectedFiles = [];
-					renderFilePreview();
-					$('input[name="documents[]"]').val("")
-                    loadUserDocs(encodedUserId);
-					Swal.fire("Success", res.message,"success");
-                } else {
-                    Swal.fire("Error", res.message, "error");
-                }
-            },
-            error: function () {
-                Swal.fire("Error", "Server error during delete.", "error");
-            }
+        // Send one delete request per file
+        var requests = ids.map(function (id) {
+            return $.ajax({
+                url: BASE_URL + "users/delete_doc",
+                type: "POST",
+                dataType: "json",
+                data: { id: id }
+            });
+        });
+
+        // Wait for all requests to finish
+        $.when.apply($, requests).then(function () {
+            $("#btnDeleteSelected").hide();
+            $("#selectedCount").text(0);
+            loadUserDocs(encodedUserId);
+            Swal.fire("Deleted", ids.length + " file(s) deleted.", "success");
         });
     });
 });
 
-});
+// ─────────────────────────────────────────────
+// DELETE SELECTED
+// ─────────────────────────────────────────────
+$(document).on("click", "#btnDeleteSelected", function () {
+    var encodedUserId = $("#attach_user_id").val();
 
+    // Collect all checked IDs
+    var ids = [];
+    $(".doc-checkbox:checked").each(function () {
+        ids.push($(this).data("id"));
+    });
+
+    if (!ids.length) return;
+
+    Swal.fire({
+        title: "Delete " + ids.length + " file(s)?",
+        text: "This cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete all",
+        confirmButtonColor: "#d33",
+    }).then(function (result) {
+        if (!result.isConfirmed) return;
+
+        // Send one delete request per file
+        var requests = ids.map(function (id) {
+            return $.ajax({
+                url: BASE_URL + "users/delete_doc",
+                type: "POST",
+                dataType: "json",
+                data: { id: id }
+            });
+        });
+
+        // Wait for all requests to finish
+        $.when.apply($, requests).then(function () {
+            $("#btnDeleteSelected").hide();
+            $("#selectedCount").text(0);
+            loadUserDocs(encodedUserId);
+            Swal.fire("Deleted", ids.length + " file(s) deleted.", "success");
+        });
+    });
+});
+});

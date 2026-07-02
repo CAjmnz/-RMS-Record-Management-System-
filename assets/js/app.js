@@ -1,6 +1,7 @@
 (function () {
 
     // ── Clock ─────────────────────────────────────────────────────
+
     function updateClock() {
         var el = document.getElementById('topbarClock');
         if (!el) return;
@@ -12,7 +13,6 @@
     }
     updateClock();
     setInterval(updateClock, 1000);
-
     // ── Sidebar toggle ────────────────────────────────────────────
     var sidebar     = document.getElementById('sidebar');
     var topbar      = document.getElementById('topbar');
